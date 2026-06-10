@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "DateSpot",
+    "slug": "datespot",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "datespot",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#E84393"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "co.il.datespot.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E84393"
+      },
+      "package": "co.il.datespot.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-location",
+      "expo-asset"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

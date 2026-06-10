@@ -1,0 +1,18 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@datespot/api-client": ["../../packages/api-client/src"],
+      "@datespot/ui": ["../../packages/ui/src"],
+      "@datespot/shared-types": ["../../packages/shared-types/src"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
+  ]
+}
