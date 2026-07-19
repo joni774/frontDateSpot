@@ -30,7 +30,7 @@
       "distribution": "store",
       "env": {
         "APP_VARIANT": "production",
-        "EXPO_PUBLIC_API_URL": "https://datespot-api-production.up.railway.app"
+        "EXPO_PUBLIC_API_URL": "https://datespot-server-production-ecb2.up.railway.app"
       },
       "channel": "production",
       "autoIncrement": true
