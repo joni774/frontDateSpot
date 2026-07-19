@@ -9,14 +9,14 @@
       "distribution": "internal",
       "env": {
         "APP_VARIANT": "staging",
-        "EXPO_PUBLIC_API_URL": "https://datespot-server-production.up.railway.app"
+        "EXPO_PUBLIC_API_URL": "https://datespot-staging.up.railway.app"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
         "APP_VARIANT": "staging",
-        "EXPO_PUBLIC_API_URL": "https://datespot-server-production.up.railway.app"
+        "EXPO_PUBLIC_API_URL": "https://datespot-staging.up.railway.app"
       },
       "android": {
         "buildType": "apk"
