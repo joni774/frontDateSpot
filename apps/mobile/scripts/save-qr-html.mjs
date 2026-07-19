@@ -68,7 +68,7 @@ const html = `<!DOCTYPE html>
     body { font-family: system-ui, sans-serif; text-align: center; padding: 24px; background: #FAF6F3; }
     img { width: min(320px, 90vw); border: 8px solid white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.12); }
     code { display: block; margin: 16px auto; padding: 12px; background: #fff; border-radius: 8px; font-size: 14px; word-break: break-all; max-width: 420px; }
-    h1 { color: #B84A62; font-size: 1.4rem; }
+    h1 { color: #7C3048; font-size: 1.4rem; }
     p { color: #444; line-height: 1.6; max-width: 420px; margin: 12px auto; }
   </style>
 </head>

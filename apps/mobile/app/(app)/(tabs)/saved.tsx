@@ -23,16 +23,16 @@ export default function SavedScreen() {
   });
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-100">
-        <Text className="text-xl font-bold text-text flex-1">
+    <SafeAreaView className="flex-1 bg-background">
+      <View className="flex-row items-center px-4 py-3 bg-surface border-b border-border">
+        <Text className="text-xl font-semibold text-text flex-1">
           {t("profile.savedPlaces")}
         </Text>
       </View>
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#B84A62" />
+          <ActivityIndicator size="large" color="#7C3048" />
         </View>
       ) : (
         <FlatList
@@ -47,8 +47,7 @@ export default function SavedScreen() {
           )}
           ListEmptyComponent={
             <View className="items-center py-16">
-              <Text className="text-4xl mb-2">💕</Text>
-              <Text className="text-gray-500">{t("saved.empty")}</Text>
+              <Text className="text-text-muted">{t("saved.empty")}</Text>
             </View>
           }
         />

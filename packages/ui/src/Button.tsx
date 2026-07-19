@@ -39,7 +39,7 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'outline' ? '#B84A62' : '#fff'} />
+        <ActivityIndicator color={variant === 'outline' ? '#7C3048' : '#fff'} />
       ) : (
         <Text className={textVariants[variant]}>{title}</Text>
       )}

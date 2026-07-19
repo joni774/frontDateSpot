@@ -63,6 +63,9 @@
     "openLocationSettings": "Open location settings",
     "datingCta": "Dating 18+"
   },
+  "map": {
+    "webUnavailable": "The map is available in the mobile app. On web, browse places from the home screen."
+  },
   "place": {
     "navigate": "Navigate",
     "share": "Share with partner",
@@ -79,15 +82,15 @@
     "phone": "Phone",
     "openingHours": "Opening Hours",
     "closedDay": "Closed",
-    "shareText": "Found the perfect date spot! 💕\n{{name}}\n{{address}}\nDistance: {{distance}} {{km}}\nhttps://datespot.co.il",
+    "shareText": "Found the perfect date spot!\n{{name}}\n{{address}}\nDistance: {{distance}} {{km}}\nhttps://datespot.co.il",
     "categories": {
-      "ROMANTIC_DATE": "💕 Romantic",
-      "RESTAURANT": "🍽 Restaurant",
-      "DAIRY_RESTAURANT": "🧀 Dairy",
-      "MEAT_RESTAURANT": "🥩 Meat",
-      "SUSHI": "🍣 Sushi",
-      "SUNSET": "🌅 Sunset",
-      "ATTRACTION": "🎡 Attraction"
+      "ROMANTIC_DATE": "Romantic",
+      "RESTAURANT": "Restaurant",
+      "DAIRY_RESTAURANT": "Dairy",
+      "MEAT_RESTAURANT": "Meat",
+      "SUSHI": "Sushi",
+      "SUNSET": "Sunset",
+      "ATTRACTION": "Attraction"
     },
     "priceRange": {
       "FREE": "Free",
@@ -253,6 +256,14 @@
     "datingRequiredBody": "Meeting people nearby requires a dating subscription at ₪39.90/month.",
     "datingSubscribe": "Get dating subscription"
   },
+  "tabs": {
+    "home": "Home",
+    "map": "Map",
+    "ai": "AI",
+    "saved": "Saved",
+    "favorites": "Favorites",
+    "profile": "Profile"
+  },
   "ai": {
     "title": "AI Bot — Where to go?",
     "inputPlaceholder": "Type a message...",
@@ -260,6 +271,10 @@
     "viewPlace": "View place",
     "loadError": "Could not load the bot. Make sure the API is running.",
     "quotaRemaining": "{{count}}/{{limit}} queries left today",
-    "unlimited": "Unlimited"
+    "unlimited": "Unlimited",
+    "shortcutPersonal": "My pick",
+    "shortcutPersonalHint": "A romantic date tailored to you",
+    "shortcutHot": "Hot pick",
+    "shortcutHotHint": "Open and nearby right now"
   }
 }

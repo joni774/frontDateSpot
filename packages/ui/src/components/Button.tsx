@@ -54,8 +54,8 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: 12,
-    paddingVertical: 16,
+    borderRadius: 10,
+    paddingVertical: 15,
     paddingHorizontal: 24,
     alignItems: "center",
     justifyContent: "center",
@@ -64,11 +64,11 @@ const styles = StyleSheet.create({
   secondary: { backgroundColor: brand.border },
   outline: {
     backgroundColor: "transparent",
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: brand.primary,
   },
   disabled: { opacity: 0.5 },
-  text: { fontSize: 16, fontWeight: "600" },
+  text: { fontSize: 16, fontWeight: "600", letterSpacing: 0.2 },
   primaryText: { color: "#fff" },
   secondaryText: { color: brand.text },
   outlineText: { color: brand.primary },

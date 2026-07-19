@@ -94,7 +94,7 @@ export default function AdminUsersScreen() {
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#B84A62" />
+          <ActivityIndicator size="large" color="#7C3048" />
         </View>
       ) : error ? (
         <View className="flex-1 items-center justify-center px-6">

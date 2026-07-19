@@ -8,13 +8,13 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { brand } from "../theme/colors";
 
 const CATEGORY_LABELS: Record<PlaceCategory, string> = {
-  ROMANTIC_DATE: "💕 Date",
-  RESTAURANT: "🍽 Restaurant",
-  DAIRY_RESTAURANT: "🧀 Dairy",
-  MEAT_RESTAURANT: "🥩 Meat",
-  SUSHI: "🍣 Sushi",
-  SUNSET: "🌅 Sunset",
-  ATTRACTION: "🎡 Attraction",
+  ROMANTIC_DATE: "Date",
+  RESTAURANT: "Restaurant",
+  DAIRY_RESTAURANT: "Dairy",
+  MEAT_RESTAURANT: "Meat",
+  SUSHI: "Sushi",
+  SUNSET: "Sunset",
+  ATTRACTION: "Attraction",
 };
 
 const PRICE_LABELS: Record<PriceRange, string> = {
@@ -64,12 +64,11 @@ export function PlaceCard({
           />
         ) : (
           <View style={[styles.placeholder, locked && styles.imageLocked]}>
-            <Text style={styles.placeholderEmoji}>📍</Text>
+            <Text style={styles.placeholderText}>No photo</Text>
           </View>
         )}
         {locked ? (
           <View style={styles.lockOverlay}>
-            <Text style={styles.lockIcon}>🔒</Text>
             <Text style={styles.lockText}>Subscribe to unlock</Text>
           </View>
         ) : null}
@@ -95,43 +94,48 @@ export function PlaceCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: brand.surface,
-    borderRadius: 16,
-    marginBottom: 16,
+    borderRadius: 14,
+    marginBottom: 14,
     overflow: "hidden",
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: brand.border,
+    shadowColor: "#1A1918",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   imageWrap: { position: "relative" },
-  image: { width: "100%", height: 176 },
-  imageLocked: { opacity: 0.3 },
+  image: { width: "100%", height: 168 },
+  imageLocked: { opacity: 0.35 },
   placeholder: {
     width: "100%",
-    height: 176,
+    height: 168,
     backgroundColor: brand.border,
     alignItems: "center",
     justifyContent: "center",
   },
-  placeholderEmoji: { fontSize: 36 },
+  placeholderText: { fontSize: 13, color: brand.textMuted, fontWeight: "500" },
   lockOverlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "rgba(26, 25, 24, 0.28)",
   },
-  lockIcon: { fontSize: 28, marginBottom: 4 },
-  lockText: { color: brand.primary, fontWeight: "600", fontSize: 14 },
+  lockText: { color: "#fff", fontWeight: "600", fontSize: 14 },
   distanceBadge: {
     position: "absolute",
     top: 12,
     right: 12,
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: "rgba(26, 25, 24, 0.55)",
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 999,
+    borderRadius: 6,
   },
   distanceText: { color: "#fff", fontSize: 12, fontWeight: "500" },
-  body: { padding: 16 },
-  name: { fontSize: 18, fontWeight: "700", color: brand.text, marginBottom: 4 },
+  body: { paddingHorizontal: 14, paddingVertical: 12 },
+  name: { fontSize: 17, fontWeight: "600", color: brand.text, marginBottom: 4 },
   metaRow: { flexDirection: "row", justifyContent: "space-between" },
-  category: { color: brand.textMuted, fontSize: 14 },
-  price: { color: brand.textMuted, fontSize: 14, fontWeight: "500" },
+  category: { color: brand.textMuted, fontSize: 13 },
+  price: { color: brand.textMuted, fontSize: 13, fontWeight: "500" },
 });

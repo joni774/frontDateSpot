@@ -60,10 +60,10 @@ export function LoginForm({ onSuccess, showHeader = true }: LoginFormProps) {
     <View>
       {showHeader ? (
         <>
-          <Text className="text-4xl font-bold text-primary text-center mb-2">
+          <Text className="text-3xl font-semibold text-primary text-center mb-2 tracking-tight">
             DateSpot
           </Text>
-          <Text className="text-gray-600 text-center mb-6">{t("auth.login")}</Text>
+          <Text className="text-text-muted text-center mb-8">{t("auth.login")}</Text>
         </>
       ) : null}
 

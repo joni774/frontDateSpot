@@ -33,13 +33,13 @@ import { Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const CATEGORY_COLORS: Record<PlaceCategory, string> = {
-  ROMANTIC_DATE: "bg-rose-100 text-rose-900",
-  RESTAURANT: "bg-orange-100 text-orange-900",
-  DAIRY_RESTAURANT: "bg-sky-100 text-sky-900",
-  MEAT_RESTAURANT: "bg-red-100 text-red-900",
-  SUSHI: "bg-pink-100 text-pink-900",
-  SUNSET: "bg-amber-100 text-amber-900",
-  ATTRACTION: "bg-slate-100 text-slate-800",
+  ROMANTIC_DATE: "bg-primary/10 text-primary",
+  RESTAURANT: "bg-secondary/10 text-secondary",
+  DAIRY_RESTAURANT: "bg-accent/15 text-accent",
+  MEAT_RESTAURANT: "bg-primary/10 text-primary-dark",
+  SUSHI: "bg-accent/10 text-accent",
+  SUNSET: "bg-secondary/10 text-secondary",
+  ATTRACTION: "bg-cream text-text-muted",
 };
 
 const DAYS = [
@@ -143,7 +143,7 @@ export default function PlaceDetailScreen() {
   if (isLoading || !place) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#B84A62" />
+        <ActivityIndicator size="large" color="#7C3048" />
       </View>
     );
   }
@@ -175,15 +175,13 @@ export default function PlaceDetailScreen() {
             )}
           />
         ) : (
-          <View style={{ width, height: 280 }} className="bg-cream items-center justify-center">
-            <Text className="text-5xl">📍</Text>
-          </View>
+          <View style={{ width, height: 280 }} className="bg-cream" />
         )}
 
         <SafeAreaView className="absolute top-0 left-0 right-0 flex-row justify-between px-4">
           <Pressable
             onPress={() => router.back()}
-            className="w-10 h-10 rounded-full bg-black/40 items-center justify-center"
+            className="w-10 h-10 rounded-lg bg-black/45 items-center justify-center"
           >
             <Text className="text-white text-lg">←</Text>
           </Pressable>
@@ -191,22 +189,26 @@ export default function PlaceDetailScreen() {
             <Pressable
               testID="place-favorite-button"
               onPress={() => favoriteMutation.mutate(!!place.isFavorite)}
-              className="w-10 h-10 rounded-full bg-black/40 items-center justify-center"
+              className="w-10 h-10 rounded-lg bg-black/45 items-center justify-center"
             >
-              <Text className="text-lg">{place.isFavorite ? "⭐" : "☆"}</Text>
+              <Text className="text-white text-lg">
+                {place.isFavorite ? "★" : "☆"}
+              </Text>
             </Pressable>
             <Pressable
               testID="place-save-button"
               onPress={() => saveMutation.mutate(!!place.isSaved)}
-              className="w-10 h-10 rounded-full bg-black/40 items-center justify-center"
+              className="w-10 h-10 rounded-lg bg-black/45 items-center justify-center"
             >
-              <Text className="text-lg">{place.isSaved ? "❤️" : "🤍"}</Text>
+              <Text className="text-white text-lg">
+                {place.isSaved ? "♥" : "♡"}
+              </Text>
             </Pressable>
             <Pressable
               onPress={shareWhatsApp}
-              className="w-10 h-10 rounded-full bg-black/40 items-center justify-center"
+              className="w-10 h-10 rounded-lg bg-black/45 items-center justify-center"
             >
-              <Text className="text-lg">↗</Text>
+              <Text className="text-white text-lg">↗</Text>
             </Pressable>
           </View>
         </SafeAreaView>
@@ -227,16 +229,16 @@ export default function PlaceDetailScreen() {
         <Text className="text-2xl font-bold text-text mb-2">{place.name}</Text>
 
         <View className="flex-row flex-wrap gap-2 mb-3">
-          <View className={`px-3 py-1 rounded-full ${CATEGORY_COLORS[place.category]}`}>
+          <View className={`px-2.5 py-1 rounded-md ${CATEGORY_COLORS[place.category]}`}>
             <Text className="text-sm font-medium">
               {t(`place.categories.${place.category}`)}
             </Text>
           </View>
           <View
-            className={`px-3 py-1 rounded-full ${place.isOpen ? "bg-green-100" : "bg-red-100"}`}
+            className={`px-2.5 py-1 rounded-md ${place.isOpen ? "bg-secondary/10" : "bg-primary/10"}`}
           >
             <Text
-              className={`text-sm font-medium ${place.isOpen ? "text-green-700" : "text-red-700"}`}
+              className={`text-sm font-medium ${place.isOpen ? "text-secondary" : "text-primary"}`}
             >
               {place.isOpen ? t("place.openNow") : t("place.closed")}
             </Text>
@@ -244,43 +246,43 @@ export default function PlaceDetailScreen() {
         </View>
 
         {place.distance != null ? (
-          <Text className="text-gray-500 mb-1">
+          <Text className="text-text-muted mb-1">
             {place.distance.toFixed(1)} {t("home.km")} · {place.address}
           </Text>
         ) : (
-          <Text className="text-gray-500 mb-1">{place.address}</Text>
+          <Text className="text-text-muted mb-1">{place.address}</Text>
         )}
 
         {reviewsData?.averageRating != null ? (
-          <Text className="text-amber-600 font-medium mb-2">
+          <Text className="text-text font-medium mb-2">
             ★ {reviewsData.averageRating.toFixed(1)} ({reviewsData.reviewCount} {t("place.reviews")})
           </Text>
         ) : null}
 
         {place.viewCount != null ? (
-          <Text className="text-gray-400 text-xs mb-2">
+          <Text className="text-text-muted text-xs mb-2">
             {t("place.views", { count: place.viewCount })}
           </Text>
         ) : null}
 
-        <Text className="text-gray-700 my-4 leading-6">{place.description}</Text>
+        <Text className="text-text my-4 leading-6 opacity-90">{place.description}</Text>
 
         <View className="flex-row flex-wrap mb-4">
           <View className="w-1/2 p-2">
-            <Text className="text-gray-400 text-xs mb-1">💰 {t("place.price")}</Text>
-            <Text className="font-medium">{formatPrice(t, place.priceRange)}</Text>
+            <Text className="text-text-muted text-xs mb-1">{t("place.price")}</Text>
+            <Text className="font-medium text-text">{formatPrice(t, place.priceRange)}</Text>
           </View>
           <View className="w-1/2 p-2">
-            <Text className="text-gray-400 text-xs mb-1">🕐 {t("place.today")}</Text>
-            <Text className="font-medium">{todayHours}</Text>
+            <Text className="text-text-muted text-xs mb-1">{t("place.today")}</Text>
+            <Text className="font-medium text-text">{todayHours}</Text>
           </View>
           <View className="w-1/2 p-2">
-            <Text className="text-gray-400 text-xs mb-1">📍 {t("place.address")}</Text>
-            <Text className="font-medium">{place.address}</Text>
+            <Text className="text-text-muted text-xs mb-1">{t("place.address")}</Text>
+            <Text className="font-medium text-text">{place.address}</Text>
           </View>
           {place.phone ? (
             <View className="w-1/2 p-2">
-              <Text className="text-gray-400 text-xs mb-1">📞 {t("place.phone")}</Text>
+              <Text className="text-text-muted text-xs mb-1">{t("place.phone")}</Text>
               <Pressable onPress={() => Linking.openURL(`tel:${place.phone}`)}>
                 <Text className="font-medium text-primary">{place.phone}</Text>
               </Pressable>

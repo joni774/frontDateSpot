@@ -232,7 +232,7 @@ export default function NearbyScreen() {
   if (statusLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#B84A62" />
+        <ActivityIndicator size="large" color="#7C3048" />
       </View>
     );
   }
@@ -317,7 +317,7 @@ export default function NearbyScreen() {
             value={visible}
             onValueChange={handleToggleVisible}
             disabled={presenceMutation.isPending}
-            trackColor={{ true: "#B84A62", false: "#d1d5db" }}
+            trackColor={{ true: "#7C3048", false: "#d1d5db" }}
           />
         </View>
         <Text className={`text-sm mt-2 ${visible ? "text-green-600" : "text-gray-400"}`}>
@@ -369,7 +369,7 @@ export default function NearbyScreen() {
           !visible ? (
             <Text className="text-gray-500 text-center py-8">{t("nearby.visibleHint")}</Text>
           ) : usersLoading ? (
-            <ActivityIndicator color="#B84A62" className="py-8" />
+            <ActivityIndicator color="#7C3048" className="py-8" />
           ) : (
             <Text className="text-gray-500 text-center py-8">{t("nearby.empty")}</Text>
           )

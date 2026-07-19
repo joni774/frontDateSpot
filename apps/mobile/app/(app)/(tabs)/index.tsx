@@ -5,6 +5,7 @@
 import { fetchPlaces, getStoredUser } from "@datespot/api-client";
 import { PlaceCard } from "@datespot/ui";
 import { useQuery } from "@tanstack/react-query";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -22,9 +23,9 @@ import {
   Text,
   TextInput,
   View,
-  type ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { CategoryChipIcon } from "../../../src/components/icons/CategoryChipIcon";
 import {
   glassCircle,
   getFirstName,
@@ -32,7 +33,7 @@ import {
   HomeTopPanel,
   SunsetSceneryBackground,
 } from "../../../src/components/SunsetSceneryBackground";
-import { CATEGORY_THEMES, type CategoryFilter } from "../../../src/theme/colors";
+import { CATEGORY_THEMES, colors, type CategoryFilter } from "../../../src/theme/colors";
 
 const DEFAULT_COORDS = { lat: 32.0853, lng: 34.7818 };
 
@@ -106,15 +107,15 @@ async function openLocationSettings() {
   }
 }
 
-const CATEGORIES: { key: CategoryFilter; label: string; emoji: string }[] = [
-  { key: "ALL", label: "all", emoji: "" },
-  { key: "ROMANTIC_DATE", label: "romantic", emoji: "💕" },
-  { key: "RESTAURANT", label: "restaurant", emoji: "🍽" },
-  { key: "DAIRY_RESTAURANT", label: "dairy", emoji: "🧀" },
-  { key: "MEAT_RESTAURANT", label: "meat", emoji: "🥩" },
-  { key: "SUSHI", label: "sushi", emoji: "🍣" },
-  { key: "SUNSET", label: "sunset", emoji: "🌅" },
-  { key: "ATTRACTION", label: "attraction", emoji: "🎡" },
+const CATEGORIES: { key: CategoryFilter; label: string }[] = [
+  { key: "ALL", label: "all" },
+  { key: "ROMANTIC_DATE", label: "romantic" },
+  { key: "RESTAURANT", label: "restaurant" },
+  { key: "DAIRY_RESTAURANT", label: "dairy" },
+  { key: "MEAT_RESTAURANT", label: "meat" },
+  { key: "SUSHI", label: "sushi" },
+  { key: "SUNSET", label: "sunset" },
+  { key: "ATTRACTION", label: "attraction" },
 ];
 
 function SkeletonCard() {
@@ -135,12 +136,12 @@ function SkeletonCard() {
     <Animated.View
       style={{
         opacity,
-        backgroundColor: "rgba(255, 255, 255, 0.55)",
-        borderRadius: 16,
-        height: 224,
-        marginBottom: 16,
-        borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.45)",
+        backgroundColor: "#FFFFFF",
+        borderRadius: 14,
+        height: 210,
+        marginBottom: 14,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: "#E2DFDB",
       }}
     />
   );
@@ -158,81 +159,128 @@ function CategoryChip({
   onPress: () => void;
 }) {
   const theme = CATEGORY_THEMES[categoryKey];
+  const scale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.spring(scale, {
+      toValue: active ? 1.04 : 1,
+      friction: 7,
+      tension: 140,
+      useNativeDriver: true,
+    }).start();
+  }, [active, scale]);
+
+  const iconColor = active ? "#FFFFFF" : theme.color;
+  const gradientColors = [theme.color, theme.colorDeep] as const;
 
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      android_ripple={{
-        color: active ? "rgba(255,255,255,0.25)" : theme.ripple,
-      }}
-      style={({ pressed }) => [
-        chipStyles.chip,
-        active
-          ? {
-              backgroundColor: theme.color,
-              borderColor: theme.color,
-              shadowColor: theme.color,
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.4,
-              shadowRadius: 6,
-              elevation: 4,
-            }
-          : {
-              backgroundColor: theme.inactiveBg,
-              borderColor: theme.inactiveBorder,
-              shadowColor: theme.color,
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.15,
-              shadowRadius: 3,
-              elevation: 2,
-              ...Platform.select({
-                web: {
-                  backdropFilter: "blur(10px)",
-                  WebkitBackdropFilter: "blur(10px)",
-                } as ViewStyle,
-                default: {},
-              }),
-            },
-        pressed && chipStyles.chipPressed,
+    <Animated.View
+      style={[
+        chipStyles.chipOuter,
+        active && chipStyles.chipOuterActive,
+        { transform: [{ scale }] },
       ]}
     >
-      <Text
-        style={[
-          chipStyles.label,
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityState={{ selected: active }}
+        android_ripple={{
+          color: active ? "rgba(255,255,255,0.22)" : theme.ripple,
+        }}
+        style={({ pressed }) => [
+          chipStyles.chip,
           active
-            ? chipStyles.labelActive
-            : { color: theme.inactiveText, textShadowColor: "rgba(0,0,0,0.2)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
+            ? chipStyles.chipActive
+            : {
+                backgroundColor: theme.inactiveBg,
+                borderColor: theme.inactiveBorder,
+              },
+          pressed && chipStyles.chipPressed,
         ]}
       >
-        {label}
-      </Text>
-    </Pressable>
+        {active ? (
+          <LinearGradient
+            colors={gradientColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          />
+        ) : null}
+        <View
+          style={[
+            chipStyles.iconWrap,
+            { backgroundColor: active ? "rgba(255,255,255,0.22)" : theme.iconBg },
+          ]}
+        >
+          <CategoryChipIcon category={categoryKey} size={13} color={iconColor} />
+        </View>
+        <Text
+          style={[
+            chipStyles.label,
+            active ? chipStyles.labelActive : chipStyles.labelInactive,
+          ]}
+        >
+          {label}
+        </Text>
+      </Pressable>
+    </Animated.View>
   );
 }
 
 const chipStyles = StyleSheet.create({
+  chipOuter: {
+    marginRight: 8,
+  },
+  chipOuterActive: Platform.select({
+    ios: {
+      shadowColor: "#1A1918",
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.28,
+      shadowRadius: 5,
+    },
+    android: {
+      elevation: 3,
+    },
+    default: {
+      boxShadow: "0 3px 10px rgba(26, 25, 24, 0.28)",
+    },
+  }),
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 9999,
-    marginRight: 6,
-    minHeight: 34,
+    flexDirection: "row",
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    borderRadius: 12,
+    minHeight: 36,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1.5,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: "hidden",
+    gap: 7,
+  },
+  chipActive: {
+    borderColor: "transparent",
   },
   chipPressed: {
-    opacity: 0.88,
-    transform: [{ scale: 0.96 }],
+    opacity: 0.9,
+  },
+  iconWrap: {
+    width: 22,
+    height: 22,
+    borderRadius: 7,
+    alignItems: "center",
+    justifyContent: "center",
   },
   label: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: "700",
+    letterSpacing: 0.1,
   },
   labelActive: {
     color: "#ffffff",
+  },
+  labelInactive: {
+    color: "rgba(255, 255, 255, 0.94)",
   },
 });
 
@@ -358,7 +406,7 @@ export default function HomeScreen() {
                 key={cat.key}
                 categoryKey={cat.key}
                 active={category === cat.key}
-                label={`${cat.emoji ? `${cat.emoji} ` : ""}${t(`home.categories.${cat.label}`)}`}
+                label={t(`home.categories.${cat.label}`)}
                 onPress={() => setCategory(cat.key)}
               />
             ))}
@@ -371,30 +419,28 @@ export default function HomeScreen() {
             style={styles.locationBanner}
             accessibilityRole="button"
           >
-            <Text style={styles.locationBannerText}>📍 {t("home.locationDenied")}</Text>
+            <Text style={styles.locationBannerText}>{t("home.locationDenied")}</Text>
             <Text style={styles.locationBannerAction}>{t("home.openLocationSettings")} →</Text>
           </Pressable>
         ) : null}
 
         <View style={styles.content}>
           {!coords || isLoading || locating ? (
-            <View className="px-4 pt-2">
+            <View className="px-4 pt-3">
               <SkeletonCard />
               <SkeletonCard />
               <SkeletonCard />
             </View>
           ) : isError ? (
             <View className="items-center px-6 py-16">
-              <Text className="text-4xl mb-2">⚠️</Text>
-              <Text className="text-white/90 text-center font-medium mb-4">
+              <Text className="text-text-muted text-center font-medium mb-4">
                 {t("home.loadError")}
               </Text>
               <Pressable
                 onPress={() => refetch()}
-                style={[styles.retryButton, glassCircle]}
-                className="px-5 py-3 rounded-full"
+                style={styles.retryButton}
               >
-                <Text className="text-white font-semibold">{t("common.retry")}</Text>
+                <Text style={styles.retryButtonText}>{t("common.retry")}</Text>
               </Pressable>
             </View>
           ) : (
@@ -406,7 +452,7 @@ export default function HomeScreen() {
               style={styles.list}
               contentContainerStyle={{
                 paddingHorizontal: 16,
-                paddingTop: 8,
+                paddingTop: 12,
                 paddingBottom: 24,
                 flexGrow: 1,
               }}
@@ -414,13 +460,12 @@ export default function HomeScreen() {
                 <RefreshControl
                   refreshing={isRefetching}
                   onRefresh={refetch}
-                  tintColor="#ffffff"
+                  tintColor={colors.primary}
                 />
               }
               ListEmptyComponent={
                 <View className="items-center py-16">
-                  <Text className="text-4xl mb-2">💕</Text>
-                  <Text className="text-white/90 text-center font-medium">
+                  <Text className="text-text-muted text-center font-medium">
                     {t("home.noResults")}
                   </Text>
                 </View>
@@ -444,27 +489,24 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: "700",
+    fontWeight: "600",
     color: "#ffffff",
-    textShadowColor: "rgba(0, 0, 0, 0.25)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
   },
   headerSubtitle: {
     fontSize: 12,
     fontWeight: "500",
-    color: "rgba(255, 255, 255, 0.82)",
-    marginTop: 1,
+    color: "rgba(255, 255, 255, 0.78)",
+    marginTop: 2,
   },
   datingCta: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 999,
+    borderRadius: 8,
     overflow: "hidden",
   },
   datingCtaText: {
     color: "#ffffff",
-    fontWeight: "700",
+    fontWeight: "600",
     fontSize: 12,
   },
   searchInput: {
@@ -473,58 +515,64 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.35)",
+    borderRadius: 10,
+    backgroundColor: "rgba(26, 25, 24, 0.32)",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(255, 255, 255, 0.22)",
     color: "#fff",
     fontSize: 15,
     textAlign: "right",
-  },
-  profileButton: {
-    overflow: "hidden",
   },
   categoriesScroll: {
     flexGrow: 0,
   },
   categoriesContent: {
     paddingHorizontal: 16,
-    paddingTop: 4,
-    paddingBottom: 8,
+    paddingTop: 6,
+    paddingBottom: 12,
     alignItems: "center",
   },
   content: {
     flex: 1,
     minHeight: 0,
+    backgroundColor: colors.background,
   },
   list: {
     flex: 1,
-    backgroundColor: "transparent",
+    backgroundColor: colors.background,
   },
   retryButton: {
-    overflow: "hidden",
+    backgroundColor: colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  retryButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 15,
   },
   locationBanner: {
     marginHorizontal: 16,
-    marginTop: 6,
+    marginTop: 10,
     marginBottom: 2,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: "rgba(42, 34, 36, 0.55)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.25)",
+    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
   },
   locationBannerText: {
-    color: "rgba(255, 255, 255, 0.92)",
+    color: colors.text,
     fontSize: 12,
     fontWeight: "500",
     textAlign: "right",
   },
   locationBannerAction: {
-    color: "#F5EDE8",
+    color: colors.primary,
     fontSize: 13,
-    fontWeight: "700",
+    fontWeight: "600",
     marginTop: 4,
     textAlign: "right",
   },

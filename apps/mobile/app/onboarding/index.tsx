@@ -51,7 +51,7 @@ export default function OnboardingScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View className="flex-1 justify-center min-h-[420px]">
-            <Text className="text-4xl font-bold text-primary text-center mb-6">
+            <Text className="text-3xl font-semibold text-primary text-center mb-6 tracking-tight">
               DateSpot
             </Text>
 
@@ -59,7 +59,7 @@ export default function OnboardingScreen() {
               {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
                 <View
                   key={i}
-                  className={`h-2 rounded-full ${i === step ? "w-6 bg-primary" : "w-2 bg-gray-300"}`}
+                  className={`h-1.5 rounded-full ${i === step ? "w-6 bg-primary" : "w-1.5 bg-border"}`}
                 />
               ))}
             </View>
@@ -68,10 +68,10 @@ export default function OnboardingScreen() {
               <LoginForm showHeader={false} />
             ) : (
               <>
-                <Text className="text-2xl font-bold text-text text-center mb-4 leading-8">
+                <Text className="text-2xl font-semibold text-text text-center mb-4 leading-8">
                   {t(`onboarding.${WELCOME_SLIDES[step]}Title`)}
                 </Text>
-                <Text className="text-gray-600 text-center text-base leading-7 px-2">
+                <Text className="text-text-muted text-center text-base leading-7 px-2">
                   {t(`onboarding.${WELCOME_SLIDES[step]}Body`)}
                 </Text>
               </>
@@ -80,13 +80,13 @@ export default function OnboardingScreen() {
         </ScrollView>
 
         {!isLoginSlide ? (
-          <View className="flex-row gap-3 px-6 pb-6 pt-2 border-t border-gray-100">
+          <View className="flex-row gap-3 px-6 pb-6 pt-2 border-t border-border">
             <Pressable
               onPress={goToLoginSlide}
-              className="flex-1 py-4 rounded-xl border border-gray-200 items-center"
+              className="flex-1 py-4 rounded-[10px] border border-border items-center bg-surface"
               testID="onboarding-skip"
             >
-              <Text className="text-gray-600 font-semibold text-base">
+              <Text className="text-text-muted font-semibold text-base">
                 {t("onboarding.skip")}
               </Text>
             </Pressable>

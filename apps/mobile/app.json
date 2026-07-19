@@ -7,7 +7,7 @@
     "scheme": "datespot",
     "userInterfaceStyle": "light",
     "splash": {
-      "backgroundColor": "#B84A62"
+      "backgroundColor": "#7C3048"
     },
     "ios": {
       "supportsTablet": false,
@@ -15,7 +15,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#B84A62"
+        "backgroundColor": "#7C3048"
       },
       "package": "co.il.datespot.app"
     },

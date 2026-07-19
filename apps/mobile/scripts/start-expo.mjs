@@ -194,7 +194,7 @@ function syncEnvFile(host, apiPort, apiUrl) {
 loadEnvFile();
 
 const lanIp = getLanIp();
-const host = useLan ? lanIp : (process.env.REACT_NATIVE_PACKAGER_HOSTNAME?.trim() || lanIp);
+const host = lanIp;
 const apiPort = process.env.EXPO_PUBLIC_API_PORT ?? "3000";
 const existingApiUrl = process.env.EXPO_PUBLIC_API_URL?.trim() ?? "";
 // Keep tunnels / remote APIs (https://…); only default to LAN IP when unset or already LAN http.
@@ -203,9 +203,10 @@ const keepRemoteApi =
   (existingApiUrl.startsWith("http://") && !existingApiUrl.includes(lanIp) && !/localhost|127\.0\.0\.1/.test(existingApiUrl));
 const apiUrl = keepRemoteApi ? existingApiUrl : `http://${host}:${apiPort}`;
 
+process.env.EXPO_PUBLIC_API_URL = apiUrl;
+
 if (useLan) {
   process.env.REACT_NATIVE_PACKAGER_HOSTNAME = host;
-  process.env.EXPO_PUBLIC_API_URL = apiUrl;
   syncEnvFile(host, apiPort, apiUrl);
 }
 
@@ -223,11 +224,12 @@ if (useLan) {
   console.log(`   exp://${host}:${METRO_PORT}`);
   console.log(`🔗 API URL for phone: ${apiUrl}`);
   console.log("");
-  console.log("   If connection fails, try: pnpm dev:tunnel");
+  console.log("   If connection fails, try: pnpm --filter mobile dev:tunnel");
   console.log("");
   printQrForUrl(`exp://${host}:${METRO_PORT}`);
 } else {
   console.log("Starting Expo (tunnel) — works across networks / firewalls");
+  console.log(`🔗 API URL for phone: ${apiUrl}`);
   console.log("   QR code will appear when tunnel is ready (~30s)");
   console.log("");
 }
@@ -241,8 +243,13 @@ if (!expoBin) {
 const expoCwd = resolveExpoCwd(mobileRoot, workspaceRoot, useTunnel);
 const expoEnv = { ...process.env };
 delete expoEnv.CI;
-expoEnv.REACT_NATIVE_PACKAGER_HOSTNAME = host;
-expoEnv.EXPO_PUBLIC_API_URL = process.env.EXPO_PUBLIC_API_URL;
+// LAN hostname overrides break Expo's public tunnel URL — only set it for LAN mode.
+if (useLan) {
+  expoEnv.REACT_NATIVE_PACKAGER_HOSTNAME = host;
+} else {
+  delete expoEnv.REACT_NATIVE_PACKAGER_HOSTNAME;
+}
+expoEnv.EXPO_PUBLIC_API_URL = apiUrl;
 
 const child = spawn(process.execPath, [expoBin, ...expoArgs], {
   stdio: ["inherit", "pipe", "pipe"],

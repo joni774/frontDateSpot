@@ -60,9 +60,13 @@
   "tabs": {
     "home": "בית",
     "map": "מפה",
+    "ai": "AI",
     "saved": "שמורים",
     "favorites": "מועדפים",
     "profile": "פרופיל"
+  },
+  "map": {
+    "webUnavailable": "המפה זמינה באפליקציה לנייד. בדפדפן אפשר לדפדף במקומות ממסך הבית."
   },
   "onboarding": {
     "slide1Title": "ברוך הבא לעולם של יציאות",
@@ -121,20 +125,20 @@
     "phone": "טלפון",
     "openingHours": "שעות פתיחה",
     "closedDay": "סגור",
-    "shareText": "מצאתי מקום מושלם לדייט! 💕\n{{name}}\n{{address}}\nמרחק: {{distance}} {{km}}\nhttps://datespot.co.il",
+    "shareText": "מצאתי מקום מושלם לדייט!\n{{name}}\n{{address}}\nמרחק: {{distance}} {{km}}\nhttps://datespot.co.il",
     "reviews": "ביקורות",
     "views": "{{count}} צפיות",
     "writeReview": "כתוב ביקורת",
     "reviewPlaceholder": "ספר/י על החוויה שלך...",
     "submitReview": "פרסם ביקורת",
     "categories": {
-      "ROMANTIC_DATE": "💕 דייט רומנטי",
-      "RESTAURANT": "🍽 מסעדה",
-      "DAIRY_RESTAURANT": "🧀 חלבית",
-      "MEAT_RESTAURANT": "🥩 בשרית",
-      "SUSHI": "🍣 סושי",
-      "SUNSET": "🌅 שקיעה",
-      "ATTRACTION": "🎡 אטרקציה"
+      "ROMANTIC_DATE": "דייט רומנטי",
+      "RESTAURANT": "מסעדה",
+      "DAIRY_RESTAURANT": "חלבית",
+      "MEAT_RESTAURANT": "בשרית",
+      "SUSHI": "סושי",
+      "SUNSET": "שקיעה",
+      "ATTRACTION": "אטרקציה"
     },
     "priceRange": {
       "FREE": "חינם",
@@ -316,6 +320,10 @@
     "viewPlace": "צפה במקום",
     "loadError": "לא הצלחנו לטעון את הבוט. ודא שה-API רץ.",
     "quotaRemaining": "{{count}}/{{limit}} שאילתות נותרו היום",
-    "unlimited": "שימוש ללא הגבלה"
+    "unlimited": "שימוש ללא הגבלה",
+    "shortcutPersonal": "המלצה שלי",
+    "shortcutPersonalHint": "דייט רומנטי מותאם אליך",
+    "shortcutHot": "המלצה חמה",
+    "shortcutHotHint": "מקום פתוח וקרוב עכשיו"
   }
 }

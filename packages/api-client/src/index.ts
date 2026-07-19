@@ -292,6 +292,8 @@ export {
   fetchAiQuota,
   fetchAiSessions,
   fetchAiSession,
+  resolveAiLanguage,
+  resolveAiLanguageFromI18n,
   sendAiChat,
   startAiChat,
 } from "./ai";

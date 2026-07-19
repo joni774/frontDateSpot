@@ -29,7 +29,7 @@ export default function AdminLayout() {
   if (!ready || !allowed) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#B84A62" />
+        <ActivityIndicator size="large" color="#7C3048" />
       </View>
     );
   }

@@ -1,16 +1,17 @@
-/** DateSpot brand palette — warm evening / romantic tones */
+/** DateSpot brand — city evening: cool stone neutrals, deep wine accent */
 export const colors = {
-  primary: "#B84A62",
-  primaryLight: "#D47388",
-  primaryDark: "#8F3A4D",
-  accent: "#D4956A",
-  secondary: "#5E4B63",
-  background: "#FAF6F3",
+  primary: "#7C3048",
+  primaryLight: "#A04D66",
+  primaryDark: "#5A2235",
+  accent: "#4A6578",
+  secondary: "#3F4A56",
+  background: "#F1F0EE",
   surface: "#FFFFFF",
-  text: "#2A2224",
-  textMuted: "#7A6B6F",
-  border: "#EDE5E1",
-  cream: "#F5EDE8",
+  text: "#1A1918",
+  textMuted: "#6A6563",
+  border: "#E2DFDB",
+  /** Legacy alias — cool stone wash (not cream) */
+  cream: "#EAE8E5",
 } as const;
 
 export type CategoryFilter =
@@ -25,45 +26,50 @@ export type CategoryFilter =
 
 export type CategoryTheme = {
   color: string;
+  colorDeep: string;
   inactiveBg: string;
   inactiveBorder: string;
   inactiveText: string;
+  iconBg: string;
   ripple: string;
 };
 
-function chipTheme(hex: string): CategoryTheme {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
+const CHIP_GLASS_BG = "rgba(255, 255, 255, 0.42)";
+const CHIP_GLASS_BORDER = "rgba(255, 255, 255, 0.38)";
+
+function chipTheme(color: string, colorDeep: string): CategoryTheme {
   return {
-    color: hex,
-    inactiveBg: `rgba(${r}, ${g}, ${b}, 0.28)`,
-    inactiveBorder: `rgba(${r}, ${g}, ${b}, 0.58)`,
+    color,
+    colorDeep,
+    inactiveBg: CHIP_GLASS_BG,
+    inactiveBorder: CHIP_GLASS_BORDER,
     inactiveText: "#FFFFFF",
-    ripple: `rgba(${r}, ${g}, ${b}, 0.2)`,
+    iconBg: `${color}33`,
+    ripple: `${color}33`,
   };
 }
 
+/** Soft dusk accents — readable on glass, distinct when browsing */
 export const CATEGORY_THEMES: Record<CategoryFilter, CategoryTheme> = {
-  ALL: chipTheme("#6E5B7A"),
-  ROMANTIC_DATE: chipTheme(colors.primary),
-  RESTAURANT: chipTheme("#C17A4A"),
-  DAIRY_RESTAURANT: chipTheme("#6B8F9C"),
-  MEAT_RESTAURANT: chipTheme("#9B4A4A"),
-  SUSHI: chipTheme("#A85C72"),
-  SUNSET: chipTheme("#C9924E"),
-  ATTRACTION: chipTheme("#6E7F9C"),
+  ALL: chipTheme("#7C3048", "#5A2235"),
+  ROMANTIC_DATE: chipTheme("#9B4560", "#6E2F44"),
+  RESTAURANT: chipTheme("#6E5548", "#4A3A32"),
+  DAIRY_RESTAURANT: chipTheme("#5A7A8A", "#3D5562"),
+  MEAT_RESTAURANT: chipTheme("#8A4A42", "#5C312C"),
+  SUSHI: chipTheme("#3F6B6A", "#2A4A49"),
+  SUNSET: chipTheme("#B07850", "#7A5336"),
+  ATTRACTION: chipTheme("#4A6578", "#334856"),
 };
 
 export const CATEGORY_BADGE: Record<
   Exclude<CategoryFilter, "ALL">,
   string
 > = {
-  ROMANTIC_DATE: "bg-rose-100 text-rose-800",
-  RESTAURANT: "bg-orange-100 text-orange-800",
-  DAIRY_RESTAURANT: "bg-sky-100 text-sky-800",
-  MEAT_RESTAURANT: "bg-red-100 text-red-800",
-  SUSHI: "bg-pink-100 text-pink-800",
-  SUNSET: "bg-amber-100 text-amber-800",
-  ATTRACTION: "bg-slate-100 text-slate-700",
+  ROMANTIC_DATE: "bg-primary/10 text-primary",
+  RESTAURANT: "bg-secondary/10 text-secondary",
+  DAIRY_RESTAURANT: "bg-accent/15 text-accent",
+  MEAT_RESTAURANT: "bg-primary/10 text-primary-dark",
+  SUSHI: "bg-accent/10 text-accent",
+  SUNSET: "bg-secondary/10 text-secondary",
+  ATTRACTION: "bg-cream text-text-muted",
 };

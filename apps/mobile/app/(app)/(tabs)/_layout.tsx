@@ -1,7 +1,9 @@
-/** Bottom tab navigation: Home, Map, Saved, Favorites, Profile. */
+/** Bottom tab navigation: Home, Map, AI, Saved, Favorites, Profile. */
 import { Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { StyleSheet, View } from "react-native";
 
+import { AiTabIcon } from "../../../src/components/icons/AiTabIcon";
 import { FavoritesTabIcon } from "../../../src/components/icons/FavoritesTabIcon";
 import { HomeTabIcon } from "../../../src/components/icons/HomeTabIcon";
 import { MapTabIcon } from "../../../src/components/icons/MapTabIcon";
@@ -17,8 +19,14 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: "#9ca3af",
-        tabBarStyle: { borderTopColor: "#f3f4f6", paddingTop: 4, height: 60 },
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+          paddingTop: 4,
+          height: 64,
+        },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "500" },
       }}
     >
       <Tabs.Screen
@@ -36,6 +44,23 @@ export default function TabsLayout() {
           title: t("tabs.map"),
           tabBarIcon: ({ color, size }) => (
             <MapTabIcon color={color} size={size ?? 24} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="ai"
+        options={{
+          title: t("tabs.ai"),
+          tabBarLabel: t("tabs.ai"),
+          tabBarIcon: ({ focused }) => (
+            <View
+              style={[
+                styles.aiIconWrap,
+                focused ? styles.aiIconWrapActive : styles.aiIconWrapIdle,
+              ]}
+            >
+              <AiTabIcon color="#FFFFFF" size={24} />
+            </View>
           ),
         }}
       />
@@ -69,3 +94,20 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  aiIconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: -18,
+  },
+  aiIconWrapActive: {
+    backgroundColor: colors.primary,
+  },
+  aiIconWrapIdle: {
+    backgroundColor: colors.primaryLight,
+  },
+});

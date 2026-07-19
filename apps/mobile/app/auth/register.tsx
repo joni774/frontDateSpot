@@ -86,7 +86,7 @@ export default function RegisterScreen() {
         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingVertical: 48 }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text className="text-3xl font-bold text-primary text-center mb-2">
+        <Text className="text-3xl font-semibold text-primary text-center mb-2 tracking-tight">
           DateSpot
         </Text>
         <Text className="text-gray-500 text-center mb-8">{t("auth.register")}</Text>

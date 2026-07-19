@@ -29,7 +29,7 @@ export function Input({
       <Text style={styles.label}>{label}</Text>
       <TextInput
         style={[styles.input, error ? styles.inputError : null, style]}
-        placeholderTextColor="#9ca3af"
+        placeholderTextColor={brand.textMuted}
         {...props}
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -43,13 +43,13 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: brand.border,
-    borderRadius: 12,
+    borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
     color: brand.text,
     backgroundColor: brand.surface,
   },
-  inputError: { borderColor: "#ef4444" },
-  error: { color: "#ef4444", fontSize: 12, marginTop: 4 },
+  inputError: { borderColor: "#C45C5C" },
+  error: { color: "#C45C5C", fontSize: 12, marginTop: 4 },
 });

@@ -1,11 +1,12 @@
+/** DateSpot brand — city evening: cool stone neutrals, deep wine accent */
 export const brand = {
-  primary: "#B84A62",
-  primaryLight: "#D47388",
-  primaryDark: "#8F3A4D",
-  accent: "#D4956A",
-  background: "#FAF6F3",
+  primary: "#7C3048",
+  primaryLight: "#A04D66",
+  primaryDark: "#5A2235",
+  accent: "#4A6578",
+  background: "#F1F0EE",
   surface: "#FFFFFF",
-  text: "#2A2224",
-  textMuted: "#7A6B6F",
-  border: "#EDE5E1",
+  text: "#1A1918",
+  textMuted: "#6A6563",
+  border: "#E2DFDB",
 } as const;

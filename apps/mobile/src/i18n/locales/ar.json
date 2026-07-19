@@ -52,6 +52,9 @@
     "openLocationSettings": "فتح إعدادات الموقع",
     "datingCta": "تعارف 18+"
   },
+  "map": {
+    "webUnavailable": "الخريطة متاحة في تطبيق الجوال. على الويب يمكنك تصفح الأماكن من الشاشة الرئيسية."
+  },
   "place": {
     "navigate": "التنقل",
     "share": "شارك مع الشريك",
@@ -68,15 +71,15 @@
     "phone": "الهاتف",
     "openingHours": "ساعات العمل",
     "closedDay": "مغلق",
-    "shareText": "وجدت مكاناً مثالياً للموعد! 💕\n{{name}}\n{{address}}\nالمسافة: {{distance}} {{km}}\nhttps://datespot.co.il",
+    "shareText": "وجدت مكاناً مثالياً للموعد!\n{{name}}\n{{address}}\nالمسافة: {{distance}} {{km}}\nhttps://datespot.co.il",
     "categories": {
-      "ROMANTIC_DATE": "💕 رومانسي",
-      "RESTAURANT": "🍽 مطعم",
-      "DAIRY_RESTAURANT": "🧀 ألبان",
-      "MEAT_RESTAURANT": "🥩 لحوم",
-      "SUSHI": "🍣 سوشي",
-      "SUNSET": "🌅 غروب",
-      "ATTRACTION": "🎡 معلم"
+      "ROMANTIC_DATE": "رومانسي",
+      "RESTAURANT": "مطعم",
+      "DAIRY_RESTAURANT": "ألبان",
+      "MEAT_RESTAURANT": "لحوم",
+      "SUSHI": "سوشي",
+      "SUNSET": "غروب",
+      "ATTRACTION": "معلم"
     },
     "priceRange": {
       "FREE": "مجاني",
@@ -242,6 +245,14 @@
     "datingRequiredBody": "للتعرف على أشخاص قريبين يلزم اشتراك تعارف بـ ₪39.90 شهرياً.",
     "datingSubscribe": "الاشتراك في التعارف"
   },
+  "tabs": {
+    "home": "الرئيسية",
+    "map": "الخريطة",
+    "ai": "AI",
+    "saved": "المحفوظات",
+    "favorites": "المفضلة",
+    "profile": "الملف"
+  },
   "ai": {
     "title": "بوت AI — إلى أين نخرج؟",
     "inputPlaceholder": "اكتب رسالة...",
@@ -249,6 +260,10 @@
     "viewPlace": "عرض المكان",
     "loadError": "تعذر تحميل البوت. تأكد أن الخادم يعمل.",
     "quotaRemaining": "{{count}}/{{limit}} استفسارات متبقية اليوم",
-    "unlimited": "استخدام غير محدود"
+    "unlimited": "استخدام غير محدود",
+    "shortcutPersonal": "توصيتي",
+    "shortcutPersonalHint": "موعد رومانسي يناسبك",
+    "shortcutHot": "توصية ساخنة",
+    "shortcutHotHint": "مكان مفتوح وقريب الآن"
   }
 }
