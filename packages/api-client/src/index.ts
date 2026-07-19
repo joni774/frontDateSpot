@@ -26,6 +26,7 @@ import {
 export {
   apiClient,
   configureApiBaseUrl,
+  getApiBaseUrl,
   setUnauthorizedHandler,
   TOKEN_KEY,
   REFRESH_TOKEN_KEY,
@@ -50,9 +51,8 @@ export async function register(payload: {
   age: number;
   phone: string;
   email: string;
-  password: string;
-}): Promise<{ message: string }> {
-  const { data } = await apiClient.post<{ message: string }>(
+}): Promise<{ message: string; devPassword?: string }> {
+  const { data } = await apiClient.post<{ message: string; devPassword?: string }>(
     "/api/auth/register",
     payload
   );

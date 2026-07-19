@@ -1,6 +1,30 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
+import { existsSync, readFileSync } from "fs";
+import { join } from "path";
 
 const IS_STAGING = process.env.APP_VARIANT === "staging";
+
+function readEnvFile(key: string): string | undefined {
+  const envPath = join(__dirname, ".env");
+  if (!existsSync(envPath)) return undefined;
+
+  for (const line of readFileSync(envPath, "utf8").split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const idx = trimmed.indexOf("=");
+    if (idx === -1) continue;
+    const envKey = trimmed.slice(0, idx).trim();
+    if (envKey !== key) continue;
+    return trimmed.slice(idx + 1).trim();
+  }
+
+  return undefined;
+}
+
+const API_URL =
+  process.env.EXPO_PUBLIC_API_URL?.trim() ||
+  readEnvFile("EXPO_PUBLIC_API_URL") ||
+  "http://localhost:3000";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -40,6 +64,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     typedRoutes: true,
   },
   extra: {
+    apiUrl: API_URL,
     ...(process.env.EAS_PROJECT_ID
       ? { eas: { projectId: process.env.EAS_PROJECT_ID } }
       : {}),

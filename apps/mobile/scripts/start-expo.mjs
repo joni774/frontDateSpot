@@ -30,7 +30,7 @@ function loadEnvFile() {
     ) {
       value = value.slice(1, -1);
     }
-    if (!process.env[key]) process.env[key] = value;
+    if (!process.env[key] || key === "EXPO_PUBLIC_API_URL") process.env[key] = value;
   }
 }
 
@@ -81,6 +81,13 @@ function getLanIp() {
 
   if (pick) {
     console.log(`Using LAN IP: ${pick.ip} (${pick.name})`);
+    if (pick.ip.startsWith("10.") && !pick.ip.startsWith("10.0.0.")) {
+      console.warn("");
+      console.warn("⚠️  Wi-Fi looks like public/hotspot (10.x). Phones often cannot reach this PC over LAN.");
+      console.warn("   If Expo Go shows \"Could not connect to the server\", run:");
+      console.warn("   pnpm --filter mobile dev:tunnel");
+      console.warn("");
+    }
     return pick.ip;
   }
 
@@ -218,6 +225,11 @@ const expoArgs = useTunnel
     ? ["start", "--port", String(METRO_PORT), "--host", "lan"]
     : ["start", "--tunnel", "--port", String(METRO_PORT)];
 
+if (keepRemoteApi) {
+  expoArgs.push("--clear");
+  console.log("Remote API detected — clearing Metro cache so EXPO_PUBLIC_API_URL is picked up.");
+}
+
 if (useLan) {
   console.log("");
   console.log("📱 Expo Go (same Wi-Fi as this PC):");
@@ -243,6 +255,7 @@ if (!expoBin) {
 const expoCwd = resolveExpoCwd(mobileRoot, workspaceRoot, useTunnel);
 const expoEnv = { ...process.env };
 delete expoEnv.CI;
+expoEnv.EXPO_NO_TELEMETRY = "1";
 // LAN hostname overrides break Expo's public tunnel URL — only set it for LAN mode.
 if (useLan) {
   expoEnv.REACT_NATIVE_PACKAGER_HOSTNAME = host;
@@ -267,11 +280,17 @@ function forwardAndWatchTunnelReady(source, isStderr = false) {
     if (useTunnel && !tunnelQrPrinted && /tunnel ready/i.test(text)) {
       tunnelQrPrinted = true;
       setTimeout(() => {
-        printExpoQr({ mode: "tunnel", waitForTunnel: false }).catch(() => {});
-        execFileSync(process.execPath, [path.join(__dirname, "save-qr-html.mjs"), "--tunnel"], {
-          cwd: mobileRoot,
-          stdio: "inherit",
+        printExpoQr({ mode: "tunnel", waitForTunnel: false }).catch((err) => {
+          console.warn("Could not print tunnel QR:", err?.message ?? err);
         });
+        try {
+          execFileSync(process.execPath, [path.join(__dirname, "save-qr-html.mjs"), "--tunnel"], {
+            cwd: mobileRoot,
+            stdio: "inherit",
+          });
+        } catch (err) {
+          console.warn("Could not save expo-qr.html:", err?.message ?? err);
+        }
       }, 2000);
     }
   });

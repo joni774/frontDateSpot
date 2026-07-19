@@ -11,10 +11,11 @@ import {
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Platform, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import { I18nextProvider } from "react-i18next";
 
 import { AuthSessionProvider, useAuthSession } from "../src/auth/AuthSession";
+import { resolveApiBaseUrl } from "../src/config/api";
 import { i18n, initI18n } from "../src/i18n/i18n";
 import { setupPushNotifications } from "../src/notifications/push";
 import { colors } from "../src/theme/colors";
@@ -24,19 +25,6 @@ const queryClient = new QueryClient({
     queries: { retry: 1, staleTime: 30_000 },
   },
 });
-
-function resolveApiBaseUrl(): string {
-  const configured = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
-
-  if (Platform.OS === "web" && typeof window !== "undefined") {
-    const host = window.location.hostname;
-    if (host === "localhost" || host === "127.0.0.1") {
-      return "http://localhost:3000";
-    }
-  }
-
-  return configured;
-}
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -54,7 +42,11 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      configureApiBaseUrl(resolveApiBaseUrl());
+      const apiUrl = resolveApiBaseUrl();
+      configureApiBaseUrl(apiUrl);
+      if (__DEV__) {
+        console.log("[DateSpot] API base URL:", apiUrl);
+      }
       await initI18n();
       if (mounted) setReady(true);
     })();

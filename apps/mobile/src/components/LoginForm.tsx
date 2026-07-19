@@ -1,5 +1,5 @@
 /** Shared login form — used in onboarding slide 3 and /auth/login. */
-import { login } from "@datespot/api-client";
+import { login, getApiBaseUrl } from "@datespot/api-client";
 import { isAxiosError } from "axios";
 import { Button, Input } from "@datespot/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -49,7 +49,12 @@ export function LoginForm({ onSuccess, showHeader = true }: LoginFormProps) {
       router.replace("/(app)/(tabs)");
     } catch (err) {
       if (isAxiosError(err) && !err.response) {
-        setError(t("auth.networkError"));
+        const apiUrl = getApiBaseUrl();
+        if (__DEV__) {
+          setError(`${t("auth.networkError")}\n(${apiUrl})`);
+        } else {
+          setError(t("auth.networkError"));
+        }
       } else {
         setError(t("auth.invalidCredentials"));
       }
@@ -63,7 +68,10 @@ export function LoginForm({ onSuccess, showHeader = true }: LoginFormProps) {
           <Text className="text-3xl font-semibold text-primary text-center mb-2 tracking-tight">
             DateSpot
           </Text>
-          <Text className="text-text-muted text-center mb-8">{t("auth.login")}</Text>
+          <Text className="text-text-muted text-center mb-2">{t("auth.login")}</Text>
+          <Text className="text-text text-center text-base mb-8 leading-7">
+            {t("auth.loginSubtitle")}
+          </Text>
         </>
       ) : null}
 

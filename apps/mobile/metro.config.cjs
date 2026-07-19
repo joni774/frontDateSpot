@@ -18,5 +18,11 @@ config.resolver.nodeModulesPaths = [
   path.join(realWorkspaceRoot, "node_modules"),
 ];
 config.resolver.disableHierarchicalLookup = true;
+config.resolver.extraNodeModules = {
+  ...(config.resolver.extraNodeModules ?? {}),
+  "@datespot/api-client": path.join(realWorkspaceRoot, "packages/api-client"),
+  "@datespot/shared-types": path.join(realWorkspaceRoot, "packages/shared-types"),
+  "@datespot/ui": path.join(realWorkspaceRoot, "packages/ui"),
+};
 
 module.exports = withNativeWind(config, { input: "./global.css" });

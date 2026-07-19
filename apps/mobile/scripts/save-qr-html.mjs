@@ -45,14 +45,18 @@ const mode = process.argv.includes("--tunnel") ? "tunnel" : "lan";
 let url;
 
 if (mode === "tunnel") {
-  const res = await fetch("http://127.0.0.1:4040/api/tunnels");
-  const data = await res.json();
-  const tunnel = data.tunnels?.find((t) => t.public_url?.includes("exp.direct"));
-  if (!tunnel) {
+  try {
+    const res = await fetch("http://127.0.0.1:4040/api/tunnels");
+    if (!res.ok) throw new Error(`ngrok API ${res.status}`);
+    const data = await res.json();
+    const tunnel = data.tunnels?.find((t) => t.public_url?.includes("exp.direct"));
+    if (!tunnel) throw new Error("exp.direct tunnel not found");
+    url = `exp://${new URL(tunnel.public_url).host}`;
+  } catch (err) {
     console.error("Tunnel not ready. Run: pnpm dev:tunnel");
+    console.error(err?.message ?? err);
     process.exit(1);
   }
-  url = `exp://${new URL(tunnel.public_url).host}`;
 } else {
   url = `exp://${getLanIp()}:${port}`;
 }
