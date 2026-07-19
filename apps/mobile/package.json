@@ -13,7 +13,12 @@
     "print-qr:lan": "node scripts/print-expo-qr.mjs --lan",
     "save-qr": "node scripts/save-qr-html.mjs",
     "build": "tsc --noEmit",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "eas:init": "eas init",
+    "build:staging:android": "eas build --profile preview --platform android --non-interactive",
+    "build:staging:ios": "eas build --profile preview --platform ios --non-interactive",
+    "build:production:android": "eas build --profile production --platform android --non-interactive",
+    "build:production:ios": "eas build --profile production --platform ios --non-interactive"
   },
   "dependencies": {
     "@datespot/api-client": "workspace:*",

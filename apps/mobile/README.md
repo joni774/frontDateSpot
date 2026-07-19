@@ -49,6 +49,37 @@ Copy `.env.example` to `.env`:
 
 The root layout calls `configureApiBaseUrl()` on startup using `EXPO_PUBLIC_API_URL`.
 
+## EAS builds (Staging / Production)
+
+Install EAS CLI and link the project once:
+
+```bash
+npm install -g eas-cli
+cd apps/mobile
+eas login
+eas init   # writes projectId into app.config.ts via EAS_PROJECT_ID
+```
+
+Set Google Maps key as an EAS secret (not in git):
+
+```bash
+eas secret:create --scope project --name EXPO_PUBLIC_GOOGLE_MAPS_KEY --value YOUR_KEY
+```
+
+| Profile | Bundle ID | API URL | Distribution |
+|---------|-----------|---------|--------------|
+| `preview` / `staging` | `co.il.datespot.app.staging` | Staging Railway | Internal (APK) |
+| `production` | `co.il.datespot.app` | Production Railway | Store |
+
+Build commands:
+
+```bash
+pnpm --filter mobile build:staging:android
+pnpm --filter mobile build:production:android
+```
+
+Staging uses `APP_VARIANT=staging` (app name **DateSpot Staging**, scheme `datespot-staging`). Production uses the store bundle `co.il.datespot.app`.
+
 ## Scripts
 
 | Command | Description |
