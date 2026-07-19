@@ -19,7 +19,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const TIERS: SubscriptionTier[] = ["FREE", "PREMIUM", "VIP"];
+const TIERS: SubscriptionTier[] = ["FREE", "VIP", "DATING"];
 type TierFilter = SubscriptionTier | "ALL";
 
 export default function AdminUsersScreen() {
@@ -94,7 +94,7 @@ export default function AdminUsersScreen() {
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#E84393" />
+          <ActivityIndicator size="large" color="#B84A62" />
         </View>
       ) : error ? (
         <View className="flex-1 items-center justify-center px-6">

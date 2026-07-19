@@ -1,6 +1,6 @@
 /**
  * Profile screen: user info, menu navigation, language picker, logout.
- * Subscription tier badge colors reflect FREE / PREMIUM / VIP status.
+ * Subscription tier badge colors reflect FREE / DATING (legacy PREMIUM/VIP still styled).
  */
 import { clearAuth, getStoredUser } from "@datespot/api-client";
 import { useQuery } from "@tanstack/react-query";
@@ -9,10 +9,12 @@ import { useTranslation } from "react-i18next";
 import { ActionSheetIOS, Alert, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { changeLanguage } from "../../src/i18n/i18n";
+import { changeLanguage } from "../../../src/i18n/i18n";
+import { useAuthSession } from "../../../src/auth/AuthSession";
 
-const TIER_COLORS = {
+const TIER_COLORS: Record<string, string> = {
   FREE: "bg-gray-200 text-gray-700",
+  DATING: "bg-primary/20 text-primary",
   PREMIUM: "bg-primary/20 text-primary",
   VIP: "bg-yellow-100 text-yellow-800",
 };
@@ -28,6 +30,7 @@ function getInitials(name: string): string {
 export default function ProfileScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
+  const { clearSession } = useAuthSession();
 
   const { data: user } = useQuery({
     queryKey: ["user"],
@@ -35,10 +38,15 @@ export default function ProfileScreen() {
   });
 
   const menuItems = [
-    { label: t("profile.savedPlaces"), route: "/(app)/saved" as const },
+    { label: t("profile.nearbyPeople"), route: "/(app)/nearby" as const },
+    { label: t("profile.savedPlaces"), route: "/(app)/(tabs)/saved" as const },
+    { label: t("profile.favorites"), route: "/(app)/(tabs)/favorites" as const },
+    { label: t("profile.editProfile"), route: "/(app)/edit-profile" as const },
+    { label: t("profile.verifyPhone"), route: "/(app)/verify-otp" as const },
     { label: t("profile.changePassword"), route: "/(app)/change-password" as const },
     { label: t("profile.language"), action: "language" as const },
     { label: t("profile.subscription"), route: "/(app)/subscription" as const },
+    { label: t("profile.aiPlanner"), route: "/(app)/ai-chat" as const },
     ...(user?.isAdmin
       ? [{ label: t("profile.adminPanel"), route: "/(app)/admin" as const }]
       : []),
@@ -78,7 +86,8 @@ export default function ProfileScreen() {
         style: "destructive",
         onPress: async () => {
           await clearAuth();
-          router.replace("/auth/login");
+          clearSession();
+          router.replace("/onboarding");
         },
       },
     ]);
@@ -87,16 +96,13 @@ export default function ProfileScreen() {
   const tier = user?.subscriptionTier ?? "FREE";
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-100">
-        <Pressable onPress={() => router.back()} className="mr-3">
-          <Text className="text-primary text-lg">← {t("common.back")}</Text>
-        </Pressable>
-        <Text className="text-xl font-bold text-text">{t("profile.title")}</Text>
+    <SafeAreaView testID="profile-screen" className="flex-1 bg-background">
+      <View className="flex-row items-center px-4 py-3 bg-surface border-b border-border">
+        <Text className="text-xl font-bold text-text flex-1">{t("profile.title")}</Text>
       </View>
 
       <ScrollView className="flex-1">
-        <View className="items-center py-8 bg-white mb-4">
+        <View className="items-center py-8 bg-surface mb-4">
           <View className="w-20 h-20 rounded-full bg-primary items-center justify-center mb-3">
             <Text className="text-white text-2xl font-bold">
               {user ? getInitials(user.fullName) : "?"}
@@ -104,7 +110,7 @@ export default function ProfileScreen() {
           </View>
           <Text className="text-xl font-bold text-text">{user?.fullName}</Text>
           <Text className="text-gray-500 mb-2">{user?.email}</Text>
-          <View className={`px-3 py-1 rounded-full ${TIER_COLORS[tier]}`}>
+          <View className={`px-3 py-1 rounded-full ${TIER_COLORS[tier] ?? TIER_COLORS.FREE}`}>
             <Text className="font-semibold text-sm">{tier}</Text>
           </View>
           <Text className="text-gray-400 text-xs mt-2">
@@ -112,10 +118,17 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
-        <View className="bg-white">
+        <View className="bg-surface">
           {menuItems.map((item) => (
             <Pressable
               key={item.label}
+              testID={
+                "action" in item && item.action === "language"
+                  ? "profile-menu-language"
+                  : "route" in item && item.route === "/(app)/admin"
+                    ? "profile-menu-admin"
+                    : undefined
+              }
               onPress={() => {
                 if ("action" in item && item.action === "language") {
                   showLanguagePicker();

@@ -5,6 +5,8 @@
 import type { Place, PlaceCategory, PriceRange } from "@datespot/shared-types";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { brand } from "../theme/colors";
+
 const CATEGORY_LABELS: Record<PlaceCategory, string> = {
   ROMANTIC_DATE: "💕 Date",
   RESTAURANT: "🍽 Restaurant",
@@ -27,6 +29,7 @@ interface PlaceCardProps {
   onPress: () => void;
   isLocked?: boolean;
   onLockedPress?: () => void;
+  testID?: string;
 }
 
 export function PlaceCard({
@@ -34,6 +37,7 @@ export function PlaceCard({
   onPress,
   isLocked = false,
   onLockedPress,
+  testID,
 }: PlaceCardProps) {
   const imageUri = place.images[0];
   const distance =
@@ -50,7 +54,7 @@ export function PlaceCard({
   const locked = isLocked || place.isLocked;
 
   return (
-    <Pressable onPress={handlePress} style={styles.card}>
+    <Pressable onPress={handlePress} style={styles.card} testID={testID}>
       <View style={styles.imageWrap}>
         {imageUri ? (
           <Image
@@ -90,12 +94,12 @@ export function PlaceCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: brand.surface,
     borderRadius: 16,
     marginBottom: 16,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#f3f4f6",
+    borderColor: brand.border,
   },
   imageWrap: { position: "relative" },
   image: { width: "100%", height: 176 },
@@ -103,7 +107,7 @@ const styles = StyleSheet.create({
   placeholder: {
     width: "100%",
     height: 176,
-    backgroundColor: "#e5e7eb",
+    backgroundColor: brand.border,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -114,7 +118,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   lockIcon: { fontSize: 28, marginBottom: 4 },
-  lockText: { color: "#E84393", fontWeight: "600", fontSize: 14 },
+  lockText: { color: brand.primary, fontWeight: "600", fontSize: 14 },
   distanceBadge: {
     position: "absolute",
     top: 12,
@@ -126,8 +130,8 @@ const styles = StyleSheet.create({
   },
   distanceText: { color: "#fff", fontSize: 12, fontWeight: "500" },
   body: { padding: 16 },
-  name: { fontSize: 18, fontWeight: "700", color: "#1a1a1a", marginBottom: 4 },
+  name: { fontSize: 18, fontWeight: "700", color: brand.text, marginBottom: 4 },
   metaRow: { flexDirection: "row", justifyContent: "space-between" },
-  category: { color: "#6b7280", fontSize: 14 },
-  price: { color: "#4b5563", fontSize: 14, fontWeight: "500" },
+  category: { color: brand.textMuted, fontSize: 14 },
+  price: { color: brand.textMuted, fontSize: 14, fontWeight: "500" },
 });

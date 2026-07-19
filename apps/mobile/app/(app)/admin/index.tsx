@@ -39,7 +39,7 @@ export default function AdminDashboardScreen() {
   const maxCount = Math.max(...categories.map(([, c]) => c), 1);
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView testID="admin-dashboard" className="flex-1 bg-gray-50">
       <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-100">
         <Pressable onPress={() => router.back()} className="mr-3">
           <Text className="text-primary text-lg">← {t("common.back")}</Text>
@@ -49,7 +49,7 @@ export default function AdminDashboardScreen() {
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#E84393" />
+          <ActivityIndicator size="large" color="#B84A62" />
         </View>
       ) : error || !data ? (
         <View className="flex-1 items-center justify-center px-6">
@@ -98,6 +98,7 @@ export default function AdminDashboardScreen() {
           </View>
 
           <Pressable
+            testID="admin-manage-places"
             onPress={() => router.push("/(app)/admin/places")}
             className="bg-white rounded-xl border border-gray-200 p-4 mb-3 flex-row justify-between items-center"
           >

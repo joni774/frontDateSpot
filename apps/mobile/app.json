@@ -7,7 +7,7 @@
     "scheme": "datespot",
     "userInterfaceStyle": "light",
     "splash": {
-      "backgroundColor": "#E84393"
+      "backgroundColor": "#B84A62"
     },
     "ios": {
       "supportsTablet": false,
@@ -15,13 +15,18 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E84393"
+        "backgroundColor": "#B84A62"
       },
       "package": "co.il.datespot.app"
     },
     "plugins": [
       "expo-router",
-      "expo-location",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "DateSpot צריך גישה למיקום שלך כדי להציג מקומות קרובים אליך."
+        }
+      ],
       "expo-asset"
     ],
     "experiments": {

@@ -15,7 +15,7 @@ export default function AdminLayout() {
       const user = await getStoredUser();
       if (!mounted) return;
       if (!user?.isAdmin) {
-        router.replace("/(app)/home");
+        router.replace("/(app)/(tabs)");
         return;
       }
       setAllowed(true);
@@ -29,7 +29,7 @@ export default function AdminLayout() {
   if (!ready || !allowed) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#E84393" />
+        <ActivityIndicator size="large" color="#B84A62" />
       </View>
     );
   }

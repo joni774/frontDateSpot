@@ -3,22 +3,24 @@
  * FREE tier users see first 5 places unlocked; index 6+ shows lock overlay.
  */
 import { fetchPlaces, getStoredUser } from "@datespot/api-client";
-import type { PlaceCategory } from "@datespot/shared-types";
 import { PlaceCard } from "@datespot/ui";
 import { useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ActivityIndicator,
+  Animated,
+  AppState,
   FlatList,
+  Linking,
   Platform,
   Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
   type ViewStyle,
 } from "react-native";
@@ -29,91 +31,41 @@ import {
   getGreetingPeriod,
   HomeTopPanel,
   SunsetSceneryBackground,
-} from "../../src/components/SunsetSceneryBackground";
-
-type CategoryFilter = PlaceCategory | "ALL";
-
-type CategoryTheme = {
-  color: string;
-  inactiveBg: string;
-  inactiveBorder: string;
-  inactiveText: string;
-  ripple: string;
-};
-
-const CATEGORY_THEMES: Record<CategoryFilter, CategoryTheme> = {
-  ALL: {
-    color: "#7C3AED",
-    inactiveBg: "rgba(124, 58, 237, 0.28)",
-    inactiveBorder: "rgba(124, 58, 237, 0.6)",
-    inactiveText: "#FFFFFF",
-    ripple: "rgba(124, 58, 237, 0.2)",
-  },
-  ROMANTIC_DATE: {
-    color: "#E84393",
-    inactiveBg: "rgba(232, 67, 147, 0.28)",
-    inactiveBorder: "rgba(232, 67, 147, 0.6)",
-    inactiveText: "#FFFFFF",
-    ripple: "rgba(232, 67, 147, 0.2)",
-  },
-  RESTAURANT: {
-    color: "#EA580C",
-    inactiveBg: "rgba(234, 88, 12, 0.28)",
-    inactiveBorder: "rgba(234, 88, 12, 0.6)",
-    inactiveText: "#FFFFFF",
-    ripple: "rgba(234, 88, 12, 0.2)",
-  },
-  SUNSET: {
-    color: "#F59E0B",
-    inactiveBg: "rgba(245, 158, 11, 0.3)",
-    inactiveBorder: "rgba(245, 158, 11, 0.65)",
-    inactiveText: "#FFFFFF",
-    ripple: "rgba(245, 158, 11, 0.2)",
-  },
-  ATTRACTION: {
-    color: "#0891B2",
-    inactiveBg: "rgba(8, 145, 178, 0.28)",
-    inactiveBorder: "rgba(8, 145, 178, 0.6)",
-    inactiveText: "#FFFFFF",
-    ripple: "rgba(8, 145, 178, 0.2)",
-  },
-  DAIRY_RESTAURANT: {
-    color: "#0EA5E9",
-    inactiveBg: "rgba(14, 165, 233, 0.28)",
-    inactiveBorder: "rgba(14, 165, 233, 0.6)",
-    inactiveText: "#FFFFFF",
-    ripple: "rgba(14, 165, 233, 0.2)",
-  },
-  MEAT_RESTAURANT: {
-    color: "#DC2626",
-    inactiveBg: "rgba(220, 38, 38, 0.28)",
-    inactiveBorder: "rgba(220, 38, 38, 0.6)",
-    inactiveText: "#FFFFFF",
-    ripple: "rgba(220, 38, 38, 0.2)",
-  },
-  SUSHI: {
-    color: "#BE185D",
-    inactiveBg: "rgba(190, 24, 93, 0.28)",
-    inactiveBorder: "rgba(190, 24, 93, 0.6)",
-    inactiveText: "#FFFFFF",
-    ripple: "rgba(190, 24, 93, 0.2)",
-  },
-};
+} from "../../../src/components/SunsetSceneryBackground";
+import { CATEGORY_THEMES, type CategoryFilter } from "../../../src/theme/colors";
 
 const DEFAULT_COORDS = { lat: 32.0853, lng: 34.7818 };
 
+/** Browser preview: fixed Tel Aviv center, no geolocation prompts. */
+const WEB_PREVIEW = Platform.OS === "web";
+
 async function resolveDeviceCoords(): Promise<{
   coords: { lat: number; lng: number };
-  error: string | null;
+  denied: boolean;
 }> {
+  if (WEB_PREVIEW) {
+    return { coords: DEFAULT_COORDS, denied: false };
+  }
+
   if (Platform.OS === "web") {
     if (typeof navigator !== "undefined" && navigator.geolocation) {
+      try {
+        const permission = await navigator.permissions?.query({
+          name: "geolocation",
+        });
+        if (permission?.state === "denied") {
+          return { coords: DEFAULT_COORDS, denied: true };
+        }
+      } catch {
+        // permissions API unsupported — fall through to geolocation request
+      }
+
       try {
         const position = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
             enableHighAccuracy: false,
             timeout: 8000,
-            maximumAge: 60_000,
+            maximumAge: 0,
           });
         });
 
@@ -122,26 +74,36 @@ async function resolveDeviceCoords(): Promise<{
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           },
-          error: null,
+          denied: false,
         };
       } catch {
-        return { coords: DEFAULT_COORDS, error: "home.locationDenied" };
+        return { coords: DEFAULT_COORDS, denied: true };
       }
     }
 
-    return { coords: DEFAULT_COORDS, error: null };
+    return { coords: DEFAULT_COORDS, denied: false };
   }
 
-  const { status } = await Location.requestForegroundPermissionsAsync();
-  if (status !== "granted") {
-    return { coords: DEFAULT_COORDS, error: "home.locationDenied" };
+  let permission = await Location.getForegroundPermissionsAsync();
+  if (permission.status !== "granted" && permission.canAskAgain) {
+    permission = await Location.requestForegroundPermissionsAsync();
+  }
+
+  if (permission.status !== "granted") {
+    return { coords: DEFAULT_COORDS, denied: true };
   }
 
   const loc = await Location.getCurrentPositionAsync({});
   return {
     coords: { lat: loc.coords.latitude, lng: loc.coords.longitude },
-    error: null,
+    denied: false,
   };
+}
+
+async function openLocationSettings() {
+  if (Platform.OS !== "web") {
+    await Linking.openSettings();
+  }
 }
 
 const CATEGORIES: { key: CategoryFilter; label: string; emoji: string }[] = [
@@ -156,9 +118,23 @@ const CATEGORIES: { key: CategoryFilter; label: string; emoji: string }[] = [
 ];
 
 function SkeletonCard() {
+  const opacity = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [opacity]);
+
   return (
-    <View
+    <Animated.View
       style={{
+        opacity,
         backgroundColor: "rgba(255, 255, 255, 0.55)",
         borderRadius: 16,
         height: 224,
@@ -166,7 +142,6 @@ function SkeletonCard() {
         borderWidth: 1,
         borderColor: "rgba(255, 255, 255, 0.45)",
       }}
-      className="animate-pulse"
     />
   );
 }
@@ -265,28 +240,31 @@ export default function HomeScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const [category, setCategory] = useState<CategoryFilter>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     null
   );
-  const [locationError, setLocationError] = useState<string | null>(null);
+  const [locationDenied, setLocationDenied] = useState(false);
+  const [locating, setLocating] = useState(true);
+
+  const loadLocation = useCallback(async () => {
+    setLocating(true);
+    const { coords: nextCoords, denied } = await resolveDeviceCoords();
+    setCoords(nextCoords);
+    setLocationDenied(denied);
+    setLocating(false);
+  }, []);
 
   useEffect(() => {
-    let mounted = true;
+    loadLocation();
+  }, [loadLocation]);
 
-    (async () => {
-      const { coords: nextCoords, error } = await resolveDeviceCoords();
-      if (!mounted) return;
-
-      setCoords(nextCoords);
-      if (error) {
-        setLocationError(t(error));
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [t]);
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") loadLocation();
+    });
+    return () => sub.remove();
+  }, [loadLocation]);
 
   const { data: user } = useQuery({
     queryKey: ["user"],
@@ -300,18 +278,21 @@ export default function HomeScreen() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ["places", category, coords?.lat, coords?.lng],
+    queryKey: ["places", category, coords?.lat, coords?.lng, searchQuery],
     queryFn: () =>
       fetchPlaces({
         category: category === "ALL" ? undefined : category,
         lat: coords!.lat,
         lng: coords!.lng,
         language: i18n.language,
+        radius: 50,
+        q: searchQuery.trim() || undefined,
       }),
     enabled: !!coords,
   });
 
-  const isFree = !user || user.subscriptionTier === "FREE";
+  const isFreePlaces =
+    !WEB_PREVIEW && (!user || user.subscriptionTier === "FREE" || user.subscriptionTier === "DATING");
 
   const greetingPeriod = useMemo(() => getGreetingPeriod(), []);
   const greetingText = useMemo(() => {
@@ -324,17 +305,18 @@ export default function HomeScreen() {
 
   const renderPlace = useCallback(
     ({ item, index }: { item: (typeof places)[0]; index: number }) => {
-      const locked = isFree && index >= 5;
+      const locked = !WEB_PREVIEW && isFreePlaces && index >= 5;
       return (
         <PlaceCard
           place={item}
-          isLocked={locked || item.isLocked}
+          testID={`place-card-${item.id}`}
+          isLocked={locked || (!WEB_PREVIEW && !!item.isLocked)}
           onPress={() => router.push(`/(app)/place/${item.id}`)}
           onLockedPress={() => router.push("/(app)/subscription")}
         />
       );
     },
-    [isFree, router, t]
+    [isFreePlaces, router]
   );
 
   return (
@@ -347,13 +329,23 @@ export default function HomeScreen() {
               <Text style={styles.headerSubtitle}>{t("home.title")}</Text>
             </View>
             <Pressable
-              onPress={() => router.push("/(app)/profile")}
-              style={[styles.profileButton, glassCircle]}
-              className="w-9 h-9 rounded-full items-center justify-center"
+              testID="home-dating-cta"
+              onPress={() => router.push("/(app)/nearby")}
+              style={[styles.datingCta, glassCircle]}
+              accessibilityRole="button"
             >
-              <Text className="text-base">👤</Text>
+              <Text style={styles.datingCtaText}>{t("home.datingCta")}</Text>
             </Pressable>
           </View>
+
+          <TextInput
+            testID="home-search"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder={t("home.searchPlaceholder")}
+            placeholderTextColor="rgba(255,255,255,0.7)"
+            style={styles.searchInput}
+          />
 
           <ScrollView
             horizontal
@@ -373,12 +365,19 @@ export default function HomeScreen() {
           </ScrollView>
         </HomeTopPanel>
 
-        {locationError ? (
-          <Text className="text-amber-100 text-xs px-4 py-1">{locationError}</Text>
+        {locationDenied && !WEB_PREVIEW ? (
+          <Pressable
+            onPress={openLocationSettings}
+            style={styles.locationBanner}
+            accessibilityRole="button"
+          >
+            <Text style={styles.locationBannerText}>📍 {t("home.locationDenied")}</Text>
+            <Text style={styles.locationBannerAction}>{t("home.openLocationSettings")} →</Text>
+          </Pressable>
         ) : null}
 
         <View style={styles.content}>
-          {!coords || isLoading ? (
+          {!coords || isLoading || locating ? (
             <View className="px-4 pt-2">
               <SkeletonCard />
               <SkeletonCard />
@@ -400,6 +399,7 @@ export default function HomeScreen() {
             </View>
           ) : (
             <FlatList
+              testID="home-place-list"
               data={places}
               keyExtractor={(item) => item.id}
               renderItem={renderPlace}
@@ -456,6 +456,31 @@ const styles = StyleSheet.create({
     color: "rgba(255, 255, 255, 0.82)",
     marginTop: 1,
   },
+  datingCta: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  datingCtaText: {
+    color: "#ffffff",
+    fontWeight: "700",
+    fontSize: 12,
+  },
+  searchInput: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.35)",
+    color: "#fff",
+    fontSize: 15,
+    textAlign: "right",
+  },
   profileButton: {
     overflow: "hidden",
   },
@@ -478,5 +503,29 @@ const styles = StyleSheet.create({
   },
   retryButton: {
     overflow: "hidden",
+  },
+  locationBanner: {
+    marginHorizontal: 16,
+    marginTop: 6,
+    marginBottom: 2,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: "rgba(42, 34, 36, 0.55)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.25)",
+  },
+  locationBannerText: {
+    color: "rgba(255, 255, 255, 0.92)",
+    fontSize: 12,
+    fontWeight: "500",
+    textAlign: "right",
+  },
+  locationBannerAction: {
+    color: "#F5EDE8",
+    fontSize: 13,
+    fontWeight: "700",
+    marginTop: 4,
+    textAlign: "right",
   },
 });

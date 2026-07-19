@@ -6,7 +6,8 @@
     "dev:lan": "pnpm --filter mobile dev:lan",
     "dev:tunnel": "pnpm --filter mobile dev:tunnel",
     "build": "turbo build",
-    "lint": "turbo lint"
+    "lint": "turbo lint",
+    "e2e": "echo Run from ../e2e: pnpm e2e"
   },
   "devDependencies": {
     "turbo": "^2.3.0",

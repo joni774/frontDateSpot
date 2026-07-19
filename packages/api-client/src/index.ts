@@ -5,16 +5,30 @@ import type {
   AuthLoginResponse,
   Place,
   PlaceDetail,
+  PlaceReview,
+  PlaceReviewsResponse,
+  SubscriptionTier,
   User,
 } from "@datespot/shared-types";
+import { isAxiosError } from "axios";
 
-import { apiClient, TOKEN_KEY, USER_KEY } from "./http";
+import {
+  apiClient,
+  clearAuthStorage,
+  configureApiBaseUrl,
+  persistAuth,
+  REFRESH_TOKEN_KEY,
+  setUnauthorizedHandler,
+  TOKEN_KEY,
+  USER_KEY,
+} from "./http";
 
 export {
   apiClient,
   configureApiBaseUrl,
   setUnauthorizedHandler,
   TOKEN_KEY,
+  REFRESH_TOKEN_KEY,
   USER_KEY,
 } from "./http";
 
@@ -22,26 +36,139 @@ export async function login(
   email: string,
   password: string
 ): Promise<AuthLoginResponse> {
-  const { data } = await apiClient.post<AuthLoginResponse>("/api/auth/login", {
+  const response = await apiClient.post<AuthLoginResponse>("/api/auth/login", {
     email,
     password,
   });
-  await AsyncStorage.setItem(TOKEN_KEY, data.token);
-  await AsyncStorage.setItem(USER_KEY, JSON.stringify(data.user));
-  return data;
+  await persistAuth(response.data);
+  return response.data;
 }
 
 export async function register(payload: {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   age: number;
   phone: string;
   email: string;
+  password: string;
 }): Promise<{ message: string }> {
   const { data } = await apiClient.post<{ message: string }>(
     "/api/auth/register",
     payload
   );
   return data;
+}
+
+export async function logout(refreshToken?: string): Promise<void> {
+  try {
+    await apiClient.post("/api/auth/logout", { refreshToken });
+  } catch {
+    // ignore — clear local auth regardless
+  }
+  await clearAuthStorage();
+}
+
+export async function fetchMe(): Promise<User> {
+  const { data } = await apiClient.get<{ user: User }>("/api/auth/me");
+  await AsyncStorage.setItem(USER_KEY, JSON.stringify(data.user));
+  return data.user;
+}
+
+export async function updateProfile(payload: {
+  fullName?: string;
+  age?: number;
+  phone?: string;
+  onboardingDone?: boolean;
+}): Promise<User> {
+  const { data } = await apiClient.put<{ user: User }>("/api/auth/profile", payload);
+  await AsyncStorage.setItem(USER_KEY, JSON.stringify(data.user));
+  return data.user;
+}
+
+export async function forgotPassword(email: string): Promise<{ message: string }> {
+  const { data } = await apiClient.post<{ message: string }>(
+    "/api/auth/forgot-password",
+    { email }
+  );
+  return data;
+}
+
+export async function resetPassword(
+  token: string,
+  newPassword: string
+): Promise<{ message: string }> {
+  const { data } = await apiClient.post<{ message: string }>(
+    "/api/auth/reset-password",
+    { token, newPassword }
+  );
+  return data;
+}
+
+export async function sendOtp(phone: string): Promise<{ message: string; devCode?: string }> {
+  const { data } = await apiClient.post<{ message: string; devCode?: string }>(
+    "/api/auth/otp/send",
+    { phone }
+  );
+  return data;
+}
+
+export async function verifyOtp(phone: string, code: string): Promise<{ user: User }> {
+  const { data } = await apiClient.post<{ user: User }>("/api/auth/otp/verify", {
+    phone,
+    code,
+  });
+  await AsyncStorage.setItem(USER_KEY, JSON.stringify(data.user));
+  return data;
+}
+
+export async function loginWithGoogle(idToken: string): Promise<AuthLoginResponse> {
+  const response = await apiClient.post<AuthLoginResponse>("/api/auth/social/google", {
+    idToken,
+  });
+  await persistAuth(response.data);
+  return response.data;
+}
+
+export async function loginWithApple(payload: {
+  idToken: string;
+  email?: string;
+  fullName?: string;
+}): Promise<AuthLoginResponse> {
+  const response = await apiClient.post<AuthLoginResponse>(
+    "/api/auth/social/apple",
+    payload
+  );
+  await persistAuth(response.data);
+  return response.data;
+}
+
+export async function registerPushToken(expoPushToken: string): Promise<void> {
+  await apiClient.put("/api/auth/push-token", { expoPushToken });
+}
+
+export async function purchaseSubscription(
+  tier: SubscriptionTier,
+  options?: {
+    receipt?: string;
+    cardNumber?: string;
+    cardExpiry?: string;
+    cardCvv?: string;
+    cardHolder?: string;
+  }
+): Promise<User> {
+  const { data } = await apiClient.post<{ user: User }>(
+    "/api/auth/subscriptions/purchase",
+    {
+      tier,
+      receipt: options?.receipt,
+      cardNumber: options?.cardNumber,
+      cardExpiry: options?.cardExpiry,
+      cardCvv: options?.cardCvv,
+      cardHolder: options?.cardHolder,
+    }
+  );
+  await AsyncStorage.setItem(USER_KEY, JSON.stringify(data.user));
+  return data.user;
 }
 
 export async function changePassword(
@@ -66,7 +193,8 @@ export async function getStoredToken(): Promise<string | null> {
 }
 
 export async function clearAuth(): Promise<void> {
-  await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
+  const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+  await logout(refreshToken ?? undefined);
 }
 
 export async function fetchPlaces(params: {
@@ -74,22 +202,33 @@ export async function fetchPlaces(params: {
   lat: number;
   lng: number;
   language?: string;
+  radius?: number;
+  q?: string;
 }): Promise<Place[]> {
   const { data } = await apiClient.get<{ places: Place[] }>("/api/places", {
-    params,
+    params: { ...params, _t: Date.now() },
+  });
+  return data?.places ?? [];
+}
+
+export async function fetchPlace(id: string, language?: string): Promise<PlaceDetail> {
+  const { data } = await apiClient.get<PlaceDetail>(`/api/places/${id}`, {
+    params: language ? { language } : undefined,
+  });
+  return data;
+}
+
+export async function fetchSavedPlaces(language?: string): Promise<Place[]> {
+  const { data } = await apiClient.get<{ places: Place[] }>("/api/places/saved", {
+    params: language ? { language } : undefined,
   });
   return data.places;
 }
 
-export async function fetchPlace(id: string): Promise<PlaceDetail> {
-  const { data } = await apiClient.get<PlaceDetail>(`/api/places/${id}`);
-  return data;
-}
-
-export async function fetchSavedPlaces(): Promise<Place[]> {
-  const { data } = await apiClient.get<{ places: Place[] }>(
-    "/api/places/saved"
-  );
+export async function fetchFavoritePlaces(language?: string): Promise<Place[]> {
+  const { data } = await apiClient.get<{ places: Place[] }>("/api/places/favorites", {
+    params: language ? { language } : undefined,
+  });
   return data.places;
 }
 
@@ -99,6 +238,32 @@ export async function savePlace(placeId: string): Promise<void> {
 
 export async function unsavePlace(placeId: string): Promise<void> {
   await apiClient.delete(`/api/places/save/${placeId}`);
+}
+
+export async function addFavorite(placeId: string): Promise<void> {
+  await apiClient.post("/api/places/favorites", { placeId });
+}
+
+export async function removeFavorite(placeId: string): Promise<void> {
+  await apiClient.delete(`/api/places/favorites/${placeId}`);
+}
+
+export async function fetchPlaceReviews(placeId: string): Promise<PlaceReviewsResponse> {
+  const { data } = await apiClient.get<PlaceReviewsResponse>(
+    `/api/places/${placeId}/reviews`
+  );
+  return data;
+}
+
+export async function submitPlaceReview(
+  placeId: string,
+  payload: { rating: number; text?: string }
+): Promise<{ review: PlaceReview }> {
+  const { data } = await apiClient.post<{ review: PlaceReview }>(
+    `/api/places/${placeId}/reviews`,
+    payload
+  );
+  return data;
 }
 
 export {
@@ -111,3 +276,22 @@ export {
   fetchAdminUsers,
   updateUserSubscription,
 } from "./admin";
+
+export {
+  fetchNearbyStatus,
+  verifyNearbyAge,
+  updateNearbyPresence,
+  fetchNearbyUsers,
+  sendNearbyInterest,
+  fetchNearbyMatches,
+  blockNearbyUser,
+  reportNearbyUser,
+} from "./nearby";
+
+export {
+  fetchAiQuota,
+  fetchAiSessions,
+  fetchAiSession,
+  sendAiChat,
+  startAiChat,
+} from "./ai";

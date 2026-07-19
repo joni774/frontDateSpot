@@ -9,6 +9,8 @@ import {
   type ViewStyle,
 } from "react-native";
 
+import { brand } from "../theme/colors";
+
 type ButtonVariant = "primary" | "secondary" | "outline";
 
 interface ButtonProps extends PressableProps {
@@ -40,7 +42,7 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <ActivityIndicator color={variant === "primary" ? "#fff" : "#E84393"} />
+        <ActivityIndicator color={variant === "primary" ? "#fff" : brand.primary} />
       ) : (
         <Text style={[styles.text, styles[`${variant}Text` as keyof typeof styles]]}>
           {children}
@@ -58,16 +60,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  primary: { backgroundColor: "#E84393" },
-  secondary: { backgroundColor: "#e5e7eb" },
+  primary: { backgroundColor: brand.primary },
+  secondary: { backgroundColor: brand.border },
   outline: {
     backgroundColor: "transparent",
     borderWidth: 2,
-    borderColor: "#E84393",
+    borderColor: brand.primary,
   },
   disabled: { opacity: 0.5 },
   text: { fontSize: 16, fontWeight: "600" },
   primaryText: { color: "#fff" },
-  secondaryText: { color: "#1a1a1a" },
-  outlineText: { color: "#E84393" },
+  secondaryText: { color: brand.text },
+  outlineText: { color: brand.primary },
 });

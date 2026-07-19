@@ -1,5 +1,4 @@
-import { Redirect } from "expo-router";
-
+/** Entry route — AuthGuard in _layout.tsx handles all redirects. */
 export default function Index() {
-  return <Redirect href="/(app)/home" />;
+  return null;
 }

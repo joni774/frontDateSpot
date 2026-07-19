@@ -19,12 +19,20 @@ import { z } from "zod";
 
 const phoneRegex = /^(05\d-?\d{7}|\+9725\d-?\d{7})$/;
 
-const schema = z.object({
-  fullName: z.string().min(2, "Name must be at least 2 characters"),
-  age: z.coerce.number().min(18, "Must be 18+").max(120, "Invalid age"),
-  phone: z.string().regex(phoneRegex, "Invalid Israeli phone number"),
-  email: z.string().email("Invalid email"),
-});
+const schema = z
+  .object({
+    firstName: z.string().min(1, "Required"),
+    lastName: z.string().min(1, "Required"),
+    age: z.coerce.number().min(18, "Must be 18+").max(120, "Invalid age"),
+    phone: z.string().regex(phoneRegex, "Invalid Israeli phone number"),
+    email: z.string().email("Invalid email"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(1, "Required"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 type FormData = z.infer<typeof schema>;
 
@@ -39,14 +47,29 @@ export default function RegisterScreen() {
     formState: { isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { fullName: "", age: 18, phone: "", email: "" },
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      age: 18,
+      phone: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
   });
 
   const onSubmit = async (data: FormData) => {
     setError(null);
     try {
-      await register(data);
-      Alert.alert(t("auth.passwordSent"), "", [
+      await register({
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+        age: data.age,
+        phone: data.phone,
+        email: data.email.trim(),
+        password: data.password,
+      });
+      Alert.alert(t("auth.registrationSuccess"), "", [
         { text: t("common.ok"), onPress: () => router.replace("/auth/login") },
       ]);
     } catch {
@@ -57,7 +80,7 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-white"
+      className="flex-1 bg-background"
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingVertical: 48 }}
@@ -70,10 +93,24 @@ export default function RegisterScreen() {
 
         <Controller
           control={control}
-          name="fullName"
+          name="firstName"
           render={({ field: { onChange, onBlur, value }, fieldState: { error: fieldError } }) => (
             <Input
-              label={t("auth.fullName")}
+              label={t("auth.firstName")}
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              error={fieldError?.message}
+            />
+          )}
+        />
+
+        <Controller
+          control={control}
+          name="lastName"
+          render={({ field: { onChange, onBlur, value }, fieldState: { error: fieldError } }) => (
+            <Input
+              label={t("auth.lastName")}
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
@@ -123,6 +160,36 @@ export default function RegisterScreen() {
               onBlur={onBlur}
               keyboardType="email-address"
               autoCapitalize="none"
+              error={fieldError?.message}
+            />
+          )}
+        />
+
+        <Controller
+          control={control}
+          name="password"
+          render={({ field: { onChange, onBlur, value }, fieldState: { error: fieldError } }) => (
+            <Input
+              label={t("auth.password")}
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              secureTextEntry
+              error={fieldError?.message}
+            />
+          )}
+        />
+
+        <Controller
+          control={control}
+          name="confirmPassword"
+          render={({ field: { onChange, onBlur, value }, fieldState: { error: fieldError } }) => (
+            <Input
+              label={t("auth.confirmPassword")}
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              secureTextEntry
               error={fieldError?.message}
             />
           )}

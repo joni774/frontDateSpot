@@ -1,6 +1,6 @@
 /** Shared TypeScript types mirrored from datespot-server API responses. */
 
-export type SubscriptionTier = "FREE" | "PREMIUM" | "VIP";
+export type SubscriptionTier = "FREE" | "PREMIUM" | "VIP" | "DATING";
 
 export type PlaceCategory =
   | "ROMANTIC_DATE"
@@ -13,6 +13,8 @@ export type PlaceCategory =
 
 export type PriceRange = "FREE" | "BUDGET" | "MODERATE" | "EXPENSIVE";
 
+export type Language = "he" | "en" | "ar";
+
 export interface User {
   id: string;
   fullName: string;
@@ -21,6 +23,10 @@ export interface User {
   email: string;
   subscriptionTier: SubscriptionTier;
   isAdmin?: boolean;
+  phoneVerified?: boolean;
+  onboardingDone?: boolean;
+  ageVerifiedAt?: string | null;
+  isVisibleNearby?: boolean;
 }
 
 export interface Place {
@@ -33,6 +39,8 @@ export interface Place {
   images: string[];
   openingHours: Record<string, string>;
   isLocked?: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface PlaceDetail extends Place {
@@ -41,12 +49,34 @@ export interface PlaceDetail extends Place {
   address: string;
   phone?: string;
   website?: string;
+  deliveryWoltUrl?: string | null;
+  deliveryTenBisUrl?: string | null;
+  deliveryMishlohaUrl?: string | null;
   isOpen: boolean;
   isSaved?: boolean;
+  isFavorite?: boolean;
+  viewCount?: number;
+  averageRating?: number | null;
+  reviewCount?: number;
+}
+
+export interface PlaceReview {
+  id: string;
+  rating: number;
+  text?: string | null;
+  userName: string;
+  createdAt: string;
+}
+
+export interface PlaceReviewsResponse {
+  reviews: PlaceReview[];
+  averageRating: number | null;
+  reviewCount: number;
 }
 
 export interface AuthLoginResponse {
   token: string;
+  refreshToken: string;
   user: User;
 }
 
@@ -76,8 +106,12 @@ export interface AdminPlace {
   openingHours: Record<string, string>;
   phone?: string | null;
   website?: string | null;
+  deliveryWoltUrl?: string | null;
+  deliveryTenBisUrl?: string | null;
+  deliveryMishlohaUrl?: string | null;
   isActive: boolean;
   displayOrder: number;
+  viewCount?: number;
 }
 
 export interface AdminUserListItem {
@@ -106,3 +140,83 @@ export interface AdminUsersResponse {
 }
 
 export type AdminPlaceInput = Omit<AdminPlace, "id">;
+
+export interface ApiError {
+  error: string;
+}
+
+export interface NearbyStatus {
+  ageVerified: boolean;
+  ageVerifiedAt: string | null;
+  isVisibleNearby: boolean;
+  isOnline: boolean;
+  datingSubscribed: boolean;
+}
+
+export interface NearbyUser {
+  id: string;
+  displayName: string;
+  age: number;
+  approxDistance: string;
+  interestSent: boolean;
+  interestReceived: boolean;
+  matched: boolean;
+}
+
+export interface NearbyMatch {
+  id: string;
+  displayName: string;
+  age: number;
+  matchedAt: string;
+}
+
+export interface AiPlaceRecommendation {
+  id: string;
+  name: string;
+  description: string;
+  category: PlaceCategory;
+  priceRange: PriceRange;
+  distanceKm: number | null;
+  isOpen: boolean;
+}
+
+export interface AiRecommendations {
+  primary: AiPlaceRecommendation;
+  alternatives: AiPlaceRecommendation[];
+}
+
+export interface AiChatMessage {
+  id?: string;
+  role: "user" | "assistant";
+  content: string;
+  recommendations?: AiRecommendations | null;
+  createdAt?: string;
+}
+
+export interface AiQuickReply {
+  value: string;
+  label: string;
+}
+
+export interface AiChatResponse {
+  sessionId: string;
+  message: AiChatMessage;
+  step: string;
+  quickReplies: AiQuickReply[];
+  advanced?: boolean;
+}
+
+export interface AiQuota {
+  unlimited: boolean;
+  used: number;
+  limit: number;
+  remaining: number | null;
+}
+
+export interface AiSessionSummary {
+  id: string;
+  language: string;
+  preview: string;
+  createdAt: string;
+  updatedAt: string;
+}

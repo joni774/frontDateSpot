@@ -1,6 +1,6 @@
 /**
- * Subscription plans screen. Tier logic: FREE sees locked places 6+;
- * PREMIUM/VIP unlock all. Payment buttons show "Coming soon" for MVP.
+ * Subscription plans: FREE, VIP (restaurants ₪29.90), DATING (₪39.90).
+ * Paid plans open in-app checkout.
  */
 import { getStoredUser } from "@datespot/api-client";
 import type { SubscriptionTier } from "@datespot/shared-types";
@@ -8,15 +8,15 @@ import { Button } from "@datespot/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface Plan {
   tier: SubscriptionTier;
   price: string;
   features: string[];
-  highlight?: boolean;
   gold?: boolean;
+  highlight?: boolean;
 }
 
 export default function SubscriptionScreen() {
@@ -37,16 +37,6 @@ export default function SubscriptionScreen() {
       features: [t("subscription.features.free1"), t("subscription.features.free2")],
     },
     {
-      tier: "PREMIUM",
-      price: t("subscription.premiumPrice"),
-      features: [
-        t("subscription.features.premium1"),
-        t("subscription.features.premium2"),
-        t("subscription.features.premium3"),
-      ],
-      highlight: true,
-    },
-    {
       tier: "VIP",
       price: t("subscription.vipPrice"),
       features: [
@@ -56,48 +46,47 @@ export default function SubscriptionScreen() {
       ],
       gold: true,
     },
+    {
+      tier: "DATING",
+      price: t("subscription.datingPrice"),
+      features: [
+        t("subscription.features.dating1"),
+        t("subscription.features.dating2"),
+        t("subscription.features.dating3"),
+      ],
+      highlight: true,
+    },
   ];
 
-  const handleSubscribe = () => {
-    Alert.alert(t("subscription.comingSoon"));
-  };
-
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView testID="subscription-screen" className="flex-1 bg-gray-50">
       <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-100">
         <Pressable onPress={() => router.back()} className="mr-3">
           <Text className="text-primary text-lg">← {t("common.back")}</Text>
         </Pressable>
-        <Text className="text-xl font-bold text-text">
-          {t("subscription.title")}
-        </Text>
+        <Text className="text-xl font-bold text-text">{t("subscription.title")}</Text>
       </View>
 
       <ScrollView className="p-4">
         {plans.map((plan) => {
           const isCurrent = currentTier === plan.tier;
-          const borderClass = plan.highlight
-            ? "border-2 border-primary"
-            : plan.gold
-              ? "border-2 border-yellow-400"
+          const borderClass = plan.gold
+            ? "border-2 border-yellow-400"
+            : plan.highlight
+              ? "border-2 border-primary"
               : "border border-gray-200";
 
           return (
-            <View
-              key={plan.tier}
-              className={`bg-white rounded-2xl p-5 mb-4 ${borderClass}`}
-            >
-              {plan.highlight ? (
-                <View className="absolute -top-3 self-center bg-primary px-3 py-1 rounded-full">
-                  <Text className="text-white text-xs font-bold">
-                    {t("subscription.mostPopular")}
-                  </Text>
-                </View>
-              ) : null}
-
+            <View key={plan.tier} className={`bg-white rounded-2xl p-5 mb-4 ${borderClass}`}>
               <View className="flex-row items-center justify-between mb-2">
                 <Text
-                  className={`text-lg font-bold ${plan.gold ? "text-yellow-600" : "text-text"}`}
+                  className={`text-lg font-bold ${
+                    plan.gold
+                      ? "text-yellow-600"
+                      : plan.highlight
+                        ? "text-primary"
+                        : "text-text"
+                  }`}
                 >
                   {t(`subscription.${plan.tier.toLowerCase()}` as "subscription.free")}
                 </Text>
@@ -113,7 +102,15 @@ export default function SubscriptionScreen() {
               ))}
 
               {!isCurrent && plan.tier !== "FREE" ? (
-                <Button onPress={handleSubscribe} style={{ marginTop: 16 }}>
+                <Button
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(app)/checkout",
+                      params: { tier: plan.tier },
+                    })
+                  }
+                  style={{ marginTop: 16 }}
+                >
                   {t("subscription.subscribe")}
                 </Button>
               ) : null}

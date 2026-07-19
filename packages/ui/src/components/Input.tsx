@@ -9,6 +9,8 @@ import {
   type ViewStyle,
 } from "react-native";
 
+import { brand } from "../theme/colors";
+
 interface InputProps extends TextInputProps {
   label: string;
   error?: string;
@@ -37,16 +39,16 @@ export function Input({
 
 const styles = StyleSheet.create({
   container: { marginBottom: 16 },
-  label: { fontSize: 14, fontWeight: "500", color: "#1a1a1a", marginBottom: 4 },
+  label: { fontSize: 14, fontWeight: "500", color: brand.text, marginBottom: 4 },
   input: {
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: brand.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    color: "#1a1a1a",
-    backgroundColor: "#fff",
+    color: brand.text,
+    backgroundColor: brand.surface,
   },
   inputError: { borderColor: "#ef4444" },
   error: { color: "#ef4444", fontSize: 12, marginTop: 4 },

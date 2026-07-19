@@ -4,6 +4,7 @@ import {
   deleteAdminPlace,
   fetchAdminPlaces,
   updateAdminPlace,
+  updateAdminPlaceOrder,
 } from "@datespot/api-client";
 import type {
   AdminPlace,
@@ -67,6 +68,9 @@ function emptyPlace(): AdminPlaceInput {
     openingHours: { ...DEFAULT_OPENING_HOURS },
     phone: "",
     website: "",
+    deliveryWoltUrl: "",
+    deliveryTenBisUrl: "",
+    deliveryMishlohaUrl: "",
     isActive: true,
     displayOrder: 0,
   };
@@ -89,6 +93,9 @@ function placeToForm(place: AdminPlace): AdminPlaceInput {
     openingHours: place.openingHours,
     phone: place.phone ?? "",
     website: place.website ?? "",
+    deliveryWoltUrl: place.deliveryWoltUrl ?? "",
+    deliveryTenBisUrl: place.deliveryTenBisUrl ?? "",
+    deliveryMishlohaUrl: place.deliveryMishlohaUrl ?? "",
     isActive: place.isActive,
     displayOrder: place.displayOrder,
   };
@@ -121,6 +128,9 @@ export default function AdminPlacesScreen() {
           .filter(Boolean),
         phone: form.phone || undefined,
         website: form.website || undefined,
+        deliveryWoltUrl: form.deliveryWoltUrl || undefined,
+        deliveryTenBisUrl: form.deliveryTenBisUrl || undefined,
+        deliveryMishlohaUrl: form.deliveryMishlohaUrl || undefined,
       };
       if (editingId) {
         return updateAdminPlace(editingId, payload);
@@ -155,6 +165,22 @@ export default function AdminPlacesScreen() {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["admin-places"] }),
   });
+
+  const reorderMutation = useMutation({
+    mutationFn: ({ id, displayOrder }: { id: string; displayOrder: number }) =>
+      updateAdminPlaceOrder(id, displayOrder),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-places"] }),
+  });
+
+  const movePlace = (item: AdminPlace, direction: "up" | "down") => {
+    const list = places ?? [];
+    const index = list.findIndex((p) => p.id === item.id);
+    const swapIndex = direction === "up" ? index - 1 : index + 1;
+    if (swapIndex < 0 || swapIndex >= list.length) return;
+    const other = list[swapIndex];
+    reorderMutation.mutate({ id: item.id, displayOrder: other.displayOrder });
+    reorderMutation.mutate({ id: other.id, displayOrder: item.displayOrder });
+  };
 
   const openCreate = () => {
     setEditingId(null);
@@ -196,22 +222,22 @@ export default function AdminPlacesScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-100">
+    <SafeAreaView className="flex-1 bg-background">
+      <View className="flex-row items-center justify-between px-4 py-3 bg-surface border-b border-border">
         <View className="flex-row items-center flex-1">
           <Pressable onPress={() => router.back()} className="mr-3">
             <Text className="text-primary text-lg">← {t("common.back")}</Text>
           </Pressable>
           <Text className="text-xl font-bold text-text">{t("admin.places")}</Text>
         </View>
-        <Pressable onPress={openCreate} className="bg-primary px-3 py-2 rounded-lg">
+        <Pressable testID="admin-places-add" onPress={openCreate} className="bg-primary px-3 py-2 rounded-lg">
           <Text className="text-white font-semibold text-sm">+ {t("admin.addPlace")}</Text>
         </Pressable>
       </View>
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#E84393" />
+          <ActivityIndicator size="large" color="#B84A62" />
         </View>
       ) : error ? (
         <View className="flex-1 items-center justify-center px-6">
@@ -225,7 +251,7 @@ export default function AdminPlacesScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 16 }}
           renderItem={({ item }) => (
-            <View className="bg-white rounded-xl border border-gray-200 p-4 mb-3">
+            <View className="bg-surface rounded-xl border border-border p-4 mb-3">
               <View className="flex-row justify-between items-start">
                 <View className="flex-1 mr-2">
                   <Text className="text-base font-semibold text-text">
@@ -235,7 +261,7 @@ export default function AdminPlacesScreen() {
                     {t(`place.categories.${item.category}`)}
                   </Text>
                   <Text className="text-xs text-gray-400 mt-1">
-                    {item.address}
+                    {item.address} · 👁 {item.viewCount ?? 0} · #{item.displayOrder}
                   </Text>
                 </View>
                 <View
@@ -253,6 +279,18 @@ export default function AdminPlacesScreen() {
                 </View>
               </View>
               <View className="flex-row gap-2 mt-3">
+                <Pressable
+                  onPress={() => movePlace(item, "up")}
+                  className="px-3 py-2 rounded-lg border border-gray-200 items-center"
+                >
+                  <Text className="text-gray-700 text-sm">↑</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => movePlace(item, "down")}
+                  className="px-3 py-2 rounded-lg border border-gray-200 items-center"
+                >
+                  <Text className="text-gray-700 text-sm">↓</Text>
+                </Pressable>
                 <Pressable
                   onPress={() => openEdit(item)}
                   className="flex-1 py-2 rounded-lg border border-primary items-center"
@@ -294,8 +332,8 @@ export default function AdminPlacesScreen() {
       )}
 
       <Modal visible={modalVisible} animationType="slide" onRequestClose={closeModal}>
-        <SafeAreaView className="flex-1 bg-white">
-          <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
+        <SafeAreaView className="flex-1 bg-surface">
+          <View className="flex-row items-center justify-between px-4 py-3 border-b border-border">
             <Pressable onPress={closeModal}>
               <Text className="text-primary">{t("common.cancel")}</Text>
             </Pressable>
@@ -308,6 +346,7 @@ export default function AdminPlacesScreen() {
           <ScrollView className="flex-1 px-4 py-4" keyboardShouldPersistTaps="handled">
             <Input
               label={t("admin.nameHe")}
+              testID="admin-place-name-he"
               value={form.nameHe}
               onChangeText={(v) => updateField("nameHe", v)}
             />
@@ -365,6 +404,24 @@ export default function AdminPlacesScreen() {
               label={t("admin.website")}
               value={form.website ?? ""}
               onChangeText={(v) => updateField("website", v)}
+              autoCapitalize="none"
+            />
+            <Input
+              label={t("admin.deliveryWolt")}
+              value={form.deliveryWoltUrl ?? ""}
+              onChangeText={(v) => updateField("deliveryWoltUrl", v)}
+              autoCapitalize="none"
+            />
+            <Input
+              label={t("admin.deliveryTenBis")}
+              value={form.deliveryTenBisUrl ?? ""}
+              onChangeText={(v) => updateField("deliveryTenBisUrl", v)}
+              autoCapitalize="none"
+            />
+            <Input
+              label={t("admin.deliveryMishloha")}
+              value={form.deliveryMishlohaUrl ?? ""}
+              onChangeText={(v) => updateField("deliveryMishlohaUrl", v)}
               autoCapitalize="none"
             />
             <Input
@@ -428,6 +485,7 @@ export default function AdminPlacesScreen() {
             </ScrollView>
 
             <Button
+              testID="admin-place-save"
               loading={saveMutation.isPending}
               onPress={() => saveMutation.mutate()}
             >

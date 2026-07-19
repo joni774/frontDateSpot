@@ -24,6 +24,7 @@ export async function initI18n(): Promise<void> {
     },
     lng,
     fallbackLng: "he",
+    compatibilityJSON: "v3",
     interpolation: { escapeValue: false },
   });
 

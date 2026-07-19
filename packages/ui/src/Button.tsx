@@ -23,12 +23,12 @@ export function Button({
   const base = 'rounded-xl px-6 py-3 items-center justify-center';
   const variants = {
     primary: 'bg-primary',
-    secondary: 'bg-gray-200',
+    secondary: 'bg-cream',
     outline: 'border-2 border-primary bg-transparent',
   };
   const textVariants = {
     primary: 'text-white font-semibold text-base',
-    secondary: 'text-gray-800 font-semibold text-base',
+    secondary: 'text-text font-semibold text-base',
     outline: 'text-primary font-semibold text-base',
   };
 
@@ -39,7 +39,7 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'outline' ? '#E84393' : '#fff'} />
+        <ActivityIndicator color={variant === 'outline' ? '#B84A62' : '#fff'} />
       ) : (
         <Text className={textVariants[variant]}>{title}</Text>
       )}

@@ -1,41 +1,30 @@
-/** Saved places list fetched from GET /api/places/saved. */
-import { fetchSavedPlaces } from "@datespot/api-client";
+/** Favorites list — separate from saved/bookmark hearts. */
+import { fetchFavoritePlaces } from "@datespot/api-client";
 import { PlaceCard } from "@datespot/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function SavedScreen() {
+export default function FavoritesScreen() {
   const { t } = useTranslation();
   const router = useRouter();
 
   const { data: places = [], isLoading } = useQuery({
-    queryKey: ["saved-places"],
-    queryFn: fetchSavedPlaces,
+    queryKey: ["favorite-places"],
+    queryFn: () => fetchFavoritePlaces(),
   });
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-100">
-        <Pressable onPress={() => router.back()} className="mr-3">
-          <Text className="text-primary text-lg">← {t("common.back")}</Text>
-        </Pressable>
-        <Text className="text-xl font-bold text-text">
-          {t("profile.savedPlaces")}
-        </Text>
+        <Text className="text-xl font-bold text-text flex-1">{t("favorites.title")}</Text>
       </View>
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#E84393" />
+          <ActivityIndicator size="large" color="#B84A62" />
         </View>
       ) : (
         <FlatList
@@ -50,8 +39,8 @@ export default function SavedScreen() {
           )}
           ListEmptyComponent={
             <View className="items-center py-16">
-              <Text className="text-4xl mb-2">💕</Text>
-              <Text className="text-gray-500">{t("saved.empty")}</Text>
+              <Text className="text-4xl mb-2">⭐</Text>
+              <Text className="text-gray-500">{t("favorites.empty")}</Text>
             </View>
           }
         />

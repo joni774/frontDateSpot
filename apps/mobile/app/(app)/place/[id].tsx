@@ -3,8 +3,12 @@
  * Maps navigation uses Linking.openURL with geo: or platform-specific map URLs.
  */
 import {
+  addFavorite,
   fetchPlace,
+  fetchPlaceReviews,
+  removeFavorite,
   savePlace,
+  submitPlaceReview,
   unsavePlace,
 } from "@datespot/api-client";
 import type { PlaceCategory, PriceRange } from "@datespot/shared-types";
@@ -22,19 +26,20 @@ import {
   Pressable,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const CATEGORY_COLORS: Record<PlaceCategory, string> = {
-  ROMANTIC_DATE: "bg-pink-100 text-pink-700",
-  RESTAURANT: "bg-orange-100 text-orange-700",
-  DAIRY_RESTAURANT: "bg-sky-100 text-sky-700",
-  MEAT_RESTAURANT: "bg-red-100 text-red-700",
-  SUSHI: "bg-rose-100 text-rose-700",
-  SUNSET: "bg-purple-100 text-purple-700",
-  ATTRACTION: "bg-blue-100 text-blue-700",
+  ROMANTIC_DATE: "bg-rose-100 text-rose-900",
+  RESTAURANT: "bg-orange-100 text-orange-900",
+  DAIRY_RESTAURANT: "bg-sky-100 text-sky-900",
+  MEAT_RESTAURANT: "bg-red-100 text-red-900",
+  SUSHI: "bg-pink-100 text-pink-900",
+  SUNSET: "bg-amber-100 text-amber-900",
+  ATTRACTION: "bg-slate-100 text-slate-800",
 };
 
 const DAYS = [
@@ -62,10 +67,18 @@ export default function PlaceDetailScreen() {
   const queryClient = useQueryClient();
   const [showHours, setShowHours] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
 
   const { data: place, isLoading } = useQuery({
     queryKey: ["place", id],
     queryFn: () => fetchPlace(id!),
+    enabled: !!id,
+  });
+
+  const { data: reviewsData } = useQuery({
+    queryKey: ["place-reviews", id],
+    queryFn: () => fetchPlaceReviews(id!),
     enabled: !!id,
   });
 
@@ -80,6 +93,27 @@ export default function PlaceDetailScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["place", id] });
       queryClient.invalidateQueries({ queryKey: ["saved-places"] });
+    },
+  });
+
+  const favoriteMutation = useMutation({
+    mutationFn: async (fav: boolean) => {
+      if (fav) await removeFavorite(id!);
+      else await addFavorite(id!);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["place", id] });
+      queryClient.invalidateQueries({ queryKey: ["favorite-places"] });
+    },
+  });
+
+  const reviewMutation = useMutation({
+    mutationFn: () =>
+      submitPlaceReview(id!, { rating: reviewRating, text: reviewText.trim() || undefined }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["place-reviews", id] });
+      queryClient.invalidateQueries({ queryKey: ["place", id] });
+      setReviewText("");
     },
   });
 
@@ -108,8 +142,8 @@ export default function PlaceDetailScreen() {
 
   if (isLoading || !place) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#E84393" />
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color="#B84A62" />
       </View>
     );
   }
@@ -119,7 +153,7 @@ export default function PlaceDetailScreen() {
   const width = Dimensions.get("window").width;
 
   return (
-    <View className="flex-1 bg-white">
+    <View testID="place-detail" className="flex-1 bg-background">
       <View className="relative">
         {place.images.length > 0 ? (
           <FlatList
@@ -141,7 +175,7 @@ export default function PlaceDetailScreen() {
             )}
           />
         ) : (
-          <View style={{ width, height: 280 }} className="bg-gray-200 items-center justify-center">
+          <View style={{ width, height: 280 }} className="bg-cream items-center justify-center">
             <Text className="text-5xl">📍</Text>
           </View>
         )}
@@ -155,6 +189,14 @@ export default function PlaceDetailScreen() {
           </Pressable>
           <View className="flex-row gap-2">
             <Pressable
+              testID="place-favorite-button"
+              onPress={() => favoriteMutation.mutate(!!place.isFavorite)}
+              className="w-10 h-10 rounded-full bg-black/40 items-center justify-center"
+            >
+              <Text className="text-lg">{place.isFavorite ? "⭐" : "☆"}</Text>
+            </Pressable>
+            <Pressable
+              testID="place-save-button"
               onPress={() => saveMutation.mutate(!!place.isSaved)}
               className="w-10 h-10 rounded-full bg-black/40 items-center justify-center"
             >
@@ -209,6 +251,18 @@ export default function PlaceDetailScreen() {
           <Text className="text-gray-500 mb-1">{place.address}</Text>
         )}
 
+        {reviewsData?.averageRating != null ? (
+          <Text className="text-amber-600 font-medium mb-2">
+            ★ {reviewsData.averageRating.toFixed(1)} ({reviewsData.reviewCount} {t("place.reviews")})
+          </Text>
+        ) : null}
+
+        {place.viewCount != null ? (
+          <Text className="text-gray-400 text-xs mb-2">
+            {t("place.views", { count: place.viewCount })}
+          </Text>
+        ) : null}
+
         <Text className="text-gray-700 my-4 leading-6">{place.description}</Text>
 
         <View className="flex-row flex-wrap mb-4">
@@ -237,9 +291,72 @@ export default function PlaceDetailScreen() {
         <Button onPress={openMaps} style={{ marginBottom: 12 }}>
           {t("place.navigate")}
         </Button>
-        <Button variant="outline" onPress={shareWhatsApp} style={{ marginBottom: 24 }}>
+        <Button variant="outline" onPress={shareWhatsApp} style={{ marginBottom: 16 }}>
           {t("place.share")}
         </Button>
+
+        {place.deliveryWoltUrl || place.deliveryTenBisUrl || place.deliveryMishlohaUrl ? (
+          <View className="mb-6">
+            <Text className="font-semibold text-text mb-3">{t("place.deliveryTitle")}</Text>
+            {place.deliveryWoltUrl ? (
+              <Button
+                variant="outline"
+                onPress={() => Linking.openURL(place.deliveryWoltUrl!)}
+                style={{ marginBottom: 8 }}
+              >
+                {t("place.orderWolt")}
+              </Button>
+            ) : null}
+            {place.deliveryTenBisUrl ? (
+              <Button
+                variant="outline"
+                onPress={() => Linking.openURL(place.deliveryTenBisUrl!)}
+                style={{ marginBottom: 8 }}
+              >
+                {t("place.orderTenBis")}
+              </Button>
+            ) : null}
+            {place.deliveryMishlohaUrl ? (
+              <Button
+                variant="outline"
+                onPress={() => Linking.openURL(place.deliveryMishlohaUrl!)}
+                style={{ marginBottom: 8 }}
+              >
+                {t("place.orderMishloha")}
+              </Button>
+            ) : null}
+          </View>
+        ) : null}
+
+        <View className="border-t border-gray-100 pt-4 mb-8">
+          <Text className="font-semibold text-text mb-3">{t("place.writeReview")}</Text>
+          <View className="flex-row gap-2 mb-3">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Pressable key={star} onPress={() => setReviewRating(star)}>
+                <Text className="text-2xl">{star <= reviewRating ? "★" : "☆"}</Text>
+              </Pressable>
+            ))}
+          </View>
+          <TextInput
+            value={reviewText}
+            onChangeText={setReviewText}
+            placeholder={t("place.reviewPlaceholder")}
+            multiline
+            className="border border-gray-200 rounded-xl p-3 mb-3 text-text min-h-[80px]"
+            textAlignVertical="top"
+          />
+          <Button onPress={() => reviewMutation.mutate()} loading={reviewMutation.isPending}>
+            {t("place.submitReview")}
+          </Button>
+
+          {reviewsData?.reviews.map((review) => (
+            <View key={review.id} className="mt-4 pb-3 border-b border-gray-100">
+              <Text className="font-semibold text-text">{review.userName}</Text>
+              <Text className="text-amber-600">{"★".repeat(review.rating)}</Text>
+              {review.text ? <Text className="text-gray-600 mt-1">{review.text}</Text> : null}
+            </View>
+          ))}
+        </View>
 
         <Pressable
           onPress={() => setShowHours(!showHours)}
