@@ -12,7 +12,6 @@ import {
 import type { NearbyMatch, NearbyUser } from "@datespot/shared-types";
 import { Button } from "@datespot/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,8 +19,6 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Linking,
-  Platform,
   Pressable,
   ScrollView,
   Switch,
@@ -29,23 +26,11 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const DEFAULT_COORDS = { lat: 32.0853, lng: 34.7818 };
-
-async function resolveCoords(): Promise<{ lat: number; lng: number; denied: boolean }> {
-  if (Platform.OS === "web") {
-    return { ...DEFAULT_COORDS, denied: false };
-  }
-  let permission = await Location.getForegroundPermissionsAsync();
-  if (permission.status !== "granted" && permission.canAskAgain) {
-    permission = await Location.requestForegroundPermissionsAsync();
-  }
-  if (permission.status !== "granted") {
-    return { ...DEFAULT_COORDS, denied: true };
-  }
-  const loc = await Location.getCurrentPositionAsync({});
-  return { lat: loc.coords.latitude, lng: loc.coords.longitude, denied: false };
-}
+import {
+  DEFAULT_COORDS,
+  openLocationSettings,
+  resolveDeviceCoords,
+} from "../../src/lib/deviceLocation";
 
 function UserCard({
   user,
@@ -115,10 +100,14 @@ export default function NearbyScreen() {
   });
 
   const loadLocation = useCallback(async () => {
-    const result = await resolveCoords();
-    setCoords({ lat: result.lat, lng: result.lng });
-    setLocationDenied(result.denied);
-    return result;
+    const result = await resolveDeviceCoords();
+    setCoords(result.coords);
+    setLocationDenied(result.denied || result.unavailable);
+    return {
+      lat: result.coords.lat,
+      lng: result.coords.lng,
+      denied: result.denied || result.unavailable,
+    };
   }, []);
 
   useEffect(() => {
@@ -173,7 +162,7 @@ export default function NearbyScreen() {
       if (err instanceof Error && err.message === "location_denied") {
         Alert.alert(t("common.error"), t("nearby.locationRequired"), [
           { text: t("common.cancel"), style: "cancel" },
-          { text: t("nearby.openSettings"), onPress: () => void Linking.openSettings() },
+          { text: t("nearby.openSettings"), onPress: () => void openLocationSettings() },
         ]);
         setVisible(false);
         return;

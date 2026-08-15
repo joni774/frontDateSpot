@@ -6,7 +6,6 @@ import { fetchPlaces, getStoredUser } from "@datespot/api-client";
 import { PlaceCard } from "@datespot/ui";
 import { useQuery } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,7 +13,6 @@ import {
   Animated,
   AppState,
   FlatList,
-  Linking,
   Platform,
   Pressable,
   RefreshControl,
@@ -33,79 +31,18 @@ import {
   HomeTopPanel,
   SunsetSceneryBackground,
 } from "../../../src/components/SunsetSceneryBackground";
+import {
+  DEFAULT_COORDS,
+  DEFAULT_PLACES_RADIUS_KM,
+  describeCoords,
+  openLocationSettings,
+  PLACES_RADIUS_OPTIONS_KM,
+  resolveDeviceCoords,
+} from "../../../src/lib/deviceLocation";
 import { CATEGORY_THEMES, colors, type CategoryFilter } from "../../../src/theme/colors";
-
-const DEFAULT_COORDS = { lat: 32.0853, lng: 34.7818 };
 
 /** Browser preview: fixed Tel Aviv center, no geolocation prompts. */
 const WEB_PREVIEW = Platform.OS === "web";
-
-async function resolveDeviceCoords(): Promise<{
-  coords: { lat: number; lng: number };
-  denied: boolean;
-}> {
-  if (WEB_PREVIEW) {
-    return { coords: DEFAULT_COORDS, denied: false };
-  }
-
-  if (Platform.OS === "web") {
-    if (typeof navigator !== "undefined" && navigator.geolocation) {
-      try {
-        const permission = await navigator.permissions?.query({
-          name: "geolocation",
-        });
-        if (permission?.state === "denied") {
-          return { coords: DEFAULT_COORDS, denied: true };
-        }
-      } catch {
-        // permissions API unsupported — fall through to geolocation request
-      }
-
-      try {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: false,
-            timeout: 8000,
-            maximumAge: 0,
-          });
-        });
-
-        return {
-          coords: {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          },
-          denied: false,
-        };
-      } catch {
-        return { coords: DEFAULT_COORDS, denied: true };
-      }
-    }
-
-    return { coords: DEFAULT_COORDS, denied: false };
-  }
-
-  let permission = await Location.getForegroundPermissionsAsync();
-  if (permission.status !== "granted" && permission.canAskAgain) {
-    permission = await Location.requestForegroundPermissionsAsync();
-  }
-
-  if (permission.status !== "granted") {
-    return { coords: DEFAULT_COORDS, denied: true };
-  }
-
-  const loc = await Location.getCurrentPositionAsync({});
-  return {
-    coords: { lat: loc.coords.latitude, lng: loc.coords.longitude },
-    denied: false,
-  };
-}
-
-async function openLocationSettings() {
-  if (Platform.OS !== "web") {
-    await Linking.openSettings();
-  }
-}
 
 const CATEGORIES: { key: CategoryFilter; label: string }[] = [
   { key: "ALL", label: "all" },
@@ -288,28 +225,84 @@ export default function HomeScreen() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const [category, setCategory] = useState<CategoryFilter>("ALL");
+  const [radiusKm, setRadiusKm] = useState<number>(DEFAULT_PLACES_RADIUS_KM);
   const [searchQuery, setSearchQuery] = useState("");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     null
   );
   const [locationDenied, setLocationDenied] = useState(false);
+  const [locationUnavailable, setLocationUnavailable] = useState(false);
+  const [locationServicesOff, setLocationServicesOff] = useState(false);
+  const [canAskAgain, setCanAskAgain] = useState(true);
+  const [fromDevice, setFromDevice] = useState(false);
+  const [fallbackAccepted, setFallbackAccepted] = useState(false);
   const [locating, setLocating] = useState(true);
+  const [locationLabel, setLocationLabel] = useState<string | null>(null);
+  const locatingLock = useRef(false);
 
-  const loadLocation = useCallback(async () => {
-    setLocating(true);
-    const { coords: nextCoords, denied } = await resolveDeviceCoords();
-    setCoords(nextCoords);
-    setLocationDenied(denied);
-    setLocating(false);
-  }, []);
+  const applyLocationResult = useCallback(
+    (result: Awaited<ReturnType<typeof resolveDeviceCoords>>, acceptFallback: boolean) => {
+      setLocationDenied(result.denied);
+      setLocationUnavailable(result.unavailable);
+      setLocationServicesOff(result.servicesOff);
+      setCanAskAgain(result.canAskAgain);
+      if (result.fromDevice) {
+        setCoords(result.coords);
+        setFromDevice(true);
+        return;
+      }
+      setFromDevice(false);
+      if (acceptFallback) {
+        setCoords(DEFAULT_COORDS);
+      } else {
+        setCoords(null);
+      }
+    },
+    []
+  );
+
+  const loadLocation = useCallback(async (opts?: { silent?: boolean; prompt?: boolean }) => {
+    if (locatingLock.current) return;
+    locatingLock.current = true;
+    if (!opts?.silent) setLocating(true);
+    try {
+      if (WEB_PREVIEW) {
+        setCoords(DEFAULT_COORDS);
+        setFromDevice(false);
+        setLocationDenied(false);
+        setLocationUnavailable(false);
+        setLocationServicesOff(false);
+        return;
+      }
+      const result = await resolveDeviceCoords({ prompt: opts?.prompt ?? false });
+      applyLocationResult(result, fallbackAccepted);
+    } finally {
+      setLocating(false);
+      locatingLock.current = false;
+    }
+  }, [applyLocationResult, fallbackAccepted]);
 
   useEffect(() => {
-    loadLocation();
+    if (!fromDevice || !coords) {
+      setLocationLabel(null);
+      return;
+    }
+    let cancelled = false;
+    void describeCoords(coords).then((label) => {
+      if (!cancelled) setLocationLabel(label);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [coords, fromDevice]);
+
+  useEffect(() => {
+    void loadLocation();
   }, [loadLocation]);
 
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
-      if (state === "active") loadLocation();
+      if (state === "active") void loadLocation({ silent: true });
     });
     return () => sub.remove();
   }, [loadLocation]);
@@ -326,18 +319,30 @@ export default function HomeScreen() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ["places", category, coords?.lat, coords?.lng, searchQuery],
+    queryKey: ["places", category, coords?.lat, coords?.lng, searchQuery, radiusKm],
     queryFn: () =>
       fetchPlaces({
         category: category === "ALL" ? undefined : category,
         lat: coords!.lat,
         lng: coords!.lng,
         language: i18n.language,
-        radius: 50,
+        radius: radiusKm,
         q: searchQuery.trim() || undefined,
       }),
     enabled: !!coords,
   });
+
+  const showLocationGate = !WEB_PREVIEW && !fromDevice && !fallbackAccepted && !coords && !locating;
+  const primaryOpensSettings =
+    locationServicesOff || (locationDenied && !canAskAgain);
+
+  const onAllowLocation = useCallback(async () => {
+    if (primaryOpensSettings) {
+      await openLocationSettings();
+      return;
+    }
+    await loadLocation({ prompt: true });
+  }, [loadLocation, primaryOpensSettings]);
 
   const isFreePlaces =
     !WEB_PREVIEW && (!user || user.subscriptionTier === "FREE" || user.subscriptionTier === "DATING");
@@ -359,12 +364,13 @@ export default function HomeScreen() {
           place={item}
           testID={`place-card-${item.id}`}
           isLocked={locked || (!WEB_PREVIEW && !!item.isLocked)}
+          sponsoredLabel={t("place.sponsored")}
           onPress={() => router.push(`/(app)/place/${item.id}`)}
           onLockedPress={() => router.push("/(app)/subscription")}
         />
       );
     },
-    [isFreePlaces, router]
+    [isFreePlaces, router, t]
   );
 
   return (
@@ -374,7 +380,11 @@ export default function HomeScreen() {
           <View style={styles.headerRow}>
             <View className="flex-1 pr-3">
               <Text style={styles.headerTitle}>{greetingText}</Text>
-              <Text style={styles.headerSubtitle}>{t("home.title")}</Text>
+              <Text style={styles.headerSubtitle}>
+                {fromDevice
+                  ? t("home.locationUsing", { place: locationLabel ?? t("home.locationYou") })
+                  : t("home.title")}
+              </Text>
             </View>
             <Pressable
               testID="home-dating-cta"
@@ -411,21 +421,81 @@ export default function HomeScreen() {
               />
             ))}
           </ScrollView>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.categoriesScroll}
+            contentContainerStyle={styles.radiusContent}
+          >
+            {PLACES_RADIUS_OPTIONS_KM.map((km) => {
+              const active = radiusKm === km;
+              return (
+                <Pressable
+                  key={km}
+                  onPress={() => setRadiusKm(km)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  style={[styles.radiusChip, active && styles.radiusChipActive]}
+                >
+                  <Text style={[styles.radiusChipText, active && styles.radiusChipTextActive]}>
+                    {t("home.radiusKm", { km })}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         </HomeTopPanel>
 
-        {locationDenied && !WEB_PREVIEW ? (
-          <Pressable
-            onPress={openLocationSettings}
-            style={styles.locationBanner}
-            accessibilityRole="button"
-          >
-            <Text style={styles.locationBannerText}>{t("home.locationDenied")}</Text>
-            <Text style={styles.locationBannerAction}>{t("home.openLocationSettings")} →</Text>
-          </Pressable>
-        ) : null}
-
         <View style={styles.content}>
-          {!coords || isLoading || locating ? (
+          {showLocationGate ? (
+            <ScrollView contentContainerStyle={styles.locationCardWrap}>
+              <View style={styles.locationCard}>
+                <Text style={styles.locationCardTitle}>{t("home.locationTitle")}</Text>
+                <Text style={styles.locationCardBody}>
+                  {locationServicesOff
+                    ? t("home.locationServicesOff")
+                    : locationUnavailable
+                      ? t("home.locationUnavailable")
+                      : t("home.locationBody")}
+                </Text>
+                <Pressable
+                  onPress={() => void onAllowLocation()}
+                  style={styles.locationPrimaryButton}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.locationPrimaryButtonText}>
+                    {primaryOpensSettings
+                      ? t("home.openLocationSettings")
+                      : t("home.allowLocation")}
+                  </Text>
+                </Pressable>
+                <Text style={styles.locationStepsTitle}>{t("home.locationSettingsTitle")}</Text>
+                <Text style={styles.locationSteps}>{t("home.locationSettingsSteps")}</Text>
+                <Text style={styles.locationPrivacyPath}>{t("home.locationPrivacyPath")}</Text>
+                {primaryOpensSettings ? null : (
+                  <Pressable
+                    onPress={() => void openLocationSettings()}
+                    style={styles.locationSecondaryButton}
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.locationSecondaryButtonText}>
+                      {t("home.openLocationSettings")}
+                    </Text>
+                  </Pressable>
+                )}
+                <Pressable
+                  onPress={() => {
+                    setFallbackAccepted(true);
+                    setCoords(DEFAULT_COORDS);
+                  }}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.locationSkip}>{t("home.showTelAviv")}</Text>
+                </Pressable>
+              </View>
+            </ScrollView>
+          ) : !coords || isLoading || locating ? (
             <View className="px-4 pt-3">
               <SkeletonCard />
               <SkeletonCard />
@@ -529,8 +599,35 @@ const styles = StyleSheet.create({
   categoriesContent: {
     paddingHorizontal: 16,
     paddingTop: 6,
+    paddingBottom: 8,
+    alignItems: "center",
+  },
+  radiusContent: {
+    paddingHorizontal: 16,
     paddingBottom: 12,
     alignItems: "center",
+    gap: 8,
+  },
+  radiusChip: {
+    marginRight: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    backgroundColor: "rgba(26, 25, 24, 0.28)",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "rgba(255, 255, 255, 0.22)",
+  },
+  radiusChipActive: {
+    backgroundColor: "rgba(255, 255, 255, 0.92)",
+    borderColor: "transparent",
+  },
+  radiusChipText: {
+    color: "rgba(255, 255, 255, 0.92)",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  radiusChipTextActive: {
+    color: colors.primary,
   },
   content: {
     flex: 1,
@@ -552,28 +649,84 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 15,
   },
-  locationBanner: {
-    marginHorizontal: 16,
-    marginTop: 10,
-    marginBottom: 2,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
+  locationCardWrap: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 24,
+  },
+  locationCard: {
     backgroundColor: colors.surface,
+    borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.border,
+    paddingHorizontal: 18,
+    paddingVertical: 20,
   },
-  locationBannerText: {
+  locationCardTitle: {
     color: colors.text,
-    fontSize: 12,
-    fontWeight: "500",
-    textAlign: "right",
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 8,
   },
-  locationBannerAction: {
+  locationCardBody: {
+    color: colors.textMuted,
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  locationPrimaryButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 18,
+  },
+  locationPrimaryButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  locationStepsTitle: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  locationSteps: {
+    color: colors.text,
+    fontSize: 14,
+    lineHeight: 22,
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  locationPrivacyPath: {
+    color: colors.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: "center",
+    marginBottom: 14,
+  },
+  locationSecondaryButton: {
+    borderWidth: 1,
+    borderColor: colors.primary,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  locationSecondaryButtonText: {
     color: colors.primary,
-    fontSize: 13,
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  locationSkip: {
+    color: colors.primary,
+    fontSize: 14,
     fontWeight: "600",
-    marginTop: 4,
-    textAlign: "right",
+    textAlign: "center",
+    paddingVertical: 8,
   },
 });

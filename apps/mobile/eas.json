@@ -23,8 +23,7 @@
       }
     },
     "staging": {
-      "extends": "preview",
-      "channel": "staging"
+      "extends": "preview"
     },
     "production": {
       "distribution": "store",
@@ -32,11 +31,14 @@
         "APP_VARIANT": "production",
         "EXPO_PUBLIC_API_URL": "https://datespot-server-production-ecb2.up.railway.app"
       },
-      "channel": "production",
       "autoIncrement": true
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascAppId": "6800843655"
+      }
+    }
   }
 }

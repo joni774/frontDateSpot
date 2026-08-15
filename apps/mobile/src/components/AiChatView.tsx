@@ -2,7 +2,6 @@
 import { fetchAiQuota, sendAiChat, startAiChat } from "@datespot/api-client";
 import type { AiChatMessage, AiPlaceRecommendation, AiQuickReply } from "@datespot/shared-types";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,9 +19,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { getAiLanguage, type AppLanguage } from "../i18n/i18n";
+import { DEFAULT_COORDS, resolveDeviceCoords } from "../lib/deviceLocation";
 import { colors } from "../theme/colors";
-
-const DEFAULT_COORDS = { lat: 32.0853, lng: 34.7818 };
 
 /** Send localized phrases so the server detects script + intent. */
 function shortcutMessage(kind: "personal" | "hot", lang: AppLanguage): string {
@@ -131,10 +129,8 @@ export function AiChatView({ showBack = false }: AiChatViewProps) {
 
   const resolveCoords = useCallback(async () => {
     if (Platform.OS === "web") return DEFAULT_COORDS;
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") return DEFAULT_COORDS;
-    const loc = await Location.getCurrentPositionAsync({});
-    return { lat: loc.coords.latitude, lng: loc.coords.longitude };
+    const result = await resolveDeviceCoords();
+    return result.coords;
   }, []);
 
   useEffect(() => {
@@ -185,21 +181,25 @@ export function AiChatView({ showBack = false }: AiChatViewProps) {
   }, [resolveCoords, t, i18n.language]);
 
   const chatMutation = useMutation({
-    mutationFn: async (text: string) => {
+    mutationFn: async (payload: { message: string; displayText: string }) => {
       const appLang = await getAiLanguage(i18n.language);
-      const lang = detectMessageLanguage(text, appLang);
+      const lang = detectMessageLanguage(payload.message, appLang);
       return sendAiChat({
         sessionId: sessionIdRef.current ?? undefined,
-        message: text,
+        message: payload.message,
         lat: coords.lat,
         lng: coords.lng,
         language: lang,
       });
     },
-    onSuccess: (res, text) => {
+    onSuccess: (res, payload) => {
       sessionIdRef.current = res.sessionId;
       setSessionId(res.sessionId);
-      setMessages((prev) => [...prev, { role: "user", content: text }, res.message]);
+      setMessages((prev) => [
+        ...prev,
+        { role: "user", content: payload.displayText },
+        res.message,
+      ]);
       setQuickReplies(res.quickReplies);
       setInput("");
       void refetchQuota();
@@ -207,10 +207,13 @@ export function AiChatView({ showBack = false }: AiChatViewProps) {
     },
   });
 
-  const sendMessage = (text: string) => {
+  const sendMessage = (text: string, displayText?: string) => {
     const trimmed = text.trim();
     if (!trimmed || chatMutation.isPending) return;
-    chatMutation.mutate(trimmed);
+    chatMutation.mutate({
+      message: trimmed,
+      displayText: (displayText ?? trimmed).trim(),
+    });
   };
 
   const sendShortcut = async (kind: "personal" | "hot") => {
@@ -292,7 +295,7 @@ export function AiChatView({ showBack = false }: AiChatViewProps) {
             {quickReplies.map((qr) => (
               <Pressable
                 key={qr.value}
-                onPress={() => sendMessage(qr.label)}
+                onPress={() => sendMessage(qr.value, qr.label)}
                 className="bg-white border border-gray-200 rounded-full px-3 py-2"
               >
                 <Text className="text-sm text-text">{qr.label}</Text>

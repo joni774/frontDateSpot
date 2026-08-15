@@ -26,6 +26,11 @@ const API_URL =
   readEnvFile("EXPO_PUBLIC_API_URL") ||
   "http://localhost:3000";
 
+const GOOGLE_MAPS_KEY =
+  process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY?.trim() ||
+  readEnvFile("EXPO_PUBLIC_GOOGLE_MAPS_KEY") ||
+  "";
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: IS_STAGING ? "DateSpot Staging" : "DateSpot",
@@ -42,12 +47,52 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundleIdentifier: IS_STAGING
       ? "co.il.datespot.app.staging"
       : "co.il.datespot.app",
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+      NSLocationWhenInUseUsageDescription:
+        "DateSpot צריך גישה למיקום שלך כדי להציג מקומות יציאה קרובים אליך.",
+      NSLocationAlwaysAndWhenInUseUsageDescription:
+        "DateSpot צריך גישה למיקום שלך כדי להציג מקומות יציאה קרובים אליך.",
+      NSLocationAlwaysUsageDescription:
+        "DateSpot צריך גישה למיקום שלך כדי להציג מקומות יציאה קרובים אליך.",
+    },
+    privacyManifests: {
+      NSPrivacyTracking: false,
+      NSPrivacyCollectedDataTypes: [
+        {
+          NSPrivacyCollectedDataType: "NSPrivacyCollectedDataTypePreciseLocation",
+          NSPrivacyCollectedDataTypeLinked: true,
+          NSPrivacyCollectedDataTypeTracking: false,
+          NSPrivacyCollectedDataTypePurposes: [
+            "NSPrivacyCollectedDataTypePurposeAppFunctionality",
+          ],
+        },
+        {
+          NSPrivacyCollectedDataType: "NSPrivacyCollectedDataTypeCoarseLocation",
+          NSPrivacyCollectedDataTypeLinked: true,
+          NSPrivacyCollectedDataTypeTracking: false,
+          NSPrivacyCollectedDataTypePurposes: [
+            "NSPrivacyCollectedDataTypePurposeAppFunctionality",
+          ],
+        },
+      ],
+    },
+    ...(GOOGLE_MAPS_KEY
+      ? { config: { googleMapsApiKey: GOOGLE_MAPS_KEY } }
+      : {}),
   },
   android: {
     adaptiveIcon: {
       backgroundColor: "#7C3048",
     },
     package: IS_STAGING ? "co.il.datespot.app.staging" : "co.il.datespot.app",
+    permissions: [
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION",
+    ],
+    ...(GOOGLE_MAPS_KEY
+      ? { config: { googleMaps: { apiKey: GOOGLE_MAPS_KEY } } }
+      : {}),
   },
   plugins: [
     "expo-router",
@@ -55,7 +100,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "expo-location",
       {
         locationWhenInUsePermission:
-          "DateSpot צריך גישה למיקום שלך כדי להציג מקומות קרובים אליך.",
+          "DateSpot צריך גישה למיקום שלך כדי להציג מקומות יציאה קרובים אליך.",
+        locationAlwaysAndWhenInUsePermission:
+          "DateSpot צריך גישה למיקום שלך כדי להציג מקומות יציאה קרובים אליך.",
+        locationAlwaysPermission:
+          "DateSpot צריך גישה למיקום שלך כדי להציג מקומות יציאה קרובים אליך.",
+        isIosBackgroundLocationEnabled: false,
+        isAndroidBackgroundLocationEnabled: false,
       },
     ],
     "expo-asset",
@@ -65,9 +116,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   extra: {
     apiUrl: API_URL,
-    ...(process.env.EAS_PROJECT_ID
-      ? { eas: { projectId: process.env.EAS_PROJECT_ID } }
-      : {}),
+    eas: {
+      projectId:
+        process.env.EAS_PROJECT_ID ?? "64c99bdb-3795-46d5-ab6c-6ba6affa6f76",
+    },
     appVariant: IS_STAGING ? "staging" : "production",
   },
 });
