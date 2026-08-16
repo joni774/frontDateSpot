@@ -64,7 +64,9 @@ function toCoords(position: Location.LocationObject): DeviceCoords {
   };
 }
 
-async function readCachedCoords(): Promise<DeviceCoords | null> {
+export async function peekCachedDeviceCoords(): Promise<DeviceCoords | null> {
+  return readCachedCoords();
+}
   try {
     const raw = await AsyncStorage.getItem(LAST_COORDS_KEY);
     if (!raw) return null;
@@ -124,6 +126,7 @@ async function readNativePosition(): Promise<Location.LocationObject> {
   const lastKnown = await Location.getLastKnownPositionAsync({
     maxAge: 30 * 60 * 1000,
   });
+  if (lastKnown) return lastKnown;
 
   try {
     return await withTimeout(
@@ -131,11 +134,11 @@ async function readNativePosition(): Promise<Location.LocationObject> {
         accuracy: Location.Accuracy.Lowest,
         mayShowUserSettingsDialog: true,
       }),
-      QUICK_FIX_TIMEOUT_MS,
+      8000,
       "location_timeout_lowest"
     );
   } catch {
-    if (lastKnown) return lastKnown;
+    // continue
   }
 
   try {
@@ -148,7 +151,7 @@ async function readNativePosition(): Promise<Location.LocationObject> {
       "location_timeout_low"
     );
   } catch {
-    if (lastKnown) return lastKnown;
+    // continue
   }
 
   return watchForFix(WATCH_FIX_TIMEOUT_MS);
@@ -238,14 +241,10 @@ export async function resolveDeviceCoords(options?: {
     return resolveWebCoords();
   }
 
-  const prompt = options?.prompt ?? false;
-
   try {
     let permission = await Location.getForegroundPermissionsAsync();
     if (permission.status !== Location.PermissionStatus.GRANTED) {
-      if (prompt || permission.canAskAgain) {
-        permission = await Location.requestForegroundPermissionsAsync();
-      }
+      permission = await Location.requestForegroundPermissionsAsync();
     }
 
     if (permission.status !== Location.PermissionStatus.GRANTED) {

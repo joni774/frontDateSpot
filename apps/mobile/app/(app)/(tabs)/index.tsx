@@ -36,6 +36,7 @@ import {
   DEFAULT_PLACES_RADIUS_KM,
   describeCoords,
   openLocationSettings,
+  peekCachedDeviceCoords,
   PLACES_RADIUS_OPTIONS_KM,
   resolveDeviceCoords,
 } from "../../../src/lib/deviceLocation";
@@ -262,7 +263,7 @@ export default function HomeScreen() {
   );
 
   const loadLocation = useCallback(async (opts?: { silent?: boolean; prompt?: boolean }) => {
-    if (locatingLock.current) return;
+    if (locatingLock.current) return null;
     locatingLock.current = true;
     if (!opts?.silent) setLocating(true);
     try {
@@ -272,10 +273,11 @@ export default function HomeScreen() {
         setLocationDenied(false);
         setLocationUnavailable(false);
         setLocationServicesOff(false);
-        return;
+        return null;
       }
       const result = await resolveDeviceCoords({ prompt: opts?.prompt ?? false });
       applyLocationResult(result, fallbackAccepted);
+      return result;
     } finally {
       setLocating(false);
       locatingLock.current = false;
@@ -297,7 +299,18 @@ export default function HomeScreen() {
   }, [coords, fromDevice]);
 
   useEffect(() => {
-    void loadLocation();
+    let cancelled = false;
+    void (async () => {
+      const cached = await peekCachedDeviceCoords();
+      if (!cancelled && cached) {
+        setCoords(cached);
+        setFromDevice(true);
+      }
+      if (!cancelled) await loadLocation({ prompt: true });
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [loadLocation]);
 
   useEffect(() => {
@@ -337,12 +350,11 @@ export default function HomeScreen() {
     locationServicesOff || (locationDenied && !canAskAgain);
 
   const onAllowLocation = useCallback(async () => {
-    if (primaryOpensSettings) {
+    const result = await loadLocation({ prompt: true });
+    if (result && !result.fromDevice) {
       await openLocationSettings();
-      return;
     }
-    await loadLocation({ prompt: true });
-  }, [loadLocation, primaryOpensSettings]);
+  }, [loadLocation]);
 
   const isFreePlaces =
     !WEB_PREVIEW && (!user || user.subscriptionTier === "FREE" || user.subscriptionTier === "DATING");
