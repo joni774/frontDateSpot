@@ -47,7 +47,7 @@
     "title": "DateSpot",
     "categories": {
       "all": "الكل",
-      "romantic": "موعد رومانسي",
+      "romantic": "سهرات",
       "restaurant": "مطاعم",
       "dairy": "ألبان",
       "meat": "لحوم",
@@ -75,7 +75,8 @@
     "datingCta": "تعارف 18+"
   },
   "map": {
-    "webUnavailable": "الخريطة متاحة في تطبيق الجوال. على الويب يمكنك تصفح الأماكن من الشاشة الرئيسية."
+    "webUnavailable": "الخريطة متاحة في تطبيق الجوال. على الويب يمكنك تصفح الأماكن من الشاشة الرئيسية.",
+    "mapboxMissingToken": "رمز Mapbox مفقود. عيّن EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN لعرض الخريطة على أندرويد."
   },
   "place": {
     "navigate": "التنقل",
@@ -99,7 +100,7 @@
     "bookWhatsAppText": "مرحباً، وصلت إليكم عبر DateSpot وأود حجز مكان في {{name}}",
     "shareText": "وجدت مكاناً مثالياً للموعد!\n{{name}}\n{{address}}\nالمسافة: {{distance}} {{km}}\nhttps://datespot.co.il",
     "categories": {
-      "ROMANTIC_DATE": "رومانسي",
+      "ROMANTIC_DATE": "سهرة",
       "RESTAURANT": "مطعم",
       "DAIRY_RESTAURANT": "ألبان",
       "MEAT_RESTAURANT": "لحوم",

@@ -21,7 +21,7 @@ export function configureApiBaseUrl(url: string): void {
 
 export const apiClient = axios.create({
   baseURL,
-  timeout: 30_000,
+  timeout: 45_000,
   headers: {
     "Content-Type": "application/json",
     "bypass-tunnel-reminder": "1",

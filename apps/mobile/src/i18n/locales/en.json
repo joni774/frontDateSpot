@@ -57,8 +57,8 @@
     },
     "categories": {
       "all": "All",
-      "romantic": "Date",
-      "restaurant": "Restaurant",
+      "romantic": "Nightlife",
+      "restaurant": "Restaurants",
       "dairy": "Dairy",
       "meat": "Meat",
       "sushi": "Sushi",
@@ -86,7 +86,8 @@
     "datingCta": "Dating 18+"
   },
   "map": {
-    "webUnavailable": "The map is available in the mobile app. On web, browse places from the home screen."
+    "webUnavailable": "The map is available in the mobile app. On web, browse places from the home screen.",
+    "mapboxMissingToken": "Missing Mapbox token. Set EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN to show the Android map."
   },
   "place": {
     "navigate": "Navigate",
@@ -110,7 +111,7 @@
     "bookWhatsAppText": "Hi, I found you on DateSpot and would like to book a table at {{name}}",
     "shareText": "Found the perfect date spot!\n{{name}}\n{{address}}\nDistance: {{distance}} {{km}}\nhttps://datespot.co.il",
     "categories": {
-      "ROMANTIC_DATE": "Romantic",
+      "ROMANTIC_DATE": "Nightlife",
       "RESTAURANT": "Restaurant",
       "DAIRY_RESTAURANT": "Dairy",
       "MEAT_RESTAURANT": "Meat",

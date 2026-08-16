@@ -21,7 +21,9 @@ import {
 
 export default function MapScreen() {
   const { t, i18n } = useTranslation();
-  const [coords, setCoords] = useState(DEFAULT_COORDS);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
+    Platform.OS === "web" ? DEFAULT_COORDS : null
+  );
   const locatingLock = useRef(false);
 
   const loadLocation = useCallback(async () => {
@@ -29,7 +31,7 @@ export default function MapScreen() {
     locatingLock.current = true;
     try {
       const result = await resolveDeviceCoords();
-      setCoords(result.coords);
+      setCoords(result.fromDevice ? result.coords : DEFAULT_COORDS);
     } finally {
       locatingLock.current = false;
     }
@@ -40,14 +42,15 @@ export default function MapScreen() {
   }, [loadLocation]);
 
   const { data: places = [], isFetching } = useQuery({
-    queryKey: ["map-places", coords.lat, coords.lng],
+    queryKey: ["map-places", coords?.lat, coords?.lng],
     queryFn: () =>
       fetchPlaces({
-        lat: coords.lat,
-        lng: coords.lng,
+        lat: coords!.lat,
+        lng: coords!.lng,
         language: i18n.language,
         radius: DEFAULT_PLACES_RADIUS_KM,
       }),
+    enabled: !!coords,
   });
 
   return (
@@ -57,8 +60,8 @@ export default function MapScreen() {
       </View>
 
       <View style={styles.mapWrap}>
-        <PlaceMap coords={coords} places={places} />
-        {isFetching ? (
+        {coords ? <PlaceMap coords={coords} places={places} /> : null}
+        {!coords || isFetching ? (
           <View style={styles.fetchBadge}>
             <ActivityIndicator size="small" color="#7C3048" />
           </View>

@@ -76,7 +76,8 @@
     "profile": "פרופיל"
   },
   "map": {
-    "webUnavailable": "המפה זמינה באפליקציה לנייד. בדפדפן אפשר לדפדף במקומות ממסך הבית."
+    "webUnavailable": "המפה זמינה באפליקציה לנייד. בדפדפן אפשר לדפדף במקומות ממסך הבית.",
+    "mapboxMissingToken": "חסר מפתח Mapbox. הוסיפו EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN כדי להציג את המפה באנדרואיד."
   },
   "onboarding": {
     "slide1Title": "ברוך הבא לעולם של יציאות",
@@ -106,7 +107,7 @@
     },
     "categories": {
       "all": "הכל",
-      "romantic": "דייט רומנטי",
+      "romantic": "בילויים",
       "restaurant": "מסעדות",
       "dairy": "חלבית",
       "meat": "בשרית",
@@ -162,7 +163,7 @@
     "reviewPlaceholder": "ספר/י על החוויה שלך...",
     "submitReview": "פרסם ביקורת",
     "categories": {
-      "ROMANTIC_DATE": "דייט רומנטי",
+      "ROMANTIC_DATE": "בילוי",
       "RESTAURANT": "מסעדה",
       "DAIRY_RESTAURANT": "חלבית",
       "MEAT_RESTAURANT": "בשרית",
