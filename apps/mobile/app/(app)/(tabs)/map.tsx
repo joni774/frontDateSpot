@@ -16,6 +16,7 @@ import { PlaceMap } from "../../../src/components/PlaceMap";
 import {
   DEFAULT_COORDS,
   DEFAULT_PLACES_RADIUS_KM,
+  peekCachedDeviceCoords,
   resolveDeviceCoords,
 } from "../../../src/lib/deviceLocation";
 
@@ -31,7 +32,12 @@ export default function MapScreen() {
     locatingLock.current = true;
     try {
       const result = await resolveDeviceCoords();
-      setCoords(result.fromDevice ? result.coords : DEFAULT_COORDS);
+      if (result.fromDevice) {
+        setCoords(result.coords);
+        return;
+      }
+      const cached = await peekCachedDeviceCoords();
+      if (cached) setCoords(cached);
     } finally {
       locatingLock.current = false;
     }
