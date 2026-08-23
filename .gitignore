@@ -4,3 +4,7 @@ node_modules
 .env.local
 dist
 .DS_Store
+submit_debug.log
+apps/mobile/submit_debug.log
+apps/mobile/.expo/tunnel-url.txt
+apps/mobile/expo-qr.png

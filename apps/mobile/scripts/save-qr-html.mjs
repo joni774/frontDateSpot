@@ -46,12 +46,23 @@ let url;
 
 if (mode === "tunnel") {
   try {
-    const res = await fetch("http://127.0.0.1:4040/api/tunnels");
-    if (!res.ok) throw new Error(`ngrok API ${res.status}`);
-    const data = await res.json();
-    const tunnel = data.tunnels?.find((t) => t.public_url?.includes("exp.direct"));
-    if (!tunnel) throw new Error("exp.direct tunnel not found");
-    url = `exp://${new URL(tunnel.public_url).host}`;
+    const persistedPath = path.join(mobileRoot, ".expo", "tunnel-url.txt");
+    if (existsSync(persistedPath)) {
+      const persisted = readFileSync(persistedPath, "utf8").trim();
+      if (persisted.startsWith("exp://")) url = persisted;
+    }
+
+    if (!url) {
+      const res = await fetch("http://127.0.0.1:4040/api/tunnels");
+      if (!res.ok) throw new Error(`tunnel API ${res.status}`);
+      const data = await res.json();
+      const tunnel =
+        data.tunnels?.find((t) => t.public_url?.includes("exp.direct")) ??
+        data.tunnels?.find((t) => t.public_url?.includes("trycloudflare.com")) ??
+        data.tunnels?.find((t) => t.public_url?.startsWith("https://"));
+      if (!tunnel?.public_url) throw new Error("public tunnel URL not found");
+      url = `exp://${new URL(tunnel.public_url).host}`;
+    }
   } catch (err) {
     console.error("Tunnel not ready. Run: pnpm dev:tunnel");
     console.error(err?.message ?? err);
@@ -81,7 +92,7 @@ const html = `<!DOCTYPE html>
   <img src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encoded}" alt="QR code" />
   <code>${url}</code>
   <p>אם הסריקה לא עובדת: פתח <strong>Expo Go</strong> → <strong>Enter URL manually</strong> → הדבק את הכתובת למעלה.</p>
-  <p>הטלפון והמחשב חייבים להיות על <strong>אותה רשת Wi‑Fi</strong> (לא נתונים סלולריים).</p>
+  <p>${mode === "tunnel" ? "מצב tunnel — אין צורך באותה רשת Wi‑Fi." : "הטלפון והמחשב חייבים להיות על <strong>אותה רשת Wi‑Fi</strong> (לא נתונים סלולריים)."}</p>
   <p><strong>זרימה:</strong> עמוד 1 ברוך הבא → עמוד 2 גילוי האפליקציה → עמוד 3 התחברות</p>
   <p>בעמודים 1–2: <strong>דלג</strong> או <strong>המשך</strong> למטה</p>
   <p><strong>התחברות:</strong> admin@datespot.co.il / admin123</p>

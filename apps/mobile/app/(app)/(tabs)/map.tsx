@@ -1,30 +1,43 @@
 /** Interactive map with place markers from the API. */
 import { fetchPlaces } from "@datespot/api-client";
+import type { Place } from "@datespot/shared-types";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
+  Image,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { PlaceActionsBar } from "../../../src/components/PlaceActionsBar";
 import { PlaceMap } from "../../../src/components/PlaceMap";
 import {
   DEFAULT_COORDS,
-  DEFAULT_PLACES_RADIUS_KM,
+  MAP_PLACES_RADIUS_KM,
   peekCachedDeviceCoords,
   resolveDeviceCoords,
 } from "../../../src/lib/deviceLocation";
+import {
+  openPlaceCall,
+  openPlaceNavigation,
+  openPlaceWhatsApp,
+} from "../../../src/lib/placeActions";
+import { colors } from "../../../src/theme/colors";
 
 export default function MapScreen() {
   const { t, i18n } = useTranslation();
+  const router = useRouter();
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     Platform.OS === "web" ? DEFAULT_COORDS : null
   );
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const locatingLock = useRef(false);
 
   const loadLocation = useCallback(async () => {
@@ -38,6 +51,7 @@ export default function MapScreen() {
       }
       const cached = await peekCachedDeviceCoords();
       if (cached) setCoords(cached);
+      else setCoords(DEFAULT_COORDS);
     } finally {
       locatingLock.current = false;
     }
@@ -47,29 +61,107 @@ export default function MapScreen() {
     void loadLocation();
   }, [loadLocation]);
 
-  const { data: places = [], isFetching } = useQuery({
-    queryKey: ["map-places", coords?.lat, coords?.lng],
+  const { data: places = [], isFetching, isError, refetch } = useQuery({
+    queryKey: ["map-places", coords?.lat, coords?.lng, i18n.language],
     queryFn: () =>
       fetchPlaces({
         lat: coords!.lat,
         lng: coords!.lng,
         language: i18n.language,
-        radius: DEFAULT_PLACES_RADIUS_KM,
+        radius: MAP_PLACES_RADIUS_KM,
       }),
     enabled: !!coords,
   });
+
+  const selected = useMemo(
+    () => places.find((place) => place.id === selectedId) ?? null,
+    [places, selectedId]
+  );
+
+  const openNav = (place: Place) => {
+    if (place.latitude == null || place.longitude == null) return;
+    openPlaceNavigation(
+      { name: place.name, latitude: place.latitude, longitude: place.longitude },
+      {
+        title: t("place.navigate"),
+        waze: t("place.waze"),
+        googleMaps: t("place.googleMaps"),
+        appleMaps: t("place.appleMaps"),
+        cancel: t("common.cancel"),
+      }
+    );
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
       <View className="px-4 py-3 bg-surface border-b border-border">
         <Text className="text-xl font-semibold text-text">{t("tabs.map")}</Text>
+        <Text className="text-sm text-text-muted mt-1">{t("map.tapPlaceHint")}</Text>
       </View>
 
       <View style={styles.mapWrap}>
-        {coords ? <PlaceMap coords={coords} places={places} /> : null}
+        {coords ? (
+          <PlaceMap
+            coords={coords}
+            places={places}
+            selectedPlaceId={selectedId}
+            onPlacePress={setSelectedId}
+          />
+        ) : null}
         {!coords || isFetching ? (
           <View style={styles.fetchBadge}>
-            <ActivityIndicator size="small" color="#7C3048" />
+            <ActivityIndicator size="small" color={colors.primary} />
+          </View>
+        ) : null}
+
+        {isError ? (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>{t("home.loadError")}</Text>
+            <Pressable onPress={() => void refetch()}>
+              <Text style={styles.retryText}>{t("common.retry")}</Text>
+            </Pressable>
+          </View>
+        ) : null}
+
+        {selected ? (
+          <View style={styles.sheet}>
+            <Pressable
+              onPress={() => router.push(`/(app)/place/${selected.id}`)}
+              style={styles.sheetHeader}
+            >
+              {selected.images[0] ? (
+                <Image source={{ uri: selected.images[0] }} style={styles.sheetThumb} />
+              ) : (
+                <View style={[styles.sheetThumb, styles.sheetThumbEmpty]} />
+              )}
+              <View style={styles.sheetBody}>
+                <Text style={styles.sheetName} numberOfLines={1}>
+                  {selected.name}
+                </Text>
+                <Text style={styles.sheetMeta} numberOfLines={1}>
+                  {selected.address ?? t(`place.categories.${selected.category}`)}
+                  {selected.distance != null
+                    ? ` · ${selected.distance.toFixed(1)} ${t("home.km")}`
+                    : ""}
+                </Text>
+              </View>
+            </Pressable>
+            <PlaceActionsBar
+              onNavigate={() => openNav(selected)}
+              onCall={selected.phone ? () => openPlaceCall(selected.phone!) : undefined}
+              onWhatsApp={
+                selected.phone
+                  ? () =>
+                      openPlaceWhatsApp(
+                        selected.phone!,
+                        t("place.bookWhatsAppText", { name: selected.name })
+                      )
+                  : undefined
+              }
+              navigateLabel={t("place.navigate")}
+              callLabel={t("place.call")}
+              whatsappLabel={t("place.whatsapp")}
+            />
           </View>
         ) : null}
       </View>
@@ -89,5 +181,72 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.92)",
     paddingHorizontal: 12,
     paddingVertical: 8,
+  },
+  errorBanner: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    right: 12,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  errorText: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 13,
+  },
+  retryText: {
+    color: colors.primary,
+    fontWeight: "600",
+    fontSize: 13,
+  },
+  sheet: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    bottom: 16,
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 12,
+    shadowColor: "#1A1918",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  sheetHeader: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 12,
+    alignItems: "center",
+  },
+  sheetThumb: {
+    width: 64,
+    height: 64,
+    borderRadius: 10,
+    backgroundColor: colors.surfaceContainerHigh,
+  },
+  sheetThumbEmpty: {
+    backgroundColor: colors.surfaceContainerHigh,
+  },
+  sheetBody: {
+    flex: 1,
+    minWidth: 0,
+  },
+  sheetName: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.text,
+  },
+  sheetMeta: {
+    marginTop: 4,
+    fontSize: 13,
+    color: colors.textMuted,
   },
 });

@@ -4,22 +4,18 @@ import { PlaceCard } from "@datespot/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { colors } from "../../../src/theme/colors";
+
 export default function SavedScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
 
-  const { data: places = [], isLoading } = useQuery({
-    queryKey: ["saved-places"],
-    queryFn: fetchSavedPlaces,
+  const { data: places = [], isLoading, isError, refetch, isRefetching } = useQuery({
+    queryKey: ["saved-places", i18n.language],
+    queryFn: () => fetchSavedPlaces(i18n.language),
   });
 
   return (
@@ -32,7 +28,14 @@ export default function SavedScreen() {
 
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#7C3048" />
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : isError ? (
+        <View className="flex-1 items-center justify-center px-6">
+          <Text className="text-text text-center mb-4">{t("common.error")}</Text>
+          <Pressable onPress={() => void refetch()} disabled={isRefetching}>
+            <Text className="text-primary font-semibold">{t("common.retry")}</Text>
+          </Pressable>
         </View>
       ) : (
         <FlatList
@@ -43,6 +46,16 @@ export default function SavedScreen() {
             <PlaceCard
               place={item}
               onPress={() => router.push(`/(app)/place/${item.id}`)}
+              sponsoredLabel={t("place.sponsored")}
+              categoryLabel={t(`place.categories.${item.category}`)}
+              priceLabel={t(`place.priceRange.${item.priceRange}`)}
+              distanceLabel={
+                item.distance != null
+                  ? `${item.distance.toFixed(1)} ${t("home.km")}`
+                  : null
+              }
+              noPhotoLabel={t("place.noPhoto")}
+              lockedLabel={t("home.locked")}
             />
           )}
           ListEmptyComponent={

@@ -6,8 +6,10 @@ import { Linking, Platform } from "react-native";
 export const DEFAULT_COORDS = { lat: 32.0853, lng: 34.7818 };
 
 /** Default search radius; Google Nearby Search caps at 50 km. */
-export const DEFAULT_PLACES_RADIUS_KM = 10;
+export const DEFAULT_PLACES_RADIUS_KM = 20;
 export const PLACES_RADIUS_OPTIONS_KM = [5, 10, 20, 50] as const;
+/** Map tab: wide radius so north/south seed places appear together. */
+export const MAP_PLACES_RADIUS_KM = 150;
 /** @deprecated Use DEFAULT_PLACES_RADIUS_KM */
 export const PLACES_SEARCH_RADIUS_KM = DEFAULT_PLACES_RADIUS_KM;
 
@@ -67,6 +69,8 @@ function toCoords(position: Location.LocationObject): DeviceCoords {
 export async function peekCachedDeviceCoords(): Promise<DeviceCoords | null> {
   return readCachedCoords();
 }
+
+async function readCachedCoords(): Promise<DeviceCoords | null> {
   try {
     const raw = await AsyncStorage.getItem(LAST_COORDS_KEY);
     if (!raw) return null;

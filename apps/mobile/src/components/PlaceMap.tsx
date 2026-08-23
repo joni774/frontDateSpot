@@ -1,18 +1,8 @@
-/** Default / web map stub — react-native-maps is native-only. */
+/** Default / web map stub — native maps are iOS Apple Maps / Android Mapbox. */
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 
-type PlaceMarker = {
-  id: string;
-  name: string;
-  latitude?: number | null;
-  longitude?: number | null;
-};
-
-type PlaceMapProps = {
-  coords: { lat: number; lng: number };
-  places: PlaceMarker[];
-};
+import type { PlaceMapProps } from "./placeMapTypes";
 
 export function PlaceMap(_props: PlaceMapProps) {
   const { t } = useTranslation();

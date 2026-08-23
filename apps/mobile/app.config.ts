@@ -26,9 +26,9 @@ const API_URL =
   readEnvFile("EXPO_PUBLIC_API_URL") ||
   "http://localhost:3000";
 
-const GOOGLE_MAPS_KEY =
-  process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY?.trim() ||
-  readEnvFile("EXPO_PUBLIC_GOOGLE_MAPS_KEY") ||
+const MAPBOX_ACCESS_TOKEN =
+  process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN?.trim() ||
+  readEnvFile("EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN") ||
   "";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
@@ -77,22 +77,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       ],
     },
-    ...(GOOGLE_MAPS_KEY
-      ? { config: { googleMapsApiKey: GOOGLE_MAPS_KEY } }
-      : {}),
   },
   android: {
     adaptiveIcon: {
       backgroundColor: "#7C3048",
     },
     package: IS_STAGING ? "co.il.datespot.app.staging" : "co.il.datespot.app",
+    supportsRtl: true,
     permissions: [
       "android.permission.ACCESS_COARSE_LOCATION",
       "android.permission.ACCESS_FINE_LOCATION",
     ],
-    ...(GOOGLE_MAPS_KEY
-      ? { config: { googleMaps: { apiKey: GOOGLE_MAPS_KEY } } }
-      : {}),
   },
   plugins: [
     "expo-router",
@@ -110,12 +105,24 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "expo-asset",
+    // Mapbox is Android-only. Skip the plugin on iOS EAS so Apple Maps / TestFlight
+    // builds do not pull in the Mapbox iOS SDK.
+    ...(process.env.EAS_BUILD_PLATFORM === "ios"
+      ? []
+      : [
+          [
+            "@rnmapbox/maps",
+            { RNMapboxMapsVersion: "11.18.2" },
+          ] as [string, { RNMapboxMapsVersion: string }],
+        ]),
   ],
   experiments: {
     typedRoutes: true,
   },
   extra: {
+    supportsRTL: true,
     apiUrl: API_URL,
+    mapboxAccessToken: MAPBOX_ACCESS_TOKEN,
     eas: {
       projectId:
         process.env.EAS_PROJECT_ID ?? "64c99bdb-3795-46d5-ab6c-6ba6affa6f76",

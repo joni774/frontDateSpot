@@ -1,6 +1,6 @@
 /**
- * Subscription plans: FREE, VIP (restaurants ₪29.90), DATING (₪39.90).
- * Paid plans open in-app checkout.
+ * Subscription: browsing is free. VIP is unlimited AI chat (₪19.90/mo).
+ * DATING remains a separate nearby-people plan.
  */
 import { getStoredUser } from "@datespot/api-client";
 import type { SubscriptionTier } from "@datespot/shared-types";

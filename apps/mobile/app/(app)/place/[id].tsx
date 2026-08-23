@@ -1,17 +1,19 @@
 /**
  * Place detail screen with gallery, hours, navigation (Google Maps/Waze), WhatsApp share, and save.
  * Maps navigation uses Linking.openURL with geo: or platform-specific map URLs.
+ * Contact CTAs (call / WhatsApp / website) record commissionable leads when authenticated.
  */
 import {
   addFavorite,
   fetchPlace,
   fetchPlaceReviews,
+  recordPlaceLead,
   removeFavorite,
   savePlace,
   submitPlaceReview,
   unsavePlace,
 } from "@datespot/api-client";
-import type { PlaceCategory, PriceRange } from "@datespot/shared-types";
+import type { LeadType, PlaceCategory, PriceRange } from "@datespot/shared-types";
 import { Button } from "@datespot/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -19,10 +21,10 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   FlatList,
   Linking,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -31,6 +33,22 @@ import {
 } from "react-native";
 import { Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import { PlaceActionsBar } from "../../../src/components/PlaceActionsBar";
+import { PlaceMap } from "../../../src/components/PlaceMap";
+import { colors } from "../../../src/theme/colors";
+import {
+  DELIVERY_LEAD_TYPE,
+  type DeliveryPlatform,
+  resolveDeliveryUrl,
+  shouldShowDeliveryOrder,
+} from "../../../src/lib/deliveryOrder";
+import {
+  openPlaceCall,
+  openPlaceNavigation,
+  openPlaceWhatsApp,
+} from "../../../src/lib/placeActions";
+import { isRtl } from "../../../src/lib/rtl";
 
 const CATEGORY_COLORS: Record<PlaceCategory, string> = {
   ROMANTIC_DATE: "bg-primary/10 text-primary",
@@ -60,23 +78,40 @@ function formatPrice(t: (key: string) => string, range: PriceRange): string {
   return t(`place.priceRange.${range}`);
 }
 
+function hasKnownHours(openingHours: Record<string, string> | undefined): boolean {
+  if (!openingHours) return false;
+  return Object.values(openingHours).some(
+    (value) => typeof value === "string" && value.trim().length > 0 && value.toLowerCase() !== "closed"
+  );
+}
+
 export default function PlaceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [showHours, setShowHours] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewText, setReviewText] = useState("");
 
-  const { data: place, isLoading } = useQuery({
-    queryKey: ["place", id],
-    queryFn: () => fetchPlace(id!),
+  const {
+    data: place,
+    isLoading,
+    isError,
+    refetch,
+    isRefetching,
+  } = useQuery({
+    queryKey: ["place", id, i18n.language],
+    queryFn: () => fetchPlace(id!, i18n.language),
     enabled: !!id,
   });
 
-  const { data: reviewsData } = useQuery({
+  const {
+    data: reviewsData,
+    isError: reviewsError,
+    refetch: refetchReviews,
+  } = useQuery({
     queryKey: ["place-reviews", id],
     queryFn: () => fetchPlaceReviews(id!),
     enabled: !!id,
@@ -94,6 +129,9 @@ export default function PlaceDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ["place", id] });
       queryClient.invalidateQueries({ queryKey: ["saved-places"] });
     },
+    onError: () => {
+      Alert.alert(t("common.error"), t("place.actionFailed"));
+    },
   });
 
   const favoriteMutation = useMutation({
@@ -105,6 +143,9 @@ export default function PlaceDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ["place", id] });
       queryClient.invalidateQueries({ queryKey: ["favorite-places"] });
     },
+    onError: () => {
+      Alert.alert(t("common.error"), t("place.actionFailed"));
+    },
   });
 
   const reviewMutation = useMutation({
@@ -115,18 +156,33 @@ export default function PlaceDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ["place", id] });
       setReviewText("");
     },
+    onError: () => {
+      Alert.alert(t("common.error"), t("place.reviewFailed"));
+    },
   });
 
-  /** Opens native maps app with lat/lng — Google Maps URL works cross-platform. */
+  const trackLead = async (type: LeadType) => {
+    if (!id) return;
+    try {
+      await recordPlaceLead(id, type);
+    } catch {
+      // Lead tracking must not block the contact action.
+    }
+  };
+
+  /** Directions via Waze / Google Maps / Apple Maps. */
   const openMaps = () => {
     if (!place) return;
-    const { latitude, longitude, name } = place;
-    const url = Platform.select({
-      ios: `maps:0,0?q=${latitude},${longitude}(${encodeURIComponent(name)})`,
-      android: `geo:${latitude},${longitude}?q=${latitude},${longitude}(${encodeURIComponent(name)})`,
-      default: `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`,
-    });
-    if (url) Linking.openURL(url);
+    openPlaceNavigation(
+      { name: place.name, latitude: place.latitude, longitude: place.longitude },
+      {
+        title: t("place.navigate"),
+        waze: t("place.waze"),
+        googleMaps: t("place.googleMaps"),
+        appleMaps: t("place.appleMaps"),
+        cancel: t("common.cancel"),
+      }
+    );
   };
 
   const shareWhatsApp = () => {
@@ -140,16 +196,61 @@ export default function PlaceDetailScreen() {
     Linking.openURL(`https://wa.me/?text=${encodeURIComponent(text)}`);
   };
 
-  if (isLoading || !place) {
+  const callPlace = async () => {
+    if (!place?.phone) return;
+    await trackLead("CALL");
+    openPlaceCall(place.phone);
+  };
+
+  const bookViaWhatsApp = async () => {
+    if (!place?.phone) return;
+    await trackLead("WHATSAPP");
+    openPlaceWhatsApp(place.phone, t("place.bookWhatsAppText", { name: place.name }));
+  };
+
+  const openWebsite = async () => {
+    if (!place?.website) return;
+    await trackLead("WEBSITE");
+    Linking.openURL(place.website);
+  };
+
+  const openDelivery = async (platform: DeliveryPlatform) => {
+    if (!place) return;
+    await trackLead(DELIVERY_LEAD_TYPE[platform]);
+    Linking.openURL(resolveDeliveryUrl(platform, place));
+  };
+
+  if (isLoading && !place) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#7C3048" />
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (isError || !place) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background px-6">
+        <Text className="text-text text-center mb-4">{t("place.loadError")}</Text>
+        <Pressable
+          onPress={() => void refetch()}
+          className="px-4 py-3 rounded-lg bg-primary"
+          disabled={isRefetching}
+        >
+          <Text className="text-white font-semibold">{t("common.retry")}</Text>
+        </Pressable>
+        <Pressable onPress={() => router.back()} className="mt-4 px-4 py-2">
+          <Text className="text-primary">{t("common.back")}</Text>
+        </Pressable>
       </View>
     );
   }
 
   const todayKey = getTodayKey();
-  const todayHours = place.openingHours[todayKey] ?? t("place.closedDay");
+  const knownHours = hasKnownHours(place.openingHours as Record<string, string>);
+  const todayHours = knownHours
+    ? (place.openingHours[todayKey] ?? t("place.closedDay"))
+    : t("place.hoursUnknown");
   const width = Dimensions.get("window").width;
 
   return (
@@ -183,7 +284,7 @@ export default function PlaceDetailScreen() {
             onPress={() => router.back()}
             className="w-10 h-10 rounded-lg bg-black/45 items-center justify-center"
           >
-            <Text className="text-white text-lg">←</Text>
+            <Text className="text-white text-lg">{isRtl() ? "→" : "←"}</Text>
           </Pressable>
           <View className="flex-row gap-2">
             <Pressable
@@ -229,18 +330,39 @@ export default function PlaceDetailScreen() {
         <Text className="text-2xl font-bold text-text mb-2">{place.name}</Text>
 
         <View className="flex-row flex-wrap gap-2 mb-3">
+          {place.isSponsored ? (
+            <View className="px-2.5 py-1 rounded-md bg-text/90" testID="sponsored-badge">
+              <Text className="text-sm font-medium text-white">{t("place.sponsored")}</Text>
+            </View>
+          ) : null}
           <View className={`px-2.5 py-1 rounded-md ${CATEGORY_COLORS[place.category]}`}>
             <Text className="text-sm font-medium">
               {t(`place.categories.${place.category}`)}
             </Text>
           </View>
           <View
-            className={`px-2.5 py-1 rounded-md ${place.isOpen ? "bg-secondary/10" : "bg-primary/10"}`}
+            className={`px-2.5 py-1 rounded-md ${
+              !knownHours
+                ? "bg-cream"
+                : place.isOpen
+                  ? "bg-secondary/10"
+                  : "bg-primary/10"
+            }`}
           >
             <Text
-              className={`text-sm font-medium ${place.isOpen ? "text-secondary" : "text-primary"}`}
+              className={`text-sm font-medium ${
+                !knownHours
+                  ? "text-text-muted"
+                  : place.isOpen
+                    ? "text-secondary"
+                    : "text-primary"
+              }`}
             >
-              {place.isOpen ? t("place.openNow") : t("place.closed")}
+              {!knownHours
+                ? t("place.hoursUnknown")
+                : place.isOpen
+                  ? t("place.openNow")
+                  : t("place.closed")}
             </Text>
           </View>
         </View>
@@ -252,6 +374,67 @@ export default function PlaceDetailScreen() {
         ) : (
           <Text className="text-text-muted mb-1">{place.address}</Text>
         )}
+
+        <View className="mt-3 mb-4">
+          <PlaceActionsBar
+            onNavigate={openMaps}
+            onCall={place.phone ? () => void callPlace() : undefined}
+            onWhatsApp={place.phone ? () => void bookViaWhatsApp() : undefined}
+            navigateLabel={t("place.navigate")}
+            callLabel={t("place.call")}
+            whatsappLabel={t("place.whatsapp")}
+          />
+        </View>
+
+        {shouldShowDeliveryOrder(place) ? (
+          <View
+            testID="place-delivery-order"
+            className="mb-5 rounded-2xl border border-primary/25 bg-primary/5 p-4"
+          >
+            <Text className="text-lg font-bold text-text mb-1">
+              {t("place.deliveryTitle")}
+            </Text>
+            <Text className="text-text-muted text-sm mb-3 leading-5">
+              {t("place.deliverySubtitle")}
+            </Text>
+            <View className="flex-row items-center justify-between mb-4 rounded-xl bg-surface px-3 py-3">
+              <Text className="text-text-muted text-sm">{t("place.orderPriceLabel")}</Text>
+              <Text className="text-xl font-bold text-text">
+                {formatPrice(t, place.priceRange)}
+              </Text>
+            </View>
+            <Button onPress={() => void openDelivery("wolt")} style={{ marginBottom: 8 }}>
+              {t("place.orderWolt")}
+            </Button>
+            <Button
+              variant="outline"
+              onPress={() => void openDelivery("tenbis")}
+              style={{ marginBottom: 8 }}
+            >
+              {t("place.orderTenBis")}
+            </Button>
+            <Button variant="outline" onPress={() => void openDelivery("mishloha")}>
+              {t("place.orderMishloha")}
+            </Button>
+          </View>
+        ) : null}
+
+        <View
+          style={{
+            height: 220,
+            borderRadius: 16,
+            overflow: "hidden",
+            marginBottom: 16,
+            backgroundColor: colors.surfaceContainer,
+          }}
+        >
+          <PlaceMap
+            coords={{ lat: place.latitude, lng: place.longitude }}
+            places={[place]}
+            selectedPlaceId={place.id}
+            zoomDelta={0.012}
+          />
+        </View>
 
         {reviewsData?.averageRating != null ? (
           <Text className="text-text font-medium mb-2">
@@ -283,52 +466,21 @@ export default function PlaceDetailScreen() {
           {place.phone ? (
             <View className="w-1/2 p-2">
               <Text className="text-text-muted text-xs mb-1">{t("place.phone")}</Text>
-              <Pressable onPress={() => Linking.openURL(`tel:${place.phone}`)}>
+              <Pressable onPress={() => void callPlace()}>
                 <Text className="font-medium text-primary">{place.phone}</Text>
               </Pressable>
             </View>
           ) : null}
         </View>
 
-        <Button onPress={openMaps} style={{ marginBottom: 12 }}>
-          {t("place.navigate")}
-        </Button>
+        {place.website ? (
+          <Button variant="outline" onPress={() => void openWebsite()} style={{ marginBottom: 12 }}>
+            {t("place.website")}
+          </Button>
+        ) : null}
         <Button variant="outline" onPress={shareWhatsApp} style={{ marginBottom: 16 }}>
           {t("place.share")}
         </Button>
-
-        {place.deliveryWoltUrl || place.deliveryTenBisUrl || place.deliveryMishlohaUrl ? (
-          <View className="mb-6">
-            <Text className="font-semibold text-text mb-3">{t("place.deliveryTitle")}</Text>
-            {place.deliveryWoltUrl ? (
-              <Button
-                variant="outline"
-                onPress={() => Linking.openURL(place.deliveryWoltUrl!)}
-                style={{ marginBottom: 8 }}
-              >
-                {t("place.orderWolt")}
-              </Button>
-            ) : null}
-            {place.deliveryTenBisUrl ? (
-              <Button
-                variant="outline"
-                onPress={() => Linking.openURL(place.deliveryTenBisUrl!)}
-                style={{ marginBottom: 8 }}
-              >
-                {t("place.orderTenBis")}
-              </Button>
-            ) : null}
-            {place.deliveryMishlohaUrl ? (
-              <Button
-                variant="outline"
-                onPress={() => Linking.openURL(place.deliveryMishlohaUrl!)}
-                style={{ marginBottom: 8 }}
-              >
-                {t("place.orderMishloha")}
-              </Button>
-            ) : null}
-          </View>
-        ) : null}
 
         <View className="border-t border-gray-100 pt-4 mb-8">
           <Text className="font-semibold text-text mb-3">{t("place.writeReview")}</Text>
@@ -350,6 +502,12 @@ export default function PlaceDetailScreen() {
           <Button onPress={() => reviewMutation.mutate()} loading={reviewMutation.isPending}>
             {t("place.submitReview")}
           </Button>
+
+          {reviewsError ? (
+            <Pressable onPress={() => void refetchReviews()} className="mt-4">
+              <Text className="text-primary">{t("place.reviewsLoadError")} — {t("common.retry")}</Text>
+            </Pressable>
+          ) : null}
 
           {reviewsData?.reviews.map((review) => (
             <View key={review.id} className="mt-4 pb-3 border-b border-gray-100">

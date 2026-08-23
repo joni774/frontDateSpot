@@ -51,6 +51,16 @@ const DEFAULT_OPENING_HOURS: Record<string, string> = {
   saturday: "10:00 - 23:00",
 };
 
+const OPENING_DAYS = [
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+] as const;
+
 function emptyPlace(): AdminPlaceInput {
   return {
     nameHe: "",
@@ -73,7 +83,15 @@ function emptyPlace(): AdminPlaceInput {
     deliveryMishlohaUrl: "",
     isActive: true,
     displayOrder: 0,
+    leadFeeAgorot: 0,
+    sponsoredUntil: null,
+    sponsoredPriority: 0,
   };
+}
+
+function toSponsoredDateInput(value?: string | null): string {
+  if (!value) return "";
+  return value.slice(0, 10);
 }
 
 function placeToForm(place: AdminPlace): AdminPlaceInput {
@@ -98,6 +116,9 @@ function placeToForm(place: AdminPlace): AdminPlaceInput {
     deliveryMishlohaUrl: place.deliveryMishlohaUrl ?? "",
     isActive: place.isActive,
     displayOrder: place.displayOrder,
+    leadFeeAgorot: place.leadFeeAgorot ?? 0,
+    sponsoredUntil: toSponsoredDateInput(place.sponsoredUntil),
+    sponsoredPriority: place.sponsoredPriority ?? 0,
   };
 }
 
@@ -122,6 +143,11 @@ export default function AdminPlacesScreen() {
         latitude: Number(form.latitude),
         longitude: Number(form.longitude),
         displayOrder: Number(form.displayOrder) || 0,
+        leadFeeAgorot: Math.max(0, Math.round(Number(form.leadFeeAgorot) || 0)),
+        sponsoredPriority: Math.max(0, Math.round(Number(form.sponsoredPriority) || 0)),
+        sponsoredUntil: form.sponsoredUntil?.trim()
+          ? form.sponsoredUntil.trim().slice(0, 10)
+          : null,
         images: imagesText
           .split("\n")
           .map((s) => s.trim())
@@ -167,9 +193,22 @@ export default function AdminPlacesScreen() {
   });
 
   const reorderMutation = useMutation({
-    mutationFn: ({ id, displayOrder }: { id: string; displayOrder: number }) =>
-      updateAdminPlaceOrder(id, displayOrder),
+    mutationFn: async ({
+      itemId,
+      otherId,
+      itemOrder,
+      otherOrder,
+    }: {
+      itemId: string;
+      otherId: string;
+      itemOrder: number;
+      otherOrder: number;
+    }) => {
+      await updateAdminPlaceOrder(itemId, otherOrder);
+      await updateAdminPlaceOrder(otherId, itemOrder);
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-places"] }),
+    onError: () => Alert.alert(t("common.error"), t("admin.reorderFailed")),
   });
 
   const movePlace = (item: AdminPlace, direction: "up" | "down") => {
@@ -178,8 +217,12 @@ export default function AdminPlacesScreen() {
     const swapIndex = direction === "up" ? index - 1 : index + 1;
     if (swapIndex < 0 || swapIndex >= list.length) return;
     const other = list[swapIndex];
-    reorderMutation.mutate({ id: item.id, displayOrder: other.displayOrder });
-    reorderMutation.mutate({ id: other.id, displayOrder: item.displayOrder });
+    reorderMutation.mutate({
+      itemId: item.id,
+      otherId: other.id,
+      itemOrder: item.displayOrder,
+      otherOrder: other.displayOrder,
+    });
   };
 
   const openCreate = () => {
@@ -207,7 +250,7 @@ export default function AdminPlacesScreen() {
     Alert.alert(t("admin.deletePlace"), place.nameHe, [
       { text: t("common.cancel"), style: "cancel" },
       {
-        text: t("admin.deactivate"),
+        text: t("admin.delete"),
         style: "destructive",
         onPress: () => deleteMutation.mutate(place.id),
       },
@@ -262,7 +305,16 @@ export default function AdminPlacesScreen() {
                   </Text>
                   <Text className="text-xs text-gray-400 mt-1">
                     {item.address} · 👁 {item.viewCount ?? 0} · #{item.displayOrder}
+                    {(item.leadFeeAgorot ?? 0) > 0
+                      ? ` · ₪${((item.leadFeeAgorot ?? 0) / 100).toFixed(2)}/${t("admin.leadShort")}`
+                      : ""}
                   </Text>
+                  {item.sponsoredUntil &&
+                  new Date(item.sponsoredUntil).getTime() > Date.now() ? (
+                    <Text className="text-xs text-primary font-medium mt-1">
+                      {t("place.sponsored")} · {item.sponsoredUntil.slice(0, 10)}
+                    </Text>
+                  ) : null}
                 </View>
                 <View
                   className={`px-2 py-1 rounded-full ${
@@ -431,12 +483,54 @@ export default function AdminPlacesScreen() {
               keyboardType="number-pad"
             />
             <Input
+              label={t("admin.leadFeeAgorot")}
+              value={String(form.leadFeeAgorot ?? 0)}
+              onChangeText={(v) => updateField("leadFeeAgorot", Number(v) || 0)}
+              keyboardType="number-pad"
+            />
+            <Input
+              label={t("admin.sponsoredUntil")}
+              value={
+                typeof form.sponsoredUntil === "string"
+                  ? form.sponsoredUntil
+                  : ""
+              }
+              onChangeText={(v) => updateField("sponsoredUntil", v || null)}
+              placeholder="YYYY-MM-DD"
+            />
+            <Input
+              label={t("admin.sponsoredPriority")}
+              value={String(form.sponsoredPriority ?? 0)}
+              onChangeText={(v) =>
+                updateField("sponsoredPriority", Number(v) || 0)
+              }
+              keyboardType="number-pad"
+            />
+            <Input
               label={t("admin.imageUrls")}
               value={imagesText}
               onChangeText={setImagesText}
               multiline
               placeholder="https://..."
             />
+
+            <Text className="text-sm font-medium text-text mb-2 mt-2">
+              {t("place.openingHours")}
+            </Text>
+            {OPENING_DAYS.map((day) => (
+              <Input
+                key={day}
+                label={t(`place.days.${day}`)}
+                value={form.openingHours[day] ?? ""}
+                onChangeText={(v) =>
+                  updateField("openingHours", {
+                    ...form.openingHours,
+                    [day]: v,
+                  })
+                }
+                placeholder="09:00 - 22:00"
+              />
+            ))}
 
             <Text className="text-sm font-medium text-text mb-2">
               {t("admin.category")}

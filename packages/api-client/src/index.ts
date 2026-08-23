@@ -3,8 +3,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type {
   AuthLoginResponse,
+  LeadType,
   Place,
   PlaceDetail,
+  PlaceLeadResponse,
   PlaceReview,
   PlaceReviewsResponse,
   SubscriptionTier,
@@ -150,9 +152,10 @@ export async function purchaseSubscription(
   tier: SubscriptionTier,
   options?: {
     receipt?: string;
+    /** @deprecated Prefer cardLast4 — full PAN must not be sent from the client. */
     cardNumber?: string;
+    cardLast4?: string;
     cardExpiry?: string;
-    cardCvv?: string;
     cardHolder?: string;
   }
 ): Promise<User> {
@@ -161,9 +164,8 @@ export async function purchaseSubscription(
     {
       tier,
       receipt: options?.receipt,
-      cardNumber: options?.cardNumber,
+      cardLast4: options?.cardLast4,
       cardExpiry: options?.cardExpiry,
-      cardCvv: options?.cardCvv,
       cardHolder: options?.cardHolder,
     }
   );
@@ -266,6 +268,17 @@ export async function submitPlaceReview(
   return data;
 }
 
+export async function recordPlaceLead(
+  placeId: string,
+  type: LeadType
+): Promise<PlaceLeadResponse> {
+  const { data } = await apiClient.post<PlaceLeadResponse>(
+    `/api/places/${placeId}/leads`,
+    { type }
+  );
+  return data;
+}
+
 export {
   fetchAdminStats,
   fetchAdminPlaces,
@@ -275,6 +288,7 @@ export {
   updateAdminPlaceOrder,
   fetchAdminUsers,
   updateUserSubscription,
+  fetchAdminLeads,
 } from "./admin";
 
 export {

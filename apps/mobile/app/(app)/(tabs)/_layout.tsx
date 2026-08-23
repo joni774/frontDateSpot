@@ -1,14 +1,11 @@
-/** Bottom tab navigation: Home, Map, AI, Saved, Favorites, Profile. */
+/** Bottom tab navigation: Home, Map, AI Chat, Profile. */
 import { Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, View } from "react-native";
 
 import { AiTabIcon } from "../../../src/components/icons/AiTabIcon";
-import { FavoritesTabIcon } from "../../../src/components/icons/FavoritesTabIcon";
 import { HomeTabIcon } from "../../../src/components/icons/HomeTabIcon";
 import { MapTabIcon } from "../../../src/components/icons/MapTabIcon";
 import { ProfileTabIcon } from "../../../src/components/icons/ProfileTabIcon";
-import { SavedTabIcon } from "../../../src/components/icons/SavedTabIcon";
 import { colors } from "../../../src/theme/colors";
 
 export default function TabsLayout() {
@@ -21,12 +18,12 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-          paddingTop: 4,
+          backgroundColor: "rgba(250, 249, 247, 0.96)",
+          borderTopColor: "rgba(222, 192, 182, 0.45)",
+          paddingTop: 6,
           height: 64,
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "500" },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
       }}
     >
       <Tabs.Screen
@@ -51,34 +48,8 @@ export default function TabsLayout() {
         name="ai"
         options={{
           title: t("tabs.ai"),
-          tabBarLabel: t("tabs.ai"),
-          tabBarIcon: ({ focused }) => (
-            <View
-              style={[
-                styles.aiIconWrap,
-                focused ? styles.aiIconWrapActive : styles.aiIconWrapIdle,
-              ]}
-            >
-              <AiTabIcon color="#FFFFFF" size={24} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="saved"
-        options={{
-          title: t("tabs.saved"),
           tabBarIcon: ({ color, size }) => (
-            <SavedTabIcon color={color} size={size ?? 24} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="favorites"
-        options={{
-          title: t("tabs.favorites"),
-          tabBarIcon: ({ color, size }) => (
-            <FavoritesTabIcon color={color} size={size ?? 24} />
+            <AiTabIcon color={color} size={size ?? 24} />
           ),
         }}
       />
@@ -91,23 +62,8 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="saved" options={{ href: null }} />
+      <Tabs.Screen name="favorites" options={{ href: null }} />
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  aiIconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: 15,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: -18,
-  },
-  aiIconWrapActive: {
-    backgroundColor: colors.primary,
-  },
-  aiIconWrapIdle: {
-    backgroundColor: colors.primaryLight,
-  },
-});

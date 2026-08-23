@@ -1,10 +1,11 @@
-/** Admin API client — calls /api/admin/* with JWT from AsyncStorage. */
-
 import type {
+  AdminLead,
+  AdminLeadsResponse,
   AdminPlace,
   AdminPlaceInput,
   AdminStats,
   AdminUsersResponse,
+  LeadType,
   SubscriptionTier,
   User,
 } from "@datespot/shared-types";
@@ -88,3 +89,17 @@ export async function updateUserSubscription(
   );
   return data;
 }
+
+export async function fetchAdminLeads(params?: {
+  page?: number;
+  limit?: number;
+  placeId?: string;
+  type?: LeadType;
+}): Promise<AdminLeadsResponse> {
+  const { data } = await apiClient.get<AdminLeadsResponse>("/api/admin/leads", {
+    params,
+  });
+  return data;
+}
+
+export type { AdminLead };

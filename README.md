@@ -13,6 +13,7 @@ See [datespot-server/README.md](../datespot-server/README.md) for the API backen
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Monorepo map, dependencies, where to change what |
 | [AGENTS.md](AGENTS.md) | Instructions for AI coding agents |
 | [apps/mobile/README.md](apps/mobile/README.md) | Mobile app routes, stack, env, scripts |
+| [apps/landing/README.md](apps/landing/README.md) | Marketing landing page (Vite) |
 | [packages/api-client/README.md](packages/api-client/README.md) | HTTP client and API wrappers |
 | [packages/ui/README.md](packages/ui/README.md) | Shared UI components |
 | [packages/shared-types/README.md](packages/shared-types/README.md) | TypeScript types (synced with server) |
@@ -42,7 +43,7 @@ Edit `apps/mobile/.env`:
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `EXPO_PUBLIC_API_URL` | Yes | API base URL. Use `http://localhost:3000` for emulator/simulator |
-| `EXPO_PUBLIC_GOOGLE_MAPS_KEY` | Yes (PRD) | Google Maps Platform key — [Google Cloud Console](https://console.cloud.google.com/google/maps-apis). Enable Maps SDK for Android/iOS. |
+| `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN` | Android | Mapbox public token (`pk.`) — [Mapbox tokens](https://account.mapbox.com/access-tokens/). iPhone uses Apple Maps. |
 
 **Physical device:** replace `localhost` with your computer's LAN IP, e.g. `http://192.168.1.10:3000`.
 
@@ -60,8 +61,9 @@ See `apps/mobile/.env.production.example` for a template.
 |---------|-------------|
 | `pnpm dev` | Start Expo dev server (LAN) |
 | `pnpm dev:lan` | Same as `dev` |
-| `pnpm dev:tunnel` | Start Expo via tunnel |
+| `pnpm dev:tunnel` | Start Expo via Cloudflare tunnel (use on public/hotspot Wi‑Fi) |
 | `pnpm --filter mobile dev` | Start mobile only |
+| `pnpm dev:landing` | Start marketing landing (Vite) |
 | `pnpm build` | Build all packages |
 | `pnpm lint` | Lint all packages |
 

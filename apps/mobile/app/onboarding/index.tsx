@@ -76,15 +76,6 @@ export default function OnboardingScreen() {
                     {t("auth.loginSubtitle")}
                   </Text>
                   <LoginForm showHeader={false} />
-                  <Pressable
-                    onPress={() => router.push("/auth/register")}
-                    className="mt-4 py-3"
-                  >
-                    <Text className="text-center text-text-muted">
-                      {t("auth.noAccount")}{" "}
-                      <Text className="text-primary font-semibold">{t("auth.register")}</Text>
-                    </Text>
-                  </Pressable>
                 </View>
               ) : (
                 <View className="items-center px-2">

@@ -1,34 +1,23 @@
 /**
- * Place card for home list. FREE users see places 6+ as locked (isLocked=true):
- * blurred image, lock overlay, tap navigates to subscription.
+ * Place card for home list. Tap opens place details.
+ * Labels are passed from the app (i18n) so this package stays UI-only.
  */
-import type { Place, PlaceCategory, PriceRange } from "@datespot/shared-types";
+import type { Place } from "@datespot/shared-types";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { brand } from "../theme/colors";
-
-const CATEGORY_LABELS: Record<PlaceCategory, string> = {
-  ROMANTIC_DATE: "Date",
-  RESTAURANT: "Restaurant",
-  DAIRY_RESTAURANT: "Dairy",
-  MEAT_RESTAURANT: "Meat",
-  SUSHI: "Sushi",
-  SUNSET: "Sunset",
-  ATTRACTION: "Attraction",
-};
-
-const PRICE_LABELS: Record<PriceRange, string> = {
-  FREE: "Free",
-  BUDGET: "₪",
-  MODERATE: "₪₪",
-  EXPENSIVE: "₪₪₪",
-};
 
 interface PlaceCardProps {
   place: Place;
   onPress: () => void;
   isLocked?: boolean;
   onLockedPress?: () => void;
+  sponsoredLabel?: string;
+  categoryLabel?: string;
+  priceLabel?: string;
+  distanceLabel?: string | null;
+  noPhotoLabel?: string;
+  lockedLabel?: string;
   testID?: string;
 }
 
@@ -37,11 +26,21 @@ export function PlaceCard({
   onPress,
   isLocked = false,
   onLockedPress,
+  sponsoredLabel = "Sponsored",
+  categoryLabel,
+  priceLabel,
+  distanceLabel,
+  noPhotoLabel = "No photo",
+  lockedLabel = "Subscribe to unlock",
   testID,
 }: PlaceCardProps) {
   const imageUri = place.images[0];
   const distance =
-    place.distance != null ? `${place.distance.toFixed(1)} km` : null;
+    distanceLabel !== undefined
+      ? distanceLabel
+      : place.distance != null
+        ? `${place.distance.toFixed(1)} km`
+        : null;
 
   const handlePress = () => {
     if (isLocked || place.isLocked) {
@@ -52,6 +51,7 @@ export function PlaceCard({
   };
 
   const locked = isLocked || place.isLocked;
+  const sponsored = !!place.isSponsored && !locked;
 
   return (
     <Pressable onPress={handlePress} style={styles.card} testID={testID}>
@@ -64,12 +64,17 @@ export function PlaceCard({
           />
         ) : (
           <View style={[styles.placeholder, locked && styles.imageLocked]}>
-            <Text style={styles.placeholderText}>No photo</Text>
+            <Text style={styles.placeholderText}>{noPhotoLabel}</Text>
           </View>
         )}
         {locked ? (
           <View style={styles.lockOverlay}>
-            <Text style={styles.lockText}>Subscribe to unlock</Text>
+            <Text style={styles.lockText}>{lockedLabel}</Text>
+          </View>
+        ) : null}
+        {sponsored ? (
+          <View style={styles.sponsoredBadge} testID="sponsored-badge">
+            <Text style={styles.sponsoredText}>{sponsoredLabel}</Text>
           </View>
         ) : null}
         {distance && !locked ? (
@@ -83,8 +88,10 @@ export function PlaceCard({
           {place.name}
         </Text>
         <View style={styles.metaRow}>
-          <Text style={styles.category}>{CATEGORY_LABELS[place.category]}</Text>
-          <Text style={styles.price}>{PRICE_LABELS[place.priceRange]}</Text>
+          <Text style={styles.category}>
+            {categoryLabel ?? place.category}
+          </Text>
+          <Text style={styles.price}>{priceLabel ?? place.priceRange}</Text>
         </View>
       </View>
     </Pressable>
@@ -123,6 +130,16 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(26, 25, 24, 0.28)",
   },
   lockText: { color: "#fff", fontWeight: "600", fontSize: 14 },
+  sponsoredBadge: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    backgroundColor: "rgba(26, 25, 24, 0.72)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  sponsoredText: { color: "#fff", fontSize: 11, fontWeight: "600" },
   distanceBadge: {
     position: "absolute",
     top: 12,

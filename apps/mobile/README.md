@@ -41,7 +41,7 @@ Copy `.env.example` to `.env`:
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `EXPO_PUBLIC_API_URL` | Yes | API base URL (`http://localhost:3000` for emulator) |
-| `EXPO_PUBLIC_GOOGLE_MAPS_KEY` | Yes | Google Maps Platform key |
+| `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN` | Android | Mapbox public token (`pk.`) for the in-app Android map. iPhone uses Apple Maps. |
 
 **Physical device:** use your computer's LAN IP instead of `localhost`, e.g. `http://192.168.1.10:3000`.
 
@@ -50,6 +50,8 @@ Copy `.env.example` to `.env`:
 The root layout calls `configureApiBaseUrl()` on startup using `EXPO_PUBLIC_API_URL`.
 
 ## EAS builds (Staging / Production)
+
+**Full Hebrew mentoring guide (Expo → TestFlight):** [docs/TESTFLIGHT_GUIDE_HE.md](../../docs/TESTFLIGHT_GUIDE_HE.md)
 
 Install EAS CLI and link the project once:
 
@@ -60,22 +62,31 @@ eas login
 eas init   # writes projectId into app.config.ts via EAS_PROJECT_ID
 ```
 
-Set Google Maps key as an EAS secret (not in git):
+Set the Mapbox public token as an EAS secret (not in git):
 
 ```bash
-eas secret:create --scope project --name EXPO_PUBLIC_GOOGLE_MAPS_KEY --value YOUR_KEY
+eas secret:create --scope project --name EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN --value YOUR_PK_TOKEN
 ```
 
 | Profile | Bundle ID | API URL | Distribution |
 |---------|-----------|---------|--------------|
-| `preview` / `staging` | `co.il.datespot.app.staging` | Staging Railway | Internal (APK) |
-| `production` | `co.il.datespot.app` | Production Railway | Store |
+| `preview` / `staging` | `co.il.datespot.app.staging` | Staging Railway | Internal (APK / internal iOS) |
+| `production` | `co.il.datespot.app` | Production Railway | Store / TestFlight |
 
 Build commands:
 
 ```bash
 pnpm --filter mobile build:staging:android
+pnpm --filter mobile build:staging:ios
 pnpm --filter mobile build:production:android
+pnpm --filter mobile build:production:ios
+```
+
+Submit production iOS build to App Store Connect (TestFlight):
+
+```bash
+cd apps/mobile
+eas submit --platform ios --profile production
 ```
 
 Staging uses `APP_VARIANT=staging` (app name **DateSpot Staging**, scheme `datespot-staging`). Production uses the store bundle `co.il.datespot.app`.
@@ -85,7 +96,7 @@ Staging uses `APP_VARIANT=staging` (app name **DateSpot Staging**, scheme `dates
 | Command | Description |
 |---------|-------------|
 | `pnpm dev` / `pnpm dev:lan` | Start Expo on LAN |
-| `pnpm dev:tunnel` | Start Expo via tunnel |
+| `pnpm dev:tunnel` | Start Expo via Cloudflare tunnel (public / hotspot Wi‑Fi) |
 | `pnpm dev:web` | Start Expo web on port 8081 (used by Playwright) |
 | `pnpm print-qr` | Print QR code to terminal |
 | `pnpm build` | Typecheck (`tsc --noEmit`) |

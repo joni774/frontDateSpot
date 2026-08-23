@@ -10,6 +10,16 @@
     "ok": "OK",
     "success": "Success"
   },
+  "validation": {
+    "required": "Required",
+    "invalidEmail": "Invalid email",
+    "passwordRequired": "Password is required",
+    "passwordMin": "At least 8 characters",
+    "mustBe18": "Must be 18+",
+    "invalidAge": "Invalid age",
+    "invalidPhone": "Invalid Israeli phone number",
+    "phonePlaceholder": "050-1234567"
+  },
   "auth": {
     "login": "Login",
     "register": "Register",
@@ -41,7 +51,57 @@
     "hidePassword": "Hide password",
     "invalidCredentials": "Invalid email or password",
     "networkError": "Cannot reach the server. Make sure the API is running and your phone is on the same network.",
-    "registrationFailed": "Registration failed. Email may already exist."
+    "registrationFailed": "Registration failed. Email may already exist.",
+    "forgotPassword": "Forgot password",
+    "forgotPasswordHint": "Enter your email and we'll send a password reset link",
+    "sendResetLink": "Send reset link",
+    "resetEmailSent": "If the email exists, a reset link was sent",
+    "resetEmailFailed": "Failed to send reset email",
+    "resetPassword": "Reset password",
+    "passwordResetSuccess": "Password reset successfully",
+    "passwordResetFailed": "Password reset failed",
+    "invalidResetToken": "Reset link is invalid or expired",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "passwordMismatch": "Passwords do not match",
+    "verifyPhone": "Verify phone",
+    "sendOtp": "Send OTP",
+    "verifyOtp": "Verify code",
+    "otpCode": "OTP code",
+    "otpSent": "Code sent to your phone",
+    "otpSendFailed": "Failed to send code",
+    "otpVerified": "Phone verified successfully",
+    "otpVerifyFailed": "Invalid or expired code",
+    "otpDevTitle": "OTP code (dev)",
+    "otpDevBody": "Your code: {{code}}",
+    "phoneRequired": "Phone number is required",
+    "otpCodeInvalid": "Enter the 6-digit code",
+    "phoneAlreadyVerified": "Your phone is already verified",
+    "socialLogin": "Social login",
+    "socialLoginHint": "Configure Google/Apple Client ID in .env for full use",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithApple": "Continue with Apple"
+  },
+  "tabs": {
+    "home": "Home",
+    "map": "Map",
+    "ai": "AI Chat",
+    "saved": "Saved",
+    "favorites": "Favorites",
+    "profile": "Profile"
+  },
+  "onboarding": {
+    "slide1Title": "Welcome to a world of going out",
+    "slide1Body": "Restaurants, dates and nights out — discover the most special places around you",
+    "slide2Title": "Discover a special app",
+    "slide2Body": "Map, recommendations, saved places and more — all in one place for you",
+    "continue": "Continue",
+    "skip": "Skip",
+    "next": "Next",
+    "start": "Let's start",
+    "step3Title": "Let's start",
+    "step3Body": "Create a new account and get a password by email, or log in if you already registered",
+    "createAccount": "Create new account",
+    "haveAccountLogin": "I have an account — Log in"
   },
   "home": {
     "title": "DateSpot",
@@ -66,6 +126,7 @@
       "attraction": "Attraction"
     },
     "noResults": "No places found nearby",
+    "expandRadius": "Expand to 50 km",
     "loadError": "Could not load places. Make sure the API is running.",
     "locked": "Subscribe to unlock",
     "km": "km",
@@ -83,22 +144,35 @@
     "locationYou": "your current location",
     "showTelAviv": "Show Tel Aviv places for now",
     "radiusKm": "{{km}} km",
-    "datingCta": "Dating 18+"
+    "datingCta": "Dating 18+",
+    "searchPlaceholder": "Search places to go...",
+    "recommended": "Recommended places",
+    "viewAll": "View all",
+    "nearbySection": "Discover nearby"
   },
   "map": {
     "webUnavailable": "The map is available in the mobile app. On web, browse places from the home screen.",
-    "mapboxMissingToken": "Missing Mapbox token. Set EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN to show the Android map."
+    "mapboxMissingToken": "Missing Mapbox token. Set EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN to show the Android map.",
+    "tapPlaceHint": "Tap a place on the map to navigate or contact it"
   },
   "place": {
     "navigate": "Navigate",
+    "call": "Call",
+    "whatsapp": "WhatsApp",
+    "waze": "Waze",
+    "googleMaps": "Google Maps",
+    "appleMaps": "Apple Maps",
     "share": "Share with partner",
-    "deliveryTitle": "Order delivery",
+    "deliveryTitle": "Order / delivery / pay",
+    "deliverySubtitle": "Ordering and payment happen on Ten Bis, Mishloha, or Wolt. DateSpot connects you to the place.",
+    "orderPriceLabel": "Price range",
     "orderWolt": "Order on Wolt",
     "orderTenBis": "Order on Ten Bis",
     "orderMishloha": "Order on Mishloha",
     "save": "Save place",
     "openNow": "Open now",
     "closed": "Closed",
+    "hoursUnknown": "Hours unknown",
     "price": "Price",
     "today": "Today",
     "address": "Address",
@@ -110,6 +184,16 @@
     "bookWhatsApp": "Book on WhatsApp",
     "bookWhatsAppText": "Hi, I found you on DateSpot and would like to book a table at {{name}}",
     "shareText": "Found the perfect date spot!\n{{name}}\n{{address}}\nDistance: {{distance}} {{km}}\nhttps://datespot.co.il",
+    "reviews": "Reviews",
+    "views": "{{count}} views",
+    "writeReview": "Write a review",
+    "reviewPlaceholder": "Tell us about your experience...",
+    "submitReview": "Post review",
+    "noPhoto": "No photo",
+    "loadError": "Could not load this place. Check your connection and try again.",
+    "actionFailed": "Could not update. Please try again.",
+    "reviewFailed": "Could not submit review. Please try again.",
+    "reviewsLoadError": "Could not load reviews",
     "categories": {
       "ROMANTIC_DATE": "Nightlife",
       "RESTAURANT": "Restaurant",
@@ -121,9 +205,9 @@
     },
     "priceRange": {
       "FREE": "Free",
-      "BUDGET": "₪",
-      "MODERATE": "₪₪",
-      "EXPENSIVE": "₪₪₪"
+      "BUDGET": "₪ · Budget",
+      "MODERATE": "₪₪ · Moderate",
+      "EXPENSIVE": "₪₪₪ · Expensive"
     },
     "days": {
       "sunday": "Sunday",
@@ -136,10 +220,10 @@
     }
   },
   "subscription": {
-    "title": "Upgrade your experience",
+    "title": "AI chat subscription",
     "mostPopular": "Most Popular",
     "free": "Free",
-    "vip": "VIP Restaurants",
+    "vip": "Unlimited AI chat",
     "dating": "Dating",
     "subscribe": "Subscribe",
     "comingSoon": "Coming soon",
@@ -148,17 +232,23 @@
     "purchaseSuccess": "Subscription updated!",
     "purchaseFailed": "Purchase failed",
     "features": {
-      "free1": "Up to 5 results",
-      "free2": "Basic categories",
-      "vip1": "Unlimited results",
-      "vip2": "All restaurants and places",
-      "vip3": "Premium experiences",
+      "free1": "All places unlocked",
+      "free2": "5 AI recommended places",
+      "vip1": "Unlimited AI chat",
+      "vip2": "Recommendations with no daily cap",
+      "vip3": "Billed monthly",
       "dating1": "Meet people nearby",
       "dating2": "Mutual matches",
       "dating3": "Visibility and safety controls"
     },
-    "vipPrice": "₪29.90/month",
-    "datingPrice": "₪39.90/month"
+    "vipPrice": "₪19.90/month",
+    "datingPrice": "₪39.90/month",
+    "tier": {
+      "FREE": "Free",
+      "PREMIUM": "Premium",
+      "VIP": "VIP",
+      "DATING": "Dating"
+    }
   },
   "checkout": {
     "title": "Pay in app",
@@ -168,7 +258,8 @@
     "cardNumber": "Card number",
     "expiry": "Expiry",
     "cvv": "CVV",
-    "secureNote": "Payment is completed in the app. In development the card is simulated; production will use a payment provider.",
+    "secureNote": "Dev mock checkout — full card number and CVV stay on device; only the last 4 digits are sent. Production will use a payment provider / store.",
+    "expiryPlaceholder": "MM/YY",
     "payNow": "Pay {{price}}",
     "success": "Payment succeeded and subscription updated",
     "failed": "Payment failed. Check your card details",
@@ -187,7 +278,17 @@
     "languageEnglish": "English",
     "languageArabic": "Arabic",
     "currentLanguage": "Language: {{lang}}",
-    "adminPanel": "Admin Panel"
+    "adminPanel": "Admin Panel",
+    "favorites": "Favorites",
+    "editProfile": "Edit profile",
+    "verifyPhone": "Verify phone (OTP)",
+    "accountSettings": "Account settings",
+    "preferences": "Preferences",
+    "upgradePremium": "AI chat subscription",
+    "upgradeAi": "Unlimited AI chat — ₪19.90/month",
+    "logoutAccount": "Log out of account",
+    "favoritesSubtitle": "Places you loved",
+    "savedSubtitle": "Saved lists"
   },
   "admin": {
     "title": "Admin Panel",
@@ -195,6 +296,7 @@
     "weeklyActive": "Weekly Active",
     "totalPlaces": "Total Places",
     "premiumUsers": "Premium Users",
+    "vipUsers": "VIP users",
     "placesByCategory": "Places by Category",
     "managePlaces": "Manage Places",
     "manageUsers": "Manage Users",
@@ -205,6 +307,7 @@
     "adminBadge": "Admin",
     "changeTier": "Change plan",
     "updateTierFailed": "Failed to update subscription",
+    "reorderFailed": "Failed to reorder places",
     "noUsers": "No users",
     "pageOf": "Page {{page}} of {{total}} ({{count}} users)",
     "previous": "Previous",
@@ -216,6 +319,7 @@
     "inactive": "Inactive",
     "activate": "Activate",
     "deactivate": "Deactivate",
+    "delete": "Delete",
     "deletePlace": "Deactivate place?",
     "noPlaces": "No places",
     "placeSaved": "Place saved successfully",
@@ -250,7 +354,10 @@
     "leadType": {
       "CALL": "Call",
       "WHATSAPP": "WhatsApp",
-      "WEBSITE": "Website"
+      "WEBSITE": "Website",
+      "DELIVERY_WOLT": "Wolt delivery",
+      "DELIVERY_TENBIS": "Ten Bis delivery",
+      "DELIVERY_MISHLOHA": "Mishloha delivery"
     },
     "imageUrls": "Image URLs (one per line)",
     "category": "Category",
@@ -258,6 +365,10 @@
   },
   "saved": {
     "empty": "No saved places yet"
+  },
+  "favorites": {
+    "title": "Favorites",
+    "empty": "No favorite places yet"
   },
   "changePassword": {
     "current": "Current Password",
@@ -287,10 +398,18 @@
     "interested": "Sent ✓",
     "matched": "Match! 💕",
     "matchAlert": "It's a mutual match!",
+    "matchNextSteps": "In-app chat is coming soon. Meanwhile — pick a date spot or ask the AI for a recommendation.",
+    "pickPlace": "Pick a place",
+    "askAi": "Ask AI",
+    "actionFailed": "Action failed. Please try again.",
     "block": "Block",
     "report": "Report",
     "blockConfirm": "Block this user?",
     "reportConfirm": "Report this user?",
+    "reportReasonTitle": "Reason for report",
+    "reportReasonSpam": "Spam",
+    "reportReasonHarassment": "Harassment",
+    "reportReasonOther": "Other",
     "blocked": "User blocked",
     "reported": "Report submitted",
     "loadError": "Could not load. Make sure the API is running.",
@@ -299,21 +418,21 @@
     "datingRequiredBody": "Meeting people nearby requires a dating subscription at ₪39.90/month.",
     "datingSubscribe": "Get dating subscription"
   },
-  "tabs": {
-    "home": "Home",
-    "map": "Map",
-    "ai": "AI",
-    "saved": "Saved",
-    "favorites": "Favorites",
-    "profile": "Profile"
-  },
   "ai": {
     "title": "AI Bot — Where to go?",
-    "inputPlaceholder": "Type a message...",
+    "headerTitle": "AI Chat",
+    "botName": "Bot AI",
+    "vibeHint": "Try searching by vibe:",
+    "inputPlaceholder": "Type here...",
     "send": "Send",
     "viewPlace": "View place",
+    "topPick": "Top pick",
+    "morePlaces": "More places",
     "loadError": "Could not load the bot. Make sure the API is running.",
-    "quotaRemaining": "{{count}}/{{limit}} queries left today",
+    "quotaRemaining": "{{count}}/{{limit}} messages left today",
+    "quotaExceeded": "You've reached your AI chat quota",
+    "quotaPaywallBody": "You got 5 places for free. To continue without limits, subscribe to unlimited AI chat for ₪19.90/month.",
+    "quotaSubscribe": "Unlimited AI chat — ₪19.90/month",
     "unlimited": "Unlimited",
     "shortcutPersonal": "My pick",
     "shortcutPersonalHint": "A romantic date tailored to you",

@@ -13,6 +13,14 @@ export type PlaceCategory =
 
 export type PriceRange = "FREE" | "BUDGET" | "MODERATE" | "EXPENSIVE";
 
+export type LeadType =
+  | "CALL"
+  | "WHATSAPP"
+  | "WEBSITE"
+  | "DELIVERY_WOLT"
+  | "DELIVERY_TENBIS"
+  | "DELIVERY_MISHLOHA";
+
 export type Language = "he" | "en" | "ar";
 
 export interface User {
@@ -39,8 +47,11 @@ export interface Place {
   images: string[];
   openingHours: Record<string, string>;
   isLocked?: boolean;
+  isSponsored?: boolean;
   latitude?: number;
   longitude?: number;
+  address?: string;
+  phone?: string | null;
 }
 
 export interface PlaceDetail extends Place {
@@ -87,6 +98,9 @@ export interface AdminStats {
   vipUsers: number;
   totalPlaces: number;
   placesByCategory: Record<PlaceCategory, number>;
+  totalLeads?: number;
+  weeklyLeads?: number;
+  leadRevenueAgorot?: number;
 }
 
 export interface AdminPlace {
@@ -112,6 +126,25 @@ export interface AdminPlace {
   isActive: boolean;
   displayOrder: number;
   viewCount?: number;
+  leadFeeAgorot?: number;
+  sponsoredUntil?: string | null;
+  sponsoredPriority?: number;
+}
+
+export interface AdminLead {
+  id: string;
+  type: LeadType;
+  feeAgorot: number;
+  createdAt: string;
+  place: { id: string; nameHe: string; nameEn: string };
+  user: { id: string; fullName: string; email: string };
+}
+
+export interface AdminLeadsResponse {
+  leads: AdminLead[];
+  total: number;
+  page: number;
+  totalPages: number;
 }
 
 export interface AdminUserListItem {
@@ -139,7 +172,14 @@ export interface AdminUsersResponse {
   totalPages: number;
 }
 
-export type AdminPlaceInput = Omit<AdminPlace, "id">;
+export type AdminPlaceInput = Omit<AdminPlace, "id" | "viewCount">;
+
+export interface PlaceLeadResponse {
+  id: string;
+  type: LeadType;
+  feeAgorot: number;
+  createdAt: string;
+}
 
 export interface ApiError {
   error: string;
@@ -178,6 +218,8 @@ export interface AiPlaceRecommendation {
   priceRange: PriceRange;
   distanceKm: number | null;
   isOpen: boolean;
+  isSponsored?: boolean;
+  imageUrl?: string | null;
 }
 
 export interface AiRecommendations {
@@ -204,6 +246,7 @@ export interface AiChatResponse {
   step: string;
   quickReplies: AiQuickReply[];
   advanced?: boolean;
+  quotaExceeded?: boolean;
 }
 
 export interface AiQuota {

@@ -10,6 +10,16 @@
     "ok": "אישור",
     "success": "הצלחה"
   },
+  "validation": {
+    "required": "שדה חובה",
+    "invalidEmail": "אימייל לא תקין",
+    "passwordRequired": "יש להזין סיסמה",
+    "passwordMin": "לפחות 8 תווים",
+    "mustBe18": "חייבים להיות בני 18+",
+    "invalidAge": "גיל לא תקין",
+    "invalidPhone": "מספר טלפון ישראלי לא תקין",
+    "phonePlaceholder": "050-1234567"
+  },
   "auth": {
     "login": "התחברות",
     "register": "הרשמה",
@@ -62,6 +72,10 @@
     "otpVerifyFailed": "קוד לא תקין או שפג תוקפו",
     "otpDevTitle": "קוד OTP (פיתוח)",
     "otpDevBody": "הקוד שלך: {{code}}",
+    "phoneRequired": "יש להזין מספר טלפון",
+    "otpCodeInvalid": "הזן קוד בן 6 ספרות",
+    "phoneAlreadyVerified": "הטלפון כבר מאומת",
+    "passwordMismatch": "הסיסמאות אינן תואמות",
     "socialLogin": "התחברות חברתית",
     "socialLoginHint": "הגדר Google/Apple Client ID ב-.env לשימוש מלא",
     "continueWithGoogle": "המשך עם Google",
@@ -70,14 +84,15 @@
   "tabs": {
     "home": "בית",
     "map": "מפה",
-    "ai": "AI",
+    "ai": "צאט AI",
     "saved": "שמורים",
     "favorites": "מועדפים",
     "profile": "פרופיל"
   },
   "map": {
     "webUnavailable": "המפה זמינה באפליקציה לנייד. בדפדפן אפשר לדפדף במקומות ממסך הבית.",
-    "mapboxMissingToken": "חסר מפתח Mapbox. הוסיפו EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN כדי להציג את המפה באנדרואיד."
+    "mapboxMissingToken": "חסר מפתח Mapbox. הוסיפו EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN כדי להציג את המפה באנדרואיד.",
+    "tapPlaceHint": "לחצו על מקום במפה לניווט וליצירת קשר"
   },
   "onboarding": {
     "slide1Title": "ברוך הבא לעולם של יציאות",
@@ -116,6 +131,7 @@
       "attraction": "אטרקציות"
     },
     "noResults": "לא נמצאו מקומות בקרבתך",
+    "expandRadius": "הרחב ל־50 ק״מ",
     "loadError": "לא הצלחנו לטעון מקומות. ודא שה-API רץ.",
     "locked": "שדרג לצפייה",
     "km": "ק״מ",
@@ -133,19 +149,30 @@
     "locationYou": "המיקום הנוכחי",
     "showTelAviv": "הצג בינתיים מקומות בתל אביב",
     "radiusKm": "{{km}} ק״מ",
-    "searchPlaceholder": "חיפוש מקום...",
-    "datingCta": "היכרויות 18+"
+    "searchPlaceholder": "חיפוש מקומות לבילוי...",
+    "datingCta": "היכרויות 18+",
+    "recommended": "מקומות מומלצים",
+    "viewAll": "הצג הכל",
+    "nearbySection": "גלה בסביבה"
   },
   "place": {
     "navigate": "נווט למקום",
+    "call": "התקשר",
+    "whatsapp": "וואטסאפ",
+    "waze": "Waze",
+    "googleMaps": "Google Maps",
+    "appleMaps": "Apple Maps",
     "share": "שתף עם פרטנר",
-    "deliveryTitle": "הזמנת משלוח",
+    "deliveryTitle": "הזמנה / משלוח / תשלום",
+    "deliverySubtitle": "ההזמנה והתשלום מתבצעים דרך תן ביס, משלוחה או Wolt. DateSpot מקשר אותך למקום.",
+    "orderPriceLabel": "טווח מחיר",
     "orderWolt": "הזמן ב־Wolt",
     "orderTenBis": "הזמן בתן ביס",
     "orderMishloha": "הזמן במשלוחה",
     "save": "שמור מקום",
     "openNow": "פתוח עכשיו",
     "closed": "סגור",
+    "hoursUnknown": "שעות לא ידועות",
     "price": "מחיר",
     "today": "היום",
     "address": "כתובת",
@@ -162,6 +189,11 @@
     "writeReview": "כתוב ביקורת",
     "reviewPlaceholder": "ספר/י על החוויה שלך...",
     "submitReview": "פרסם ביקורת",
+    "noPhoto": "אין תמונה",
+    "loadError": "לא ניתן לטעון את המקום. בדוק חיבור ונסה שוב.",
+    "actionFailed": "הפעולה נכשלה. נסה שוב.",
+    "reviewFailed": "שליחת הביקורת נכשלה. נסה שוב.",
+    "reviewsLoadError": "טעינת הביקורות נכשלה",
     "categories": {
       "ROMANTIC_DATE": "בילוי",
       "RESTAURANT": "מסעדה",
@@ -173,9 +205,9 @@
     },
     "priceRange": {
       "FREE": "חינם",
-      "BUDGET": "₪",
-      "MODERATE": "₪₪",
-      "EXPENSIVE": "₪₪₪"
+      "BUDGET": "₪ · זול",
+      "MODERATE": "₪₪ · בינוני",
+      "EXPENSIVE": "₪₪₪ · יקר"
     },
     "days": {
       "sunday": "ראשון",
@@ -188,10 +220,10 @@
     }
   },
   "subscription": {
-    "title": "שדרג את החוויה",
+    "title": "מנוי צ'אט AI",
     "mostPopular": "הכי פופולרי",
     "free": "חינמי",
-    "vip": "VIP מסעדות",
+    "vip": "צ'אט AI ללא הגבלה",
     "dating": "היכרויות",
     "subscribe": "הירשם",
     "comingSoon": "בקרוב",
@@ -200,17 +232,23 @@
     "purchaseSuccess": "המנוי עודכן בהצלחה!",
     "purchaseFailed": "הרכישה נכשלה",
     "features": {
-      "free1": "עד 5 תוצאות",
-      "free2": "קטגוריות בסיסיות",
-      "vip1": "תוצאות ללא הגבלה",
-      "vip2": "כל המסעדות והמקומות",
-      "vip3": "חוויות פרימיום",
+      "free1": "כל המקומות פתוחים",
+      "free2": "5 מקומות מומלצים מה-AI",
+      "vip1": "צ'אט AI ללא הגבלה",
+      "vip2": "המלצות בלי מכסה יומית",
+      "vip3": "חיוב חודשי",
       "dating1": "הכר אנשים סביבך",
       "dating2": "התאמות הדדיות",
       "dating3": "נראות ובטיחות מלאה"
     },
-    "vipPrice": "₪29.90/חודש",
-    "datingPrice": "₪39.90/חודש"
+    "vipPrice": "₪19.90/חודש",
+    "datingPrice": "₪39.90/חודש",
+    "tier": {
+      "FREE": "חינמי",
+      "PREMIUM": "פרמיום",
+      "VIP": "VIP",
+      "DATING": "היכרויות"
+    }
   },
   "checkout": {
     "title": "תשלום באפליקציה",
@@ -220,7 +258,8 @@
     "cardNumber": "מספר כרטיס",
     "expiry": "תוקף",
     "cvv": "CVV",
-    "secureNote": "התשלום מתבצע באפליקציה. בפיתוח הכרטיס מדומה; בפרודקשן יחובר לספק תשלומים.",
+    "secureNote": "התשלום מדומה בפיתוח — מספר הכרטיס וה-CVV לא נשלחים לשרת, רק 4 ספרות אחרונות. בפרודקשן יחובר ספק תשלומים / חנות.",
+    "expiryPlaceholder": "MM/YY",
     "payNow": "שלם {{price}}",
     "success": "התשלום הצליח והמנוי עודכן",
     "failed": "התשלום נכשל. בדוק את פרטי הכרטיס",
@@ -244,7 +283,14 @@
     "languageEnglish": "English",
     "languageArabic": "العربية",
     "currentLanguage": "שפה: {{lang}}",
-    "adminPanel": "לוח בקרה"
+    "adminPanel": "לוח בקרה",
+    "accountSettings": "הגדרות חשבון",
+    "preferences": "העדפות",
+    "upgradePremium": "מנוי צ'אט AI",
+    "upgradeAi": "מנוי צ'אט AI — ₪19.90 לחודש",
+    "logoutAccount": "התנתק מהחשבון",
+    "favoritesSubtitle": "המקומות שאהבת",
+    "savedSubtitle": "רשימות שמורות"
   },
   "admin": {
     "title": "לוח בקרה",
@@ -252,6 +298,7 @@
     "weeklyActive": "פעילים השבוע",
     "totalPlaces": "סה״כ מקומות",
     "premiumUsers": "משתמשי פרמיום",
+    "vipUsers": "משתמשי VIP",
     "placesByCategory": "מקומות לפי קטגוריה",
     "managePlaces": "ניהול מקומות",
     "manageUsers": "ניהול משתמשים",
@@ -262,6 +309,7 @@
     "adminBadge": "אדמין",
     "changeTier": "שנה מנוי",
     "updateTierFailed": "עדכון המנוי נכשל",
+    "reorderFailed": "שינוי הסדר נכשל",
     "noUsers": "אין משתמשים",
     "pageOf": "עמוד {{page}} מתוך {{total}} ({{count}} משתמשים)",
     "previous": "הקודם",
@@ -273,6 +321,7 @@
     "inactive": "לא פעיל",
     "activate": "הפעל",
     "deactivate": "השבת",
+    "delete": "מחק",
     "deletePlace": "להשבית מקום?",
     "noPlaces": "אין מקומות",
     "placeSaved": "המקום נשמר בהצלחה",
@@ -307,7 +356,10 @@
     "leadType": {
       "CALL": "שיחה",
       "WHATSAPP": "וואטסאפ",
-      "WEBSITE": "אתר"
+      "WEBSITE": "אתר",
+      "DELIVERY_WOLT": "משלוח Wolt",
+      "DELIVERY_TENBIS": "משלוח תן ביס",
+      "DELIVERY_MISHLOHA": "משלוח משלוחה"
     },
     "imageUrls": "קישורי תמונות (שורה לכל URL)",
     "category": "קטגוריה",
@@ -348,10 +400,18 @@
     "interested": "נשלח ✓",
     "matched": "התאמה! 💕",
     "matchAlert": "יש התאמה הדדית!",
+    "matchNextSteps": "צ'אט פנימי יגיע בקרוב. בינתיים — בחרו מקום לדייט או בקשו מהבוט המלצה.",
+    "pickPlace": "בחרו מקום",
+    "askAi": "שאלו את ה-AI",
+    "actionFailed": "הפעולה נכשלה. נסו שוב.",
     "block": "חסום",
     "report": "דווח",
     "blockConfirm": "לחסום משתמש/ת זה/ו?",
     "reportConfirm": "לדווח על משתמש/ת זה/ו?",
+    "reportReasonTitle": "סיבת הדיווח",
+    "reportReasonSpam": "ספאם",
+    "reportReasonHarassment": "הטרדה",
+    "reportReasonOther": "אחר",
     "blocked": "המשתמש/ת נחסם/ה",
     "reported": "הדיווח נשלח",
     "loadError": "לא הצלחנו לטעון. ודא שה-API רץ.",
@@ -362,11 +422,19 @@
   },
   "ai": {
     "title": "בוט AI — לאן יוצאים?",
-    "inputPlaceholder": "כתוב/י הודעה...",
+    "headerTitle": "צאט AI",
+    "botName": "Bot AI",
+    "vibeHint": "נסו לחפש לפי אווירה:",
+    "inputPlaceholder": "הקלידו כאן...",
     "send": "שלח",
     "viewPlace": "צפה במקום",
+    "topPick": "ההמלצה שלי",
+    "morePlaces": "עוד מקומות",
     "loadError": "לא הצלחנו לטעון את הבוט. ודא שה-API רץ.",
-    "quotaRemaining": "{{count}}/{{limit}} שאילתות נותרו היום",
+    "quotaRemaining": "{{count}}/{{limit}} הודעות נותרו היום",
+    "quotaExceeded": "הגעת למכסת התכתבות עם AI",
+    "quotaPaywallBody": "קיבלת 5 מקומות בחינם. כדי להמשיך בלי הגבלה, רכוש מנוי צ'אט AI ב־₪19.90 לחודש.",
+    "quotaSubscribe": "מנוי צ'אט AI — ₪19.90 לחודש",
     "unlimited": "שימוש ללא הגבלה",
     "shortcutPersonal": "המלצה שלי",
     "shortcutPersonalHint": "דייט רומנטי מותאם אליך",

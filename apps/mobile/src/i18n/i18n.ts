@@ -91,6 +91,8 @@ function applyRTL(lng: string): boolean {
   const directionChanged = I18nManager.isRTL !== shouldRtl;
   I18nManager.allowRTL(shouldRtl);
   I18nManager.forceRTL(shouldRtl);
+  // Keep left/right as physical sides so Hebrew is RTL without a mirrored UI.
+  I18nManager.swapLeftAndRightInRTL(false);
   return directionChanged;
 }
 

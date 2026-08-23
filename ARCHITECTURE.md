@@ -101,7 +101,7 @@ Detailed client monorepo map: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 | Concern | Location | Notes |
 |---------|----------|-------|
 | API base URL | `apps/mobile/.env` → `EXPO_PUBLIC_API_URL` | Set in root layout via `configureApiBaseUrl()` |
-| Google Maps | `EXPO_PUBLIC_GOOGLE_MAPS_KEY` | Required for maps (PRD 9.2) |
+| Mapbox (Android) | `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN` | Public token for the in-app Android map. iPhone uses Apple Maps. |
 | Auth / JWT | `packages/api-client/src/http.ts` | Token in AsyncStorage; 401 clears auth |
 | Data fetching | `@tanstack/react-query` in `_layout.tsx` | Default `staleTime: 30s`, `retry: 1` |
 | i18n | `apps/mobile/src/i18n/` | Default `he`; locales `he`, `en`, `ar` |
@@ -113,7 +113,7 @@ Detailed client monorepo map: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `EXPO_PUBLIC_API_URL` | Yes | API base URL (`http://localhost:3000` or Railway) |
-| `EXPO_PUBLIC_GOOGLE_MAPS_KEY` | Yes (PRD) | Google Maps Platform key |
+| `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN` | Android | Mapbox public token (`pk.`) for the in-app Android map |
 
 ### Commands
 

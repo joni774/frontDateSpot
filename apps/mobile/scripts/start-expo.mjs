@@ -1,5 +1,5 @@
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -85,7 +85,7 @@ function getLanIp() {
       console.warn("");
       console.warn("⚠️  Wi-Fi looks like public/hotspot (10.x). Phones often cannot reach this PC over LAN.");
       console.warn("   If Expo Go shows \"Could not connect to the server\", run:");
-      console.warn("   pnpm --filter mobile dev:tunnel");
+      console.warn("   pnpm dev:tunnel");
       console.warn("");
     }
     return pick.ip;
@@ -236,11 +236,11 @@ if (useLan) {
   console.log(`   exp://${host}:${METRO_PORT}`);
   console.log(`🔗 API URL for phone: ${apiUrl}`);
   console.log("");
-  console.log("   If connection fails, try: pnpm --filter mobile dev:tunnel");
+  console.log("   If connection fails, try: pnpm dev:tunnel");
   console.log("");
   printQrForUrl(`exp://${host}:${METRO_PORT}`);
 } else {
-  console.log("Starting Expo (tunnel) — works across networks / firewalls");
+  console.log("Starting Expo (tunnel via Cloudflare) — works across networks / firewalls");
   console.log(`🔗 API URL for phone: ${apiUrl}`);
   console.log("   QR code will appear when tunnel is ready (~30s)");
   console.log("");
@@ -251,6 +251,28 @@ if (!expoBin) {
   console.error("Could not find expo CLI. Run: pnpm install");
   process.exit(1);
 }
+
+function ensureCloudflaredBinary() {
+  if (!useTunnel) return;
+  const candidates = [mobileRoot, workspaceRoot].flatMap((root) => [
+    path.join(root, "node_modules", "expo-cloudflared", "dist", "cli.js"),
+    path.join(root, "node_modules", "expo-cloudflared", "bin", "cli.js"),
+    path.join(root, "node_modules", ".bin", "expo-cloudflared"),
+  ]);
+  const cli = candidates.find((p) => existsSync(p));
+  if (!cli) {
+    console.warn("expo-cloudflared not found locally — tunnel may download on first connect.");
+    return;
+  }
+  console.log("Ensuring Cloudflare tunnel binary is installed...");
+  try {
+    execFileSync(process.execPath, [cli, "install"], { cwd: mobileRoot, stdio: "inherit" });
+  } catch {
+    console.warn("Could not preinstall cloudflared — Expo will try on connect.");
+  }
+}
+
+ensureCloudflaredBinary();
 
 const expoCwd = resolveExpoCwd(mobileRoot, workspaceRoot, useTunnel);
 const expoEnv = { ...process.env };
@@ -270,6 +292,53 @@ const child = spawn(process.execPath, [expoBin, ...expoArgs], {
   cwd: expoCwd,
 });
 
+const tunnelUrlFile = path.join(mobileRoot, ".expo", "tunnel-url.txt");
+
+function expUrlFromHttps(httpsUrl) {
+  try {
+    return `exp://${new URL(httpsUrl.trim()).host}`;
+  } catch {
+    return null;
+  }
+}
+
+function extractTunnelExpUrl(text) {
+  const labeled = text.match(/\[expo-cloudflared\]\s+Tunnel URL:\s*(https:\/\/\S+)/i);
+  if (labeled) return expUrlFromHttps(labeled[1]);
+
+  const exp = text.match(/exp:\/\/[^\s"'<>]+/i);
+  if (exp?.[0] && /trycloudflare\.com|exp\.direct|ngrok/i.test(exp[0])) {
+    return exp[0].replace(/[.,;]+$/, "");
+  }
+
+  const cf = text.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/i);
+  if (cf) return expUrlFromHttps(cf[0]);
+
+  return null;
+}
+
+function persistTunnelExpUrl(expUrl) {
+  try {
+    mkdirSync(path.dirname(tunnelUrlFile), { recursive: true });
+    writeFileSync(tunnelUrlFile, `${expUrl}\n`, "utf8");
+  } catch {
+    // ignore — QR helpers can still parse live output / ngrok API
+  }
+}
+
+function printTunnelQr(expUrl) {
+  persistTunnelExpUrl(expUrl);
+  printQrForUrl(expUrl);
+  try {
+    execFileSync(process.execPath, [path.join(__dirname, "save-qr-html.mjs"), "--tunnel"], {
+      cwd: mobileRoot,
+      stdio: "inherit",
+    });
+  } catch (err) {
+    console.warn("Could not save expo-qr.html:", err?.message ?? err);
+  }
+}
+
 let tunnelQrPrinted = false;
 
 function forwardAndWatchTunnelReady(source, isStderr = false) {
@@ -277,12 +346,25 @@ function forwardAndWatchTunnelReady(source, isStderr = false) {
     const text = chunk.toString();
     process[isStderr ? "stderr" : "stdout"].write(chunk);
 
-    if (useTunnel && !tunnelQrPrinted && /tunnel ready/i.test(text)) {
+    if (!useTunnel || tunnelQrPrinted) return;
+
+    const extracted = extractTunnelExpUrl(text);
+    if (extracted) {
+      tunnelQrPrinted = true;
+      printTunnelQr(extracted);
+      return;
+    }
+
+    if (/tunnel ready/i.test(text)) {
       tunnelQrPrinted = true;
       setTimeout(() => {
-        printExpoQr({ mode: "tunnel", waitForTunnel: false }).catch((err) => {
-          console.warn("Could not print tunnel QR:", err?.message ?? err);
-        });
+        printExpoQr({ mode: "tunnel", waitForTunnel: false })
+          .then((url) => {
+            if (url) persistTunnelExpUrl(url);
+          })
+          .catch((err) => {
+            console.warn("Could not print tunnel QR:", err?.message ?? err);
+          });
         try {
           execFileSync(process.execPath, [path.join(__dirname, "save-qr-html.mjs"), "--tunnel"], {
             cwd: mobileRoot,

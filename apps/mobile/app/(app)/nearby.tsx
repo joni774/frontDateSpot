@@ -181,6 +181,7 @@ export default function NearbyScreen() {
         Alert.alert(t("common.success"), t("nearby.matchAlert"));
       }
     },
+    onError: () => Alert.alert(t("common.error"), t("nearby.actionFailed")),
   });
 
   const blockMutation = useMutation({
@@ -189,11 +190,14 @@ export default function NearbyScreen() {
       queryClient.invalidateQueries({ queryKey: ["nearby-users"] });
       Alert.alert(t("common.success"), t("nearby.blocked"));
     },
+    onError: () => Alert.alert(t("common.error"), t("nearby.actionFailed")),
   });
 
   const reportMutation = useMutation({
-    mutationFn: (userId: string) => reportNearbyUser(userId),
+    mutationFn: ({ userId, reason }: { userId: string; reason: string }) =>
+      reportNearbyUser(userId, reason),
     onSuccess: () => Alert.alert(t("common.success"), t("nearby.reported")),
+    onError: () => Alert.alert(t("common.error"), t("nearby.actionFailed")),
   });
 
   const handleToggleVisible = (next: boolean) => {
@@ -212,9 +216,20 @@ export default function NearbyScreen() {
   };
 
   const confirmReport = (userId: string) => {
-    Alert.alert(t("nearby.report"), t("nearby.reportConfirm"), [
+    Alert.alert(t("nearby.report"), t("nearby.reportReasonTitle"), [
+      {
+        text: t("nearby.reportReasonSpam"),
+        onPress: () => reportMutation.mutate({ userId, reason: "spam" }),
+      },
+      {
+        text: t("nearby.reportReasonHarassment"),
+        onPress: () => reportMutation.mutate({ userId, reason: "harassment" }),
+      },
+      {
+        text: t("nearby.reportReasonOther"),
+        onPress: () => reportMutation.mutate({ userId, reason: "other" }),
+      },
       { text: t("common.cancel"), style: "cancel" },
-      { text: t("nearby.report"), onPress: () => reportMutation.mutate(userId) },
     ]);
   };
 
@@ -329,14 +344,37 @@ export default function NearbyScreen() {
                 {matches.map((m: NearbyMatch) => (
                   <View
                     key={m.id}
-                    className="bg-primary/10 rounded-xl p-3 mb-2 flex-row items-center gap-3"
+                    className="bg-primary/10 rounded-xl p-3 mb-2"
                   >
-                    <Text className="text-2xl">💕</Text>
-                    <View>
-                      <Text className="font-semibold text-text">{m.displayName}</Text>
-                      <Text className="text-gray-500 text-sm">
-                        {t("nearby.yearsOld", { age: m.age })}
-                      </Text>
+                    <View className="flex-row items-center gap-3 mb-2">
+                      <Text className="text-2xl">💕</Text>
+                      <View className="flex-1">
+                        <Text className="font-semibold text-text">{m.displayName}</Text>
+                        <Text className="text-gray-500 text-sm">
+                          {t("nearby.yearsOld", { age: m.age })}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text className="text-text-muted text-sm mb-3 leading-5">
+                      {t("nearby.matchNextSteps")}
+                    </Text>
+                    <View className="flex-row gap-2">
+                      <Pressable
+                        onPress={() => router.push("/(app)/(tabs)")}
+                        className="flex-1 py-2 rounded-lg bg-primary items-center"
+                      >
+                        <Text className="text-white text-sm font-semibold">
+                          {t("nearby.pickPlace")}
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={() => router.push("/(app)/(tabs)/ai")}
+                        className="flex-1 py-2 rounded-lg border border-primary items-center"
+                      >
+                        <Text className="text-primary text-sm font-semibold">
+                          {t("nearby.askAi")}
+                        </Text>
+                      </Pressable>
                     </View>
                   </View>
                 ))}

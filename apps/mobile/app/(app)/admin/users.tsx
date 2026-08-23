@@ -6,7 +6,7 @@ import {
 import type { SubscriptionTier } from "@datespot/shared-types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -19,7 +19,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const TIERS: SubscriptionTier[] = ["FREE", "VIP", "DATING"];
+const TIERS: SubscriptionTier[] = ["FREE", "PREMIUM", "VIP", "DATING"];
 type TierFilter = SubscriptionTier | "ALL";
 
 export default function AdminUsersScreen() {
@@ -30,15 +30,16 @@ export default function AdminUsersScreen() {
   const [tierFilter, setTierFilter] = useState<TierFilter>("ALL");
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["admin-users", page],
-    queryFn: () => fetchAdminUsers(page),
+    queryKey: ["admin-users", page, tierFilter],
+    queryFn: () =>
+      fetchAdminUsers(
+        page,
+        20,
+        tierFilter === "ALL" ? undefined : tierFilter
+      ),
   });
 
-  const filteredUsers = useMemo(() => {
-    if (!data?.users) return [];
-    if (tierFilter === "ALL") return data.users;
-    return data.users.filter((u) => u.subscriptionTier === tierFilter);
-  }, [data?.users, tierFilter]);
+  const tierLabel = (tier: SubscriptionTier) => t(`subscription.tier.${tier}`);
 
   const tierMutation = useMutation({
     mutationFn: ({ id, tier }: { id: string; tier: SubscriptionTier }) =>
@@ -48,14 +49,14 @@ export default function AdminUsersScreen() {
     onError: () => Alert.alert(t("common.error"), t("admin.updateTierFailed")),
   });
 
-  const showTierPicker = (userId: string, currentTier: SubscriptionTier) => {
+  const showTierPicker = (userId: string) => {
     Alert.alert(t("admin.changeTier"), undefined, [
       ...TIERS.map((tier) => ({
-        text: tier,
+        text: tierLabel(tier),
         onPress: () => tierMutation.mutate({ id: userId, tier }),
       })),
       { text: t("common.cancel"), style: "cancel" as const },
-    ].filter(() => true));
+    ]);
   };
 
   return (
@@ -76,7 +77,10 @@ export default function AdminUsersScreen() {
         {(["ALL", ...TIERS] as TierFilter[]).map((tier) => (
           <Pressable
             key={tier}
-            onPress={() => setTierFilter(tier)}
+            onPress={() => {
+              setTierFilter(tier);
+              setPage(1);
+            }}
             className={`px-4 py-2 rounded-full ${
               tierFilter === tier ? "bg-primary" : "bg-gray-100"
             }`}
@@ -86,7 +90,7 @@ export default function AdminUsersScreen() {
                 tierFilter === tier ? "text-white" : "text-gray-700"
               }`}
             >
-              {tier === "ALL" ? t("admin.allTiers") : tier}
+              {tier === "ALL" ? t("admin.allTiers") : tierLabel(tier)}
             </Text>
           </Pressable>
         ))}
@@ -105,7 +109,7 @@ export default function AdminUsersScreen() {
       ) : (
         <>
           <FlatList
-            data={filteredUsers}
+            data={data?.users ?? []}
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ padding: 16 }}
             renderItem={({ item }) => (
@@ -121,15 +125,13 @@ export default function AdminUsersScreen() {
                 </Text>
                 <Pressable
                   disabled={item.isAdmin || tierMutation.isPending}
-                  onPress={() =>
-                    showTierPicker(item.id, item.subscriptionTier)
-                  }
+                  onPress={() => showTierPicker(item.id)}
                   className={`mt-3 px-3 py-2 rounded-lg border border-gray-200 self-start ${
                     item.isAdmin ? "opacity-40" : ""
                   }`}
                 >
                   <Text className="text-sm font-medium text-primary">
-                    {t("admin.plan")}: {item.subscriptionTier}
+                    {t("admin.plan")}: {tierLabel(item.subscriptionTier)}
                   </Text>
                 </Pressable>
               </View>
@@ -153,21 +155,21 @@ export default function AdminUsersScreen() {
               <View className="flex-row gap-2">
                 <Pressable
                   disabled={page <= 1}
-                  onPress={() => setPage((p) => p - 1)}
-                  className={`px-3 py-1.5 rounded-lg border border-gray-200 ${
+                  onPress={() => setPage((p) => Math.max(1, p - 1))}
+                  className={`px-3 py-2 rounded-lg border border-gray-200 ${
                     page <= 1 ? "opacity-40" : ""
                   }`}
                 >
-                  <Text className="text-sm">{t("admin.previous")}</Text>
+                  <Text>‹</Text>
                 </Pressable>
                 <Pressable
                   disabled={page >= data.totalPages}
                   onPress={() => setPage((p) => p + 1)}
-                  className={`px-3 py-1.5 rounded-lg border border-gray-200 ${
+                  className={`px-3 py-2 rounded-lg border border-gray-200 ${
                     page >= data.totalPages ? "opacity-40" : ""
                   }`}
                 >
-                  <Text className="text-sm">{t("admin.next")}</Text>
+                  <Text>›</Text>
                 </Pressable>
               </View>
             </View>

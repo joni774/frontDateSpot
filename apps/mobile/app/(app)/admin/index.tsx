@@ -69,11 +69,26 @@ export default function AdminDashboardScreen() {
               value={data.weeklyActiveUsers}
             />
             <StatCard label={t("admin.totalPlaces")} value={data.totalPlaces} />
+            <StatCard label={t("admin.vipUsers")} value={data.vipUsers} />
             <StatCard
               label={t("admin.premiumUsers")}
               value={data.premiumUsers}
             />
+            <StatCard label={t("admin.totalLeads")} value={data.totalLeads ?? 0} />
+            <StatCard
+              label={t("admin.weeklyLeads")}
+              value={data.weeklyLeads ?? 0}
+            />
           </View>
+
+          {(data.leadRevenueAgorot ?? 0) > 0 ? (
+            <View className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+              <Text className="text-sm text-gray-500">{t("admin.leadRevenue")}</Text>
+              <Text className="text-2xl font-bold text-text mt-1">
+                ₪{((data.leadRevenueAgorot ?? 0) / 100).toFixed(2)}
+              </Text>
+            </View>
+          ) : null}
 
           <View className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
             <Text className="text-lg font-semibold text-text mb-4">
@@ -104,6 +119,17 @@ export default function AdminDashboardScreen() {
           >
             <Text className="text-base font-semibold text-text">
               {t("admin.managePlaces")}
+            </Text>
+            <Text className="text-gray-400">→</Text>
+          </Pressable>
+
+          <Pressable
+            testID="admin-manage-leads"
+            onPress={() => router.push("/(app)/admin/leads")}
+            className="bg-white rounded-xl border border-gray-200 p-4 mb-3 flex-row justify-between items-center"
+          >
+            <Text className="text-base font-semibold text-text">
+              {t("admin.manageLeads")}
             </Text>
             <Text className="text-gray-400">→</Text>
           </Pressable>

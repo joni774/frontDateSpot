@@ -10,6 +10,16 @@
     "ok": "موافق",
     "success": "نجاح"
   },
+  "validation": {
+    "required": "حقل مطلوب",
+    "invalidEmail": "بريد إلكتروني غير صالح",
+    "passwordRequired": "كلمة المرور مطلوبة",
+    "passwordMin": "8 أحرف على الأقل",
+    "mustBe18": "يجب أن يكون العمر 18+",
+    "invalidAge": "عمر غير صالح",
+    "invalidPhone": "رقم هاتف إسرائيلي غير صالح",
+    "phonePlaceholder": "050-1234567"
+  },
   "auth": {
     "login": "تسجيل الدخول",
     "register": "التسجيل",
@@ -41,7 +51,57 @@
     "hidePassword": "إخفاء كلمة المرور",
     "invalidCredentials": "البريد أو كلمة المرور غير صحيحة",
     "networkError": "تعذر الاتصال بالخادم. تأكد أن API يعمل وأن الهاتف والكمبيوتر على نفس الشبكة.",
-    "registrationFailed": "فشل التسجيل. قد يكون البريد مستخدماً."
+    "registrationFailed": "فشل التسجيل. قد يكون البريد مستخدماً.",
+    "forgotPassword": "نسيت كلمة المرور",
+    "forgotPasswordHint": "أدخل بريدك وسنرسل رابط إعادة تعيين كلمة المرور",
+    "sendResetLink": "إرسال رابط إعادة التعيين",
+    "resetEmailSent": "إذا كان البريد موجوداً، تم إرسال رابط إعادة التعيين",
+    "resetEmailFailed": "فشل إرسال بريد إعادة التعيين",
+    "resetPassword": "إعادة تعيين كلمة المرور",
+    "passwordResetSuccess": "تمت إعادة تعيين كلمة المرور بنجاح",
+    "passwordResetFailed": "فشلت إعادة تعيين كلمة المرور",
+    "invalidResetToken": "رابط إعادة التعيين غير صالح أو منتهٍ",
+    "passwordMinLength": "يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل",
+    "passwordMismatch": "كلمتا المرور غير متطابقتين",
+    "verifyPhone": "التحقق من الهاتف",
+    "sendOtp": "إرسال رمز OTP",
+    "verifyOtp": "تحقق من الرمز",
+    "otpCode": "رمز OTP",
+    "otpSent": "تم إرسال الرمز إلى هاتفك",
+    "otpSendFailed": "فشل إرسال الرمز",
+    "otpVerified": "تم التحقق من الهاتف بنجاح",
+    "otpVerifyFailed": "رمز غير صالح أو منتهٍ",
+    "otpDevTitle": "رمز OTP (تطوير)",
+    "otpDevBody": "رمزك: {{code}}",
+    "phoneRequired": "رقم الهاتف مطلوب",
+    "otpCodeInvalid": "أدخل الرمز المكوّن من 6 أرقام",
+    "phoneAlreadyVerified": "هاتفك مُوثَّق بالفعل",
+    "socialLogin": "تسجيل دخول اجتماعي",
+    "socialLoginHint": "اضبط Google/Apple Client ID في .env للاستخدام الكامل",
+    "continueWithGoogle": "المتابعة مع Google",
+    "continueWithApple": "المتابعة مع Apple"
+  },
+  "tabs": {
+    "home": "الرئيسية",
+    "map": "الخريطة",
+    "ai": "دردشة AI",
+    "saved": "المحفوظات",
+    "favorites": "المفضلة",
+    "profile": "الملف"
+  },
+  "onboarding": {
+    "slide1Title": "مرحباً بك في عالم الخروجات",
+    "slide1Body": "مطاعم ومواعيد وسهرات — اكتشف أجمل الأماكن من حولك",
+    "slide2Title": "اكتشف تطبيقاً مميزاً",
+    "slide2Body": "خريطة وتوصيات وأماكن محفوظة والمزيد — كل شيء في مكان واحد",
+    "continue": "متابعة",
+    "skip": "تخطّي",
+    "next": "التالي",
+    "start": "لنبدأ",
+    "step3Title": "لنبدأ",
+    "step3Body": "أنشئ حساباً جديداً واحصل على كلمة مرور بالبريد، أو سجّل الدخول إن كان لديك حساب",
+    "createAccount": "إنشاء حساب جديد",
+    "haveAccountLogin": "لدي حساب — تسجيل الدخول"
   },
   "home": {
     "title": "DateSpot",
@@ -56,6 +116,7 @@
       "attraction": "معالم"
     },
     "noResults": "لم يتم العثور على أماكن قريبة",
+    "expandRadius": "وسّع إلى 50 كم",
     "locked": "اشترك للفتح",
     "km": "كم",
     "locationDenied": "تم رفض إذن الموقع — عرض أماكن قرب تل أبيب",
@@ -72,22 +133,35 @@
     "locationYou": "موقعك الحالي",
     "showTelAviv": "عرض أماكن تل أبيب مؤقتاً",
     "radiusKm": "{{km}} كم",
-    "datingCta": "تعارف 18+"
+    "datingCta": "تعارف 18+",
+    "searchPlaceholder": "ابحث عن أماكن للخروج...",
+    "recommended": "أماكن موصى بها",
+    "viewAll": "عرض الكل",
+    "nearbySection": "اكتشف في الجوار"
   },
   "map": {
     "webUnavailable": "الخريطة متاحة في تطبيق الجوال. على الويب يمكنك تصفح الأماكن من الشاشة الرئيسية.",
-    "mapboxMissingToken": "رمز Mapbox مفقود. عيّن EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN لعرض الخريطة على أندرويد."
+    "mapboxMissingToken": "رمز Mapbox مفقود. عيّن EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN لعرض الخريطة على أندرويد.",
+    "tapPlaceHint": "اضغط على مكان في الخريطة للتنقل أو التواصل"
   },
   "place": {
     "navigate": "التنقل",
+    "call": "اتصال",
+    "whatsapp": "واتساب",
+    "waze": "Waze",
+    "googleMaps": "Google Maps",
+    "appleMaps": "Apple Maps",
     "share": "شارك مع الشريك",
-    "deliveryTitle": "طلب توصيل",
+    "deliveryTitle": "طلب / توصيل / دفع",
+    "deliverySubtitle": "الطلب والدفع يتمان عبر تن بيس أو مشلوحا أو Wolt. DateSpot يربطك بالمكان.",
+    "orderPriceLabel": "نطاق السعر",
     "orderWolt": "اطلب عبر Wolt",
     "orderTenBis": "اطلب عبر تن بيس",
     "orderMishloha": "اطلب عبر مشلوحا",
     "save": "حفظ المكان",
     "openNow": "مفتوح الآن",
     "closed": "مغلق",
+    "hoursUnknown": "الساعات غير معروفة",
     "price": "السعر",
     "today": "اليوم",
     "address": "العنوان",
@@ -99,6 +173,16 @@
     "bookWhatsApp": "احجز عبر واتساب",
     "bookWhatsAppText": "مرحباً، وصلت إليكم عبر DateSpot وأود حجز مكان في {{name}}",
     "shareText": "وجدت مكاناً مثالياً للموعد!\n{{name}}\n{{address}}\nالمسافة: {{distance}} {{km}}\nhttps://datespot.co.il",
+    "reviews": "المراجعات",
+    "views": "{{count}} مشاهدة",
+    "writeReview": "اكتب مراجعة",
+    "reviewPlaceholder": "أخبرنا عن تجربتك...",
+    "submitReview": "نشر المراجعة",
+    "noPhoto": "لا توجد صورة",
+    "loadError": "تعذر تحميل المكان. تحقق من الاتصال وحاول مرة أخرى.",
+    "actionFailed": "تعذر التحديث. حاول مرة أخرى.",
+    "reviewFailed": "تعذر إرسال المراجعة. حاول مرة أخرى.",
+    "reviewsLoadError": "تعذر تحميل المراجعات",
     "categories": {
       "ROMANTIC_DATE": "سهرة",
       "RESTAURANT": "مطعم",
@@ -110,9 +194,9 @@
     },
     "priceRange": {
       "FREE": "مجاني",
-      "BUDGET": "₪",
-      "MODERATE": "₪₪",
-      "EXPENSIVE": "₪₪₪"
+      "BUDGET": "₪ · رخيص",
+      "MODERATE": "₪₪ · متوسط",
+      "EXPENSIVE": "₪₪₪ · غالي"
     },
     "days": {
       "sunday": "الأحد",
@@ -125,10 +209,10 @@
     }
   },
   "subscription": {
-    "title": "طور تجربتك",
+    "title": "اشتراك دردشة AI",
     "mostPopular": "الأكثر شعبية",
     "free": "مجاني",
-    "vip": "VIP مطاعم",
+    "vip": "دردشة AI بلا حدود",
     "dating": "تعارف",
     "subscribe": "اشترك",
     "comingSoon": "قريباً",
@@ -137,17 +221,23 @@
     "purchaseSuccess": "تم تحديث الاشتراك!",
     "purchaseFailed": "فشل الشراء",
     "features": {
-      "free1": "حتى 5 نتائج",
-      "free2": "فئات أساسية",
-      "vip1": "نتائج غير محدودة",
-      "vip2": "جميع المطاعم والأماكن",
-      "vip3": "تجارب مميزة",
+      "free1": "كل الأماكن مفتوحة",
+      "free2": "5 أماكن موصى بها من AI",
+      "vip1": "دردشة AI بلا حدود",
+      "vip2": "توصيات بلا حد يومي",
+      "vip3": "فوترة شهرية",
       "dating1": "تعرف على أشخاص قريبين",
       "dating2": "تطابقات متبادلة",
       "dating3": "تحكم بالظهور والأمان"
     },
-    "vipPrice": "₪29.90/شهر",
-    "datingPrice": "₪39.90/شهر"
+    "vipPrice": "₪19.90/شهر",
+    "datingPrice": "₪39.90/شهر",
+    "tier": {
+      "FREE": "مجاني",
+      "PREMIUM": "بريميوم",
+      "VIP": "VIP",
+      "DATING": "تعارف"
+    }
   },
   "checkout": {
     "title": "الدفع في التطبيق",
@@ -157,7 +247,8 @@
     "cardNumber": "رقم البطاقة",
     "expiry": "الانتهاء",
     "cvv": "CVV",
-    "secureNote": "يتم الدفع داخل التطبيق. في التطوير البطاقة محاكاة؛ في الإنتاج سيتم ربط مزود دفع.",
+    "secureNote": "محاكاة في التطوير — رقم البطاقة وCVV يبقيان على الجهاز؛ تُرسل آخر 4 أرقام فقط. في الإنتاج سيُربط مزود دفع / المتجر.",
+    "expiryPlaceholder": "MM/YY",
     "payNow": "ادفع {{price}}",
     "success": "تم الدفع وتحديث الاشتراك",
     "failed": "فشل الدفع. تحقق من تفاصيل البطاقة",
@@ -176,7 +267,17 @@
     "languageEnglish": "English",
     "languageArabic": "العربية",
     "currentLanguage": "اللغة: {{lang}}",
-    "adminPanel": "لوحة التحكم"
+    "adminPanel": "لوحة التحكم",
+    "favorites": "المفضلة",
+    "editProfile": "تعديل الملف",
+    "verifyPhone": "تأكيد الهاتف (OTP)",
+    "accountSettings": "إعدادات الحساب",
+    "preferences": "التفضيلات",
+    "upgradePremium": "اشتراك دردشة AI",
+    "upgradeAi": "دردشة AI بلا حدود — ₪19.90 شهرياً",
+    "logoutAccount": "تسجيل الخروج من الحساب",
+    "favoritesSubtitle": "الأماكن التي أحببتها",
+    "savedSubtitle": "القوائم المحفوظة"
   },
   "admin": {
     "title": "لوحة التحكم",
@@ -184,6 +285,7 @@
     "weeklyActive": "نشطون هذا الأسبوع",
     "totalPlaces": "إجمالي الأماكن",
     "premiumUsers": "مستخدمون بريميوم",
+    "vipUsers": "مستخدمو VIP",
     "placesByCategory": "الأماكن حسب الفئة",
     "managePlaces": "إدارة الأماكن",
     "manageUsers": "إدارة المستخدمين",
@@ -194,6 +296,7 @@
     "adminBadge": "مدير",
     "changeTier": "تغيير الخطة",
     "updateTierFailed": "فشل تحديث الاشتراك",
+    "reorderFailed": "فشل تغيير الترتيب",
     "noUsers": "لا يوجد مستخدمون",
     "pageOf": "صفحة {{page}} من {{total}} ({{count}} مستخدم)",
     "previous": "السابق",
@@ -205,6 +308,7 @@
     "inactive": "غير نشط",
     "activate": "تفعيل",
     "deactivate": "إلغاء التفعيل",
+    "delete": "حذف",
     "deletePlace": "إلغاء تفعيل المكان؟",
     "noPlaces": "لا توجد أماكن",
     "placeSaved": "تم حفظ المكان بنجاح",
@@ -239,7 +343,10 @@
     "leadType": {
       "CALL": "مكالمة",
       "WHATSAPP": "واتساب",
-      "WEBSITE": "موقع"
+      "WEBSITE": "موقع",
+      "DELIVERY_WOLT": "توصيل Wolt",
+      "DELIVERY_TENBIS": "توصيل تن بيس",
+      "DELIVERY_MISHLOHA": "توصيل مشلوحا"
     },
     "imageUrls": "روابط الصور (رابط لكل سطر)",
     "category": "الفئة",
@@ -247,6 +354,10 @@
   },
   "saved": {
     "empty": "لا توجد أماكن محفوظة بعد"
+  },
+  "favorites": {
+    "title": "المفضلة",
+    "empty": "لا توجد أماكن مفضلة بعد"
   },
   "changePassword": {
     "current": "كلمة المرور الحالية",
@@ -276,10 +387,18 @@
     "interested": "تم الإرسال ✓",
     "matched": "تطابق! 💕",
     "matchAlert": "تطابق متبادل!",
+    "matchNextSteps": "الدردشة داخل التطبيق قادمة قريباً. في هذه الأثناء — اختر مكاناً أو اطلب توصية من AI.",
+    "pickPlace": "اختر مكاناً",
+    "askAi": "اسأل AI",
+    "actionFailed": "فشلت العملية. حاول مرة أخرى.",
     "block": "حظر",
     "report": "إبلاغ",
     "blockConfirm": "حظر هذا المستخدم؟",
     "reportConfirm": "الإبلاغ عن هذا المستخدم؟",
+    "reportReasonTitle": "سبب البلاغ",
+    "reportReasonSpam": "رسائل مزعجة",
+    "reportReasonHarassment": "مضايقة",
+    "reportReasonOther": "أخرى",
     "blocked": "تم حظر المستخدم",
     "reported": "تم إرسال البلاغ",
     "loadError": "تعذر التحميل. تأكد أن الخادم يعمل.",
@@ -288,21 +407,21 @@
     "datingRequiredBody": "للتعرف على أشخاص قريبين يلزم اشتراك تعارف بـ ₪39.90 شهرياً.",
     "datingSubscribe": "الاشتراك في التعارف"
   },
-  "tabs": {
-    "home": "الرئيسية",
-    "map": "الخريطة",
-    "ai": "AI",
-    "saved": "المحفوظات",
-    "favorites": "المفضلة",
-    "profile": "الملف"
-  },
   "ai": {
     "title": "بوت AI — إلى أين نخرج؟",
-    "inputPlaceholder": "اكتب رسالة...",
+    "headerTitle": "دردشة AI",
+    "botName": "Bot AI",
+    "vibeHint": "جرّب البحث حسب الأجواء:",
+    "inputPlaceholder": "اكتب هنا...",
     "send": "إرسال",
     "viewPlace": "عرض المكان",
+    "topPick": "توصيتي",
+    "morePlaces": "أماكن إضافية",
     "loadError": "تعذر تحميل البوت. تأكد أن الخادم يعمل.",
-    "quotaRemaining": "{{count}}/{{limit}} استفسارات متبقية اليوم",
+    "quotaRemaining": "{{count}}/{{limit}} رسائل متبقية اليوم",
+    "quotaExceeded": "وصلت إلى حد المراسلة مع AI",
+    "quotaPaywallBody": "حصلت على 5 أماكن مجاناً. للمتابعة بلا حدود، اشترك في دردشة AI مقابل ₪19.90 شهرياً.",
+    "quotaSubscribe": "دردشة AI بلا حدود — ₪19.90 شهرياً",
     "unlimited": "استخدام غير محدود",
     "shortcutPersonal": "توصيتي",
     "shortcutPersonalHint": "موعد رومانسي يناسبك",

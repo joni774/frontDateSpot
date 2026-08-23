@@ -21,7 +21,7 @@ export default function ResetPasswordScreen() {
       return;
     }
     if (password !== confirm) {
-      Alert.alert(t("common.error"), t("changePassword.confirm"));
+      Alert.alert(t("common.error"), t("auth.passwordMismatch"));
       return;
     }
     if (!token) {

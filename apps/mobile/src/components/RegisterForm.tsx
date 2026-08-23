@@ -3,24 +3,23 @@ import { register } from "@datespot/api-client";
 import { isAxiosError } from "axios";
 import { Button, Input } from "@datespot/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
+import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 import { z } from "zod";
 
 const phoneRegex = /^(05\d-?\d{7}|\+9725\d-?\d{7})$/;
 
-const schema = z.object({
-  firstName: z.string().min(1, "Required"),
-  lastName: z.string().min(1, "Required"),
-  age: z.coerce.number().min(18, "Must be 18+").max(120, "Invalid age"),
-  phone: z.string().regex(phoneRegex, "Invalid Israeli phone number"),
-  email: z.string().email("Invalid email"),
-});
-
-type FormData = z.infer<typeof schema>;
+type FormData = {
+  firstName: string;
+  lastName: string;
+  age: number;
+  phone: string;
+  email: string;
+};
 
 interface RegisterFormProps {
   onSuccess?: () => void;
@@ -34,6 +33,29 @@ export function RegisterForm({ onSuccess, showHeader = true }: RegisterFormProps
   const [devPassword, setDevPassword] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [passwordCopied, setPasswordCopied] = useState(false);
+
+  const schema = useMemo(
+    () =>
+      z.object({
+        firstName: z.string().min(1, t("validation.required")),
+        lastName: z.string().min(1, t("validation.required")),
+        age: z.coerce
+          .number({ invalid_type_error: t("validation.invalidAge") })
+          .min(18, t("validation.mustBe18"))
+          .max(120, t("validation.invalidAge")),
+        phone: z.string().regex(phoneRegex, t("validation.invalidPhone")),
+        email: z.string().email(t("validation.invalidEmail")),
+      }),
+    [t]
+  );
+
+  const copyDevPassword = async () => {
+    if (!devPassword) return;
+    await Clipboard.setStringAsync(devPassword);
+    setPasswordCopied(true);
+    setTimeout(() => setPasswordCopied(false), 2000);
+  };
 
   const {
     control,
@@ -90,9 +112,24 @@ export function RegisterForm({ onSuccess, showHeader = true }: RegisterFormProps
             <Text className="text-text-muted text-sm text-center mb-2">
               {t("auth.devPasswordHint")}
             </Text>
-            <Text className="text-primary text-center text-lg font-semibold tracking-wide">
-              {devPassword}
-            </Text>
+            <TextInput
+              value={devPassword}
+              editable={false}
+              selectTextOnFocus
+              showSoftInputOnFocus={false}
+              contextMenuHidden={false}
+              className="text-primary text-center text-lg font-semibold tracking-wide py-2"
+              accessibilityLabel={t("auth.devPasswordHint")}
+            />
+            <Pressable
+              testID="copy-dev-password"
+              onPress={() => void copyDevPassword()}
+              className="mt-3 py-2.5 rounded-[10px] border border-primary items-center"
+            >
+              <Text className="text-primary font-semibold">
+                {passwordCopied ? t("auth.passwordCopied") : t("auth.copyPassword")}
+              </Text>
+            </Pressable>
           </View>
         ) : null}
         <Button onPress={() => router.replace("/auth/login")}>{t("auth.goToLogin")}</Button>
@@ -180,7 +217,7 @@ export function RegisterForm({ onSuccess, showHeader = true }: RegisterFormProps
             onChangeText={onChange}
             onBlur={onBlur}
             keyboardType="phone-pad"
-            placeholder="050-1234567"
+            placeholder={t("validation.phonePlaceholder")}
             error={fieldError?.message}
           />
         )}

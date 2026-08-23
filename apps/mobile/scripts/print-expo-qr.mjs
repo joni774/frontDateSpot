@@ -91,24 +91,40 @@ function getLanExpUrl() {
   return `exp://${host}:${port}`;
 }
 
+function readPersistedTunnelExpUrl() {
+  const filePath = path.join(mobileRoot, ".expo", "tunnel-url.txt");
+  if (!existsSync(filePath)) return null;
+  const value = readFileSync(filePath, "utf8").trim();
+  return value.startsWith("exp://") ? value : null;
+}
+
+async function fetchNgrokTunnelExpUrl() {
+  const res = await fetch("http://127.0.0.1:4040/api/tunnels");
+  if (!res.ok) return null;
+  const data = await res.json();
+  const tunnel =
+    data.tunnels?.find((t) => t.public_url?.includes("exp.direct")) ??
+    data.tunnels?.find((t) => t.public_url?.includes("trycloudflare.com")) ??
+    data.tunnels?.find((t) => t.public_url?.startsWith("https://"));
+  if (!tunnel?.public_url) return null;
+  return `exp://${new URL(tunnel.public_url).host}`;
+}
+
 async function fetchTunnelExpUrl(timeoutMs = 90_000) {
+  const persisted = readPersistedTunnelExpUrl();
+  if (persisted) return persisted;
+
   const start = Date.now();
 
   while (Date.now() - start < timeoutMs) {
+    const persistedAgain = readPersistedTunnelExpUrl();
+    if (persistedAgain) return persistedAgain;
+
     try {
-      const res = await fetch("http://127.0.0.1:4040/api/tunnels");
-      if (res.ok) {
-        const data = await res.json();
-        const tunnel =
-          data.tunnels?.find((t) => t.public_url?.includes("exp.direct")) ??
-          data.tunnels?.find((t) => t.public_url?.startsWith("https://"));
-        if (tunnel?.public_url) {
-          const host = new URL(tunnel.public_url).host;
-          return `exp://${host}`;
-        }
-      }
+      const fromNgrok = await fetchNgrokTunnelExpUrl();
+      if (fromNgrok) return fromNgrok;
     } catch {
-      // ngrok not ready yet
+      // tunnel API not ready yet
     }
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }

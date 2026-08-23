@@ -13,6 +13,8 @@ Instructions for AI coding agents working in this repository.
 | When editing | Read |
 |--------------|------|
 | `apps/mobile/**` | [apps/mobile/README.md](apps/mobile/README.md) |
+| `apps/landing/**` | [apps/landing/README.md](apps/landing/README.md) |
+| EAS / TestFlight (iOS) | [docs/TESTFLIGHT_GUIDE_HE.md](docs/TESTFLIGHT_GUIDE_HE.md) |
 | `packages/api-client/**` | [packages/api-client/README.md](packages/api-client/README.md) |
 | `packages/ui/**` | [packages/ui/README.md](packages/ui/README.md) |
 | `packages/shared-types/**` | [packages/shared-types/README.md](packages/shared-types/README.md) |
@@ -24,6 +26,7 @@ pnpm install
 pnpm dev                    # Expo mobile (LAN)
 pnpm dev:lan                # Same as dev
 pnpm dev:tunnel             # Expo via tunnel
+pnpm dev:landing            # Marketing landing (Vite)
 pnpm build                  # turbo build all packages
 pnpm lint                   # turbo lint all packages
 ```

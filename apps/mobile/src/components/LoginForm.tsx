@@ -4,20 +4,19 @@ import { isAxiosError } from "axios";
 import { Button, Input } from "@datespot/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
 import { z } from "zod";
 
 import { useAuthSession } from "../auth/AuthSession";
+import { textAlignStart } from "../lib/rtl";
 
-const schema = z.object({
-  email: z.string().email("Invalid email"),
-  password: z.string().min(1, "Password is required"),
-});
-
-type FormData = z.infer<typeof schema>;
+type FormData = {
+  email: string;
+  password: string;
+};
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -30,6 +29,15 @@ export function LoginForm({ onSuccess, showHeader = true }: LoginFormProps) {
   const { activateSession } = useAuthSession();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const schema = useMemo(
+    () =>
+      z.object({
+        email: z.string().email(t("validation.invalidEmail")),
+        password: z.string().min(1, t("validation.passwordRequired")),
+      }),
+    [t]
+  );
 
   const {
     control,
@@ -107,7 +115,10 @@ export function LoginForm({ onSuccess, showHeader = true }: LoginFormProps) {
               error={fieldError?.message}
             />
             <Pressable onPress={() => setShowPassword(!showPassword)} className="mb-2">
-              <Text className="text-primary text-sm text-right">
+              <Text
+                className="text-primary text-sm"
+                style={{ textAlign: textAlignStart() }}
+              >
                 {showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
               </Text>
             </Pressable>

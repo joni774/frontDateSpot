@@ -4,9 +4,16 @@ import { useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 
+import { colors } from "../theme/colors";
 import { hasCoords, type PlaceMapProps } from "./placeMapTypes";
 
-export function PlaceMap({ coords, places }: PlaceMapProps) {
+export function PlaceMap({
+  coords,
+  places,
+  selectedPlaceId,
+  onPlacePress,
+  zoomDelta = 0.08,
+}: PlaceMapProps) {
   const router = useRouter();
   const mapRef = useRef<MapView>(null);
 
@@ -15,12 +22,12 @@ export function PlaceMap({ coords, places }: PlaceMapProps) {
       {
         latitude: coords.lat,
         longitude: coords.lng,
-        latitudeDelta: 0.08,
-        longitudeDelta: 0.08,
+        latitudeDelta: zoomDelta,
+        longitudeDelta: zoomDelta,
       },
       400
     );
-  }, [coords.lat, coords.lng]);
+  }, [coords.lat, coords.lng, zoomDelta]);
 
   return (
     <View style={styles.container}>
@@ -30,8 +37,8 @@ export function PlaceMap({ coords, places }: PlaceMapProps) {
         initialRegion={{
           latitude: coords.lat,
           longitude: coords.lng,
-          latitudeDelta: 0.08,
-          longitudeDelta: 0.08,
+          latitudeDelta: zoomDelta,
+          longitudeDelta: zoomDelta,
         }}
         showsUserLocation
         showsMyLocationButton
@@ -44,7 +51,11 @@ export function PlaceMap({ coords, places }: PlaceMapProps) {
               longitude: place.longitude,
             }}
             title={place.name}
-            onCalloutPress={() => router.push(`/(app)/place/${place.id}`)}
+            pinColor={place.id === selectedPlaceId ? colors.coral : colors.primary}
+            onPress={() => {
+              if (onPlacePress) onPlacePress(place.id);
+              else router.push(`/(app)/place/${place.id}`);
+            }}
           />
         ))}
       </MapView>

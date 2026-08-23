@@ -1,8 +1,10 @@
 /** Admin section layout — redirects non-admin users to home. */
-import { getStoredUser } from "@datespot/api-client";
+import { fetchMe } from "@datespot/api-client";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
+
+import { colors } from "../../../src/theme/colors";
 
 export default function AdminLayout() {
   const router = useRouter();
@@ -12,14 +14,19 @@ export default function AdminLayout() {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const user = await getStoredUser();
-      if (!mounted) return;
-      if (!user?.isAdmin) {
+      try {
+        const user = await fetchMe();
+        if (!mounted) return;
+        if (!user.isAdmin) {
+          router.replace("/(app)/(tabs)");
+          return;
+        }
+        setAllowed(true);
+        setReady(true);
+      } catch {
+        if (!mounted) return;
         router.replace("/(app)/(tabs)");
-        return;
       }
-      setAllowed(true);
-      setReady(true);
     })();
     return () => {
       mounted = false;
@@ -29,7 +36,7 @@ export default function AdminLayout() {
   if (!ready || !allowed) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#7C3048" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
