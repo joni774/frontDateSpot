@@ -83,7 +83,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: "#7C3048",
     },
     package: IS_STAGING ? "co.il.datespot.app.staging" : "co.il.datespot.app",
-    supportsRtl: true,
     permissions: [
       "android.permission.ACCESS_COARSE_LOCATION",
       "android.permission.ACCESS_FINE_LOCATION",

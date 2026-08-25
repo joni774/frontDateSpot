@@ -37,8 +37,8 @@ export const glassCircle: ViewStyle = {
 type TimeOfDay = "sunrise" | "day" | "sunset" | "night";
 
 type SceneryPreset = {
-  colors: string[];
-  locations: number[];
+  colors: readonly [string, string, ...string[]];
+  locations: readonly [number, number, ...number[]];
   start: { x: number; y: number };
   end: { x: number; y: number };
 };
@@ -97,8 +97,8 @@ const SCENERY: Record<TimeOfDay, SceneryPreset> = {
 
 type TopPanelPreset = {
   image: ImageSourcePropType;
-  colors: string[];
-  locations: number[];
+  colors: readonly [string, string, ...string[]];
+  locations: readonly [number, number, ...number[]];
   start: { x: number; y: number };
   end: { x: number; y: number };
 };

@@ -65,7 +65,6 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
       const inAuthGroup = segments[0] === "auth";
       const inOnboarding = segments[0] === "onboarding";
-      const atIndex = segments.length === 0;
       const inApp = segments[0] === "(app)";
       const needsLogin = !token || !isSessionActive;
 
@@ -76,7 +75,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       }
 
       // Signed in this session → go to app
-      if (!needsLogin && (inOnboarding || inAuthGroup || atIndex)) {
+      if (!needsLogin && (inOnboarding || inAuthGroup)) {
         router.replace("/(app)/(tabs)");
         void setupPushNotifications();
         return;

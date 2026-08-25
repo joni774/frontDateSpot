@@ -92,7 +92,10 @@ function applyRTL(lng: string): boolean {
   I18nManager.allowRTL(shouldRtl);
   I18nManager.forceRTL(shouldRtl);
   // Keep left/right as physical sides so Hebrew is RTL without a mirrored UI.
-  I18nManager.swapLeftAndRightInRTL(false);
+  // react-native-web doesn't implement this API — guard so web doesn't crash on boot.
+  if (typeof I18nManager.swapLeftAndRightInRTL === "function") {
+    I18nManager.swapLeftAndRightInRTL(false);
+  }
   return directionChanged;
 }
 

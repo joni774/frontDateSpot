@@ -122,7 +122,7 @@ async function watchForFix(ms: number): Promise<Location.LocationObject> {
         });
     });
   } finally {
-    subscription?.remove();
+    (subscription as Location.LocationSubscription | null)?.remove();
   }
 }
 
