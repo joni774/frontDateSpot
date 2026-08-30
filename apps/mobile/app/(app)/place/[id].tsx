@@ -47,6 +47,7 @@ import {
   openPlaceCall,
   openPlaceNavigation,
   openPlaceWhatsApp,
+  safeOpenUrl,
 } from "../../../src/lib/placeActions";
 import { isRtl } from "../../../src/lib/rtl";
 
@@ -211,13 +212,13 @@ export default function PlaceDetailScreen() {
   const openWebsite = async () => {
     if (!place?.website) return;
     await trackLead("WEBSITE");
-    Linking.openURL(place.website);
+    await safeOpenUrl(place.website, t("place.linkOpenError"));
   };
 
   const openDelivery = async (platform: DeliveryPlatform) => {
     if (!place) return;
     await trackLead(DELIVERY_LEAD_TYPE[platform]);
-    Linking.openURL(resolveDeliveryUrl(platform, place));
+    await safeOpenUrl(resolveDeliveryUrl(platform, place), t("place.linkOpenError"));
   };
 
   if (isLoading && !place) {
@@ -403,19 +404,20 @@ export default function PlaceDetailScreen() {
                 {formatPrice(t, place.priceRange)}
               </Text>
             </View>
-            <Button onPress={() => void openDelivery("wolt")} style={{ marginBottom: 8 }}>
-              {t("place.orderWolt")}
-            </Button>
-            <Button
-              variant="outline"
-              onPress={() => void openDelivery("tenbis")}
-              style={{ marginBottom: 8 }}
-            >
-              {t("place.orderTenBis")}
-            </Button>
-            <Button variant="outline" onPress={() => void openDelivery("mishloha")}>
-              {t("place.orderMishloha")}
-            </Button>
+            <View style={{ gap: 10 }}>
+              <Button onPress={() => void openDelivery("wolt")}>
+                {t("place.orderWolt")}
+              </Button>
+              <Button variant="secondary" onPress={() => void openDelivery("tenbis")}>
+                {t("place.orderTenBis")}
+              </Button>
+              <Button variant="secondary" onPress={() => void openDelivery("mishloha")}>
+                {t("place.orderMishloha")}
+              </Button>
+              <Button variant="secondary" onPress={() => void openDelivery("cibus")}>
+                {t("place.orderCibus")}
+              </Button>
+            </View>
           </View>
         ) : null}
 

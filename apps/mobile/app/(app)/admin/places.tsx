@@ -29,6 +29,24 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { safeOpenUrl } from "../../../src/lib/placeActions";
+
+const DELIVERY_URL_FIELDS = [
+  { key: "deliveryWoltUrl", labelKey: "admin.deliveryWolt", placeholder: "https://wolt.com/he/isr/..." },
+  { key: "deliveryTenBisUrl", labelKey: "admin.deliveryTenBis", placeholder: "https://www.10bis.co.il/next/he/menu/..." },
+  { key: "deliveryMishlohaUrl", labelKey: "admin.deliveryMishloha", placeholder: "https://www.mishloha.co.il/..." },
+  { key: "deliveryCibusUrl", labelKey: "admin.deliveryCibus", placeholder: "https://www.cibus.co.il/..." },
+] as const;
+
+function isValidHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 const CATEGORIES: PlaceCategory[] = [
   "ROMANTIC_DATE",
   "RESTAURANT",
@@ -81,6 +99,7 @@ function emptyPlace(): AdminPlaceInput {
     deliveryWoltUrl: "",
     deliveryTenBisUrl: "",
     deliveryMishlohaUrl: "",
+    deliveryCibusUrl: "",
     isActive: true,
     displayOrder: 0,
     leadFeeAgorot: 0,
@@ -114,6 +133,7 @@ function placeToForm(place: AdminPlace): AdminPlaceInput {
     deliveryWoltUrl: place.deliveryWoltUrl ?? "",
     deliveryTenBisUrl: place.deliveryTenBisUrl ?? "",
     deliveryMishlohaUrl: place.deliveryMishlohaUrl ?? "",
+    deliveryCibusUrl: place.deliveryCibusUrl ?? "",
     isActive: place.isActive,
     displayOrder: place.displayOrder,
     leadFeeAgorot: place.leadFeeAgorot ?? 0,
@@ -157,6 +177,7 @@ export default function AdminPlacesScreen() {
         deliveryWoltUrl: form.deliveryWoltUrl || undefined,
         deliveryTenBisUrl: form.deliveryTenBisUrl || undefined,
         deliveryMishlohaUrl: form.deliveryMishlohaUrl || undefined,
+        deliveryCibusUrl: form.deliveryCibusUrl || undefined,
       };
       if (editingId) {
         return updateAdminPlace(editingId, payload);
@@ -262,6 +283,25 @@ export default function AdminPlacesScreen() {
     value: AdminPlaceInput[K]
   ) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const invalidDeliveryUrlLabel = DELIVERY_URL_FIELDS.find(({ key }) => {
+    const value = (form[key] ?? "").trim();
+    return value.length > 0 && !isValidHttpUrl(value);
+  })?.labelKey;
+
+  const handleSave = () => {
+    if (invalidDeliveryUrlLabel) {
+      Alert.alert(t("common.error"), t("admin.invalidDeliveryUrl", { field: t(invalidDeliveryUrlLabel) }));
+      return;
+    }
+    saveMutation.mutate();
+  };
+
+  const testDeliveryUrl = (url: string) => {
+    const value = url.trim();
+    if (!value || !isValidHttpUrl(value)) return;
+    void safeOpenUrl(value, t("place.linkOpenError"));
   };
 
   return (
@@ -458,24 +498,28 @@ export default function AdminPlacesScreen() {
               onChangeText={(v) => updateField("website", v)}
               autoCapitalize="none"
             />
-            <Input
-              label={t("admin.deliveryWolt")}
-              value={form.deliveryWoltUrl ?? ""}
-              onChangeText={(v) => updateField("deliveryWoltUrl", v)}
-              autoCapitalize="none"
-            />
-            <Input
-              label={t("admin.deliveryTenBis")}
-              value={form.deliveryTenBisUrl ?? ""}
-              onChangeText={(v) => updateField("deliveryTenBisUrl", v)}
-              autoCapitalize="none"
-            />
-            <Input
-              label={t("admin.deliveryMishloha")}
-              value={form.deliveryMishlohaUrl ?? ""}
-              onChangeText={(v) => updateField("deliveryMishlohaUrl", v)}
-              autoCapitalize="none"
-            />
+            {DELIVERY_URL_FIELDS.map(({ key, labelKey, placeholder }) => {
+              const value = form[key] ?? "";
+              const trimmed = value.trim();
+              const hasError = trimmed.length > 0 && !isValidHttpUrl(trimmed);
+              return (
+                <View key={key}>
+                  <Input
+                    label={t(labelKey)}
+                    value={value}
+                    onChangeText={(v) => updateField(key, v)}
+                    autoCapitalize="none"
+                    placeholder={placeholder}
+                    error={hasError ? t("admin.invalidUrlFormat") : undefined}
+                  />
+                  {trimmed.length > 0 && !hasError ? (
+                    <Pressable onPress={() => testDeliveryUrl(trimmed)} style={{ marginTop: -8, marginBottom: 12 }}>
+                      <Text className="text-primary text-sm">{t("admin.testLink")}</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+              );
+            })}
             <Input
               label={t("admin.displayOrder")}
               value={String(form.displayOrder)}
@@ -581,7 +625,7 @@ export default function AdminPlacesScreen() {
             <Button
               testID="admin-place-save"
               loading={saveMutation.isPending}
-              onPress={() => saveMutation.mutate()}
+              onPress={handleSave}
             >
               {t("common.save")}
             </Button>

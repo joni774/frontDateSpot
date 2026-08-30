@@ -10,6 +10,25 @@ export function toWhatsAppNumber(phone: string): string {
   return phone.replace(/[^\d+]/g, "").replace(/^\+/, "");
 }
 
+/**
+ * Opens a URL and surfaces a translated alert if the OS can't handle it
+ * (e.g. no browser/app installed, malformed URL, offline). Never throws.
+ */
+export async function safeOpenUrl(url: string, errorMessage: string): Promise<boolean> {
+  try {
+    const canOpen = await Linking.canOpenURL(url);
+    if (!canOpen) {
+      Alert.alert(errorMessage);
+      return false;
+    }
+    await Linking.openURL(url);
+    return true;
+  } catch {
+    Alert.alert(errorMessage);
+    return false;
+  }
+}
+
 export function openPlaceCall(phone: string): void {
   void Linking.openURL(`tel:${phone}`);
 }

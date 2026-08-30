@@ -1,12 +1,13 @@
-/** Resolve Wolt / Ten Bis / Mishloha order URLs for a place (affiliate or search fallback). */
+/** Resolve delivery-platform order URL for a place (affiliate or search fallback). */
 import type { LeadType, PlaceCategory } from "@datespot/shared-types";
 
-export type DeliveryPlatform = "wolt" | "tenbis" | "mishloha";
+export type DeliveryPlatform = "wolt" | "tenbis" | "mishloha" | "cibus";
 
 export const DELIVERY_LEAD_TYPE: Record<DeliveryPlatform, LeadType> = {
   wolt: "DELIVERY_WOLT",
   tenbis: "DELIVERY_TENBIS",
   mishloha: "DELIVERY_MISHLOHA",
+  cibus: "DELIVERY_CIBUS",
 };
 
 /** Categories where in-app delivery ordering is the primary CTA. */
@@ -24,12 +25,20 @@ export type DeliveryPlaceUrls = {
   deliveryWoltUrl?: string | null;
   deliveryTenBisUrl?: string | null;
   deliveryMishlohaUrl?: string | null;
+  deliveryCibusUrl?: string | null;
+};
+
+const AFFILIATE_URL_FIELD: Record<DeliveryPlatform, keyof DeliveryPlaceUrls> = {
+  wolt: "deliveryWoltUrl",
+  tenbis: "deliveryTenBisUrl",
+  mishloha: "deliveryMishlohaUrl",
+  cibus: "deliveryCibusUrl",
 };
 
 export function shouldShowDeliveryOrder(place: DeliveryPlaceUrls): boolean {
   if (FOOD_ORDER_CATEGORIES.has(place.category)) return true;
   return Boolean(
-    place.deliveryWoltUrl || place.deliveryTenBisUrl || place.deliveryMishlohaUrl
+    place.deliveryWoltUrl || place.deliveryTenBisUrl || place.deliveryMishlohaUrl || place.deliveryCibusUrl
   );
 }
 
@@ -39,9 +48,11 @@ function searchFallback(platform: DeliveryPlatform, placeName: string): string {
     case "wolt":
       return `https://wolt.com/he/discovery?q=${q}`;
     case "tenbis":
-      return `https://www.10bis.co.il/next/search?query=${q}`;
+      return `https://www.10bis.co.il/next/he/restaurants?q=${q}`;
     case "mishloha":
-      return `https://www.mishloha.co.il/?s=${q}`;
+      return `https://www.mishloha.co.il/search?q=${q}`;
+    case "cibus":
+      return `https://www.cibus.co.il/restaurants?q=${q}`;
   }
 }
 
@@ -49,10 +60,7 @@ export function resolveDeliveryUrl(
   platform: DeliveryPlatform,
   place: DeliveryPlaceUrls
 ): string {
-  if (platform === "wolt" && place.deliveryWoltUrl) return place.deliveryWoltUrl;
-  if (platform === "tenbis" && place.deliveryTenBisUrl) return place.deliveryTenBisUrl;
-  if (platform === "mishloha" && place.deliveryMishlohaUrl) {
-    return place.deliveryMishlohaUrl;
-  }
+  const affiliateUrl = place[AFFILIATE_URL_FIELD[platform]];
+  if (typeof affiliateUrl === "string" && affiliateUrl) return affiliateUrl;
   return searchFallback(platform, place.name);
 }

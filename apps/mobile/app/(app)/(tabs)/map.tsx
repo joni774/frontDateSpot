@@ -1,5 +1,5 @@
 /** Interactive map with place markers from the API. */
-import { fetchPlaces } from "@datespot/api-client";
+import { fetchPlaces, recordPlaceLead } from "@datespot/api-client";
 import type { Place } from "@datespot/shared-types";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -19,6 +19,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { PlaceActionsBar } from "../../../src/components/PlaceActionsBar";
 import { PlaceMap } from "../../../src/components/PlaceMap";
 import {
+  DELIVERY_LEAD_TYPE,
+  type DeliveryPlatform,
+  resolveDeliveryUrl,
+  shouldShowDeliveryOrder,
+} from "../../../src/lib/deliveryOrder";
+import {
   DEFAULT_COORDS,
   MAP_PLACES_RADIUS_KM,
   peekCachedDeviceCoords,
@@ -28,6 +34,7 @@ import {
   openPlaceCall,
   openPlaceNavigation,
   openPlaceWhatsApp,
+  safeOpenUrl,
 } from "../../../src/lib/placeActions";
 import { colors } from "../../../src/theme/colors";
 
@@ -90,6 +97,15 @@ export default function MapScreen() {
         cancel: t("common.cancel"),
       }
     );
+  };
+
+  const openDelivery = async (place: Place, platform: DeliveryPlatform) => {
+    try {
+      await recordPlaceLead(place.id, DELIVERY_LEAD_TYPE[platform]);
+    } catch {
+      // Lead tracking must not block the delivery action.
+    }
+    await safeOpenUrl(resolveDeliveryUrl(platform, place), t("place.linkOpenError"));
   };
 
   return (
@@ -162,6 +178,35 @@ export default function MapScreen() {
               callLabel={t("place.call")}
               whatsappLabel={t("place.whatsapp")}
             />
+
+            {shouldShowDeliveryOrder(selected) ? (
+              <View style={styles.deliveryRow} testID="map-delivery-order">
+                <Pressable
+                  style={styles.deliveryPill}
+                  onPress={() => void openDelivery(selected, "wolt")}
+                >
+                  <Text style={styles.deliveryPillText}>{t("place.orderWolt")}</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.deliveryPill}
+                  onPress={() => void openDelivery(selected, "tenbis")}
+                >
+                  <Text style={styles.deliveryPillText}>{t("place.orderTenBis")}</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.deliveryPill}
+                  onPress={() => void openDelivery(selected, "mishloha")}
+                >
+                  <Text style={styles.deliveryPillText}>{t("place.orderMishloha")}</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.deliveryPill}
+                  onPress={() => void openDelivery(selected, "cibus")}
+                >
+                  <Text style={styles.deliveryPillText}>{t("place.orderCibus")}</Text>
+                </Pressable>
+              </View>
+            ) : null}
           </View>
         ) : null}
       </View>
@@ -248,5 +293,25 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 13,
     color: colors.textMuted,
+  },
+  deliveryRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 10,
+  },
+  deliveryPill: {
+    flexGrow: 1,
+    minWidth: "45%",
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    paddingVertical: 8,
+    alignItems: "center",
+  },
+  deliveryPillText: {
+    color: colors.primary,
+    fontWeight: "600",
+    fontSize: 12,
   },
 });
