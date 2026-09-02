@@ -179,6 +179,15 @@ export interface AdminLeadInvoicesResponse {
   totalPages: number;
 }
 
+export type InvoiceSkipReason =
+  | "NO_PARTNER_PLACES"
+  | "NO_UNBILLED_LEADS"
+  | "NO_UNBILLED_LEADS_FOR_PLACE"
+  | "MISSING_BILLING_EMAIL"
+  | "NO_BILLABLE_FEES"
+  | "STRIPE_NOT_CONFIGURED"
+  | "INVOICE_FAILED";
+
 export interface AdminCreateLeadInvoicesResponse {
   created: Array<
     AdminLeadInvoice & {
@@ -188,7 +197,8 @@ export interface AdminCreateLeadInvoicesResponse {
   skipped: Array<{
     placeId: string;
     placeNameHe: string;
-    reason: string;
+    reason: InvoiceSkipReason | string;
+    detail?: string;
   }>;
 }
 

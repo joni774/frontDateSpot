@@ -4,7 +4,7 @@ import {
   fetchAdminLeadInvoices,
   fetchAdminLeads,
 } from "@datespot/api-client";
-import type { LeadType } from "@datespot/shared-types";
+import type { InvoiceSkipReason, LeadType } from "@datespot/shared-types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -34,6 +34,17 @@ const LEAD_TYPES: Array<LeadType | "ALL"> = [
 
 function formatFee(agorot: number): string {
   return `₪${(agorot / 100).toFixed(2)}`;
+}
+
+function formatSkipReason(
+  t: (key: string) => string,
+  reason: InvoiceSkipReason | string,
+  detail?: string
+): string {
+  const key = `admin.invoiceSkip.${reason}`;
+  const translated = t(key);
+  if (translated !== key) return translated;
+  return detail ?? reason;
 }
 
 export default function AdminLeadsScreen() {
@@ -75,15 +86,28 @@ export default function AdminLeadsScreen() {
 
       const createdCount = result.created.length;
       const skippedCount = result.skipped.length;
-      if (createdCount === 0 && skippedCount === 0) {
-        Alert.alert(t("admin.invoiceLeads"), t("admin.invoiceNothingToBill"));
+      if (createdCount === 0) {
+        const skipLines = result.skipped.map((item) =>
+          item.placeNameHe
+            ? `${item.placeNameHe}: ${formatSkipReason(t, item.reason, item.detail)}`
+            : formatSkipReason(t, item.reason, item.detail)
+        );
+        Alert.alert(
+          t("admin.invoiceLeads"),
+          skipLines.length > 0 ? skipLines.join("\n") : t("admin.invoiceNothingToBill")
+        );
         return;
       }
 
       const lines = [
         t("admin.invoiceCreatedCount", { count: createdCount }),
         skippedCount > 0
-          ? t("admin.invoiceSkippedCount", { count: skippedCount })
+          ? result.skipped
+              .map(
+                (item) =>
+                  `${item.placeNameHe || t("admin.invoiceSkippedPlace")}: ${formatSkipReason(t, item.reason, item.detail)}`
+              )
+              .join("\n")
           : null,
       ].filter(Boolean);
 
@@ -91,10 +115,15 @@ export default function AdminLeadsScreen() {
       setTab("invoices");
     },
     onError: (err) => {
-      Alert.alert(
-        t("common.error"),
-        err instanceof Error ? err.message : t("admin.invoiceFailed")
-      );
+      const message =
+        err instanceof Error && "response" in err
+          ? String((err as { response?: { status?: number } }).response?.status) === "404"
+            ? t("admin.invoiceEndpointMissing")
+            : err.message
+          : err instanceof Error
+            ? err.message
+            : t("admin.invoiceFailed");
+      Alert.alert(t("common.error"), message);
     },
   });
 
