@@ -64,6 +64,10 @@ export function LoginForm({ onSuccess, showHeader = true }: LoginFormProps) {
         } else {
           setError(t("auth.networkError"));
         }
+      } else if (isAxiosError(err) && err.response?.status === 429) {
+        setError(t("auth.tooManyRequests"));
+      } else if (isAxiosError(err) && (err.response?.status ?? 0) >= 500) {
+        setError(t("auth.serverError"));
       } else {
         setError(t("auth.invalidCredentials"));
       }

@@ -89,6 +89,17 @@ export function RegisterForm({ onSuccess, showHeader = true }: RegisterFormProps
     } catch (err) {
       if (isAxiosError(err) && !err.response) {
         setError(t("auth.networkError"));
+      } else if (isAxiosError(err) && err.response?.status === 409) {
+        const apiError = String(
+          (err.response.data as { error?: string } | undefined)?.error ?? ""
+        );
+        if (apiError.toLowerCase().includes("email")) {
+          setError(t("auth.emailAlreadyRegistered"));
+        } else if (apiError.toLowerCase().includes("phone")) {
+          setError(t("auth.phoneAlreadyRegistered"));
+        } else {
+          setError(t("auth.registrationFailed"));
+        }
       } else {
         setError(t("auth.registrationFailed"));
       }

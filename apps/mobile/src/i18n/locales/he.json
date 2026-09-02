@@ -7,6 +7,7 @@
     "cancel": "ביטול",
     "logout": "התנתק",
     "back": "חזור",
+    "close": "סגור",
     "ok": "אישור",
     "success": "הצלחה"
   },
@@ -80,6 +81,12 @@
     "otpCodeInvalid": "הזן קוד בן 6 ספרות",
     "phoneAlreadyVerified": "הטלפון כבר מאומת",
     "passwordMismatch": "הסיסמאות אינן תואמות",
+    "sessionExpiredTitle": "פג תוקף ההתחברות",
+    "sessionExpiredBody": "התחבר/י מחדש כדי להמשיך",
+    "tooManyRequests": "יותר מדי ניסיונות. נסה/י שוב בעוד כמה דקות",
+    "serverError": "שגיאת שרת. נסה/י שוב מאוחר יותר",
+    "emailAlreadyRegistered": "האימייל כבר רשום במערכת",
+    "phoneAlreadyRegistered": "מספר הטלפון כבר רשום במערכת",
     "socialLogin": "התחברות חברתית",
     "socialLoginHint": "הגדר Google/Apple Client ID ב-.env לשימוש מלא",
     "continueWithGoogle": "המשך עם Google",
@@ -96,7 +103,10 @@
   "map": {
     "webUnavailable": "המפה זמינה באפליקציה לנייד. בדפדפן אפשר לדפדף במקומות ממסך הבית.",
     "mapboxMissingToken": "חסר מפתח Mapbox. הוסיפו EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN כדי להציג את המפה באנדרואיד.",
-    "tapPlaceHint": "לחצו על מקום במפה לניווט וליצירת קשר"
+    "tapPlaceHint": "לחצו על מקום במפה לניווט וליצירת קשר",
+    "approxLocation": "מיקום משוער (תל אביב) — GPS לא זמין",
+    "cachedLocation": "מיקום אחרון שנשמר",
+    "noPlacesNearby": "אין מקומות באזור — נסו להתקרב או לרענן"
   },
   "onboarding": {
     "slide1Title": "ברוך הבא לעולם של יציאות",

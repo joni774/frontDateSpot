@@ -29,14 +29,22 @@ export async function safeOpenUrl(url: string, errorMessage: string): Promise<bo
   }
 }
 
-export function openPlaceCall(phone: string): void {
-  void Linking.openURL(`tel:${phone}`);
+export function openPlaceCall(phone: string, errorMessage?: string): void {
+  const url = `tel:${phone}`;
+  if (errorMessage) {
+    void safeOpenUrl(url, errorMessage);
+    return;
+  }
+  void Linking.openURL(url);
 }
 
-export function openPlaceWhatsApp(phone: string, text: string): void {
-  void Linking.openURL(
-    `https://wa.me/${toWhatsAppNumber(phone)}?text=${encodeURIComponent(text)}`
-  );
+export function openPlaceWhatsApp(phone: string, text: string, errorMessage?: string): void {
+  const url = `https://wa.me/${toWhatsAppNumber(phone)}?text=${encodeURIComponent(text)}`;
+  if (errorMessage) {
+    void safeOpenUrl(url, errorMessage);
+    return;
+  }
+  void Linking.openURL(url);
 }
 
 export function openPlaceNavigation(

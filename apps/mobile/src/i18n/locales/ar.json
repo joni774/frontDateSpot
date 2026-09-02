@@ -7,6 +7,7 @@
     "cancel": "إلغاء",
     "logout": "تسجيل الخروج",
     "back": "رجوع",
+    "close": "إغلاق",
     "ok": "موافق",
     "success": "نجاح"
   },
@@ -67,6 +68,12 @@
     "invalidResetToken": "رابط إعادة التعيين غير صالح أو منتهٍ",
     "passwordMinLength": "يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل",
     "passwordMismatch": "كلمتا المرور غير متطابقتين",
+    "sessionExpiredTitle": "انتهت الجلسة",
+    "sessionExpiredBody": "يرجى تسجيل الدخول مرة أخرى للمتابعة",
+    "tooManyRequests": "محاولات كثيرة جداً. حاول لاحقاً",
+    "serverError": "خطأ في الخادم. حاول لاحقاً",
+    "emailAlreadyRegistered": "البريد مسجل بالفعل",
+    "phoneAlreadyRegistered": "رقم الهاتف مسجل بالفعل",
     "verifyPhone": "التحقق من الهاتف",
     "sendOtp": "إرسال رمز OTP",
     "verifyOtp": "تحقق من الرمز",
@@ -146,7 +153,10 @@
   "map": {
     "webUnavailable": "الخريطة متاحة في تطبيق الجوال. على الويب يمكنك تصفح الأماكن من الشاشة الرئيسية.",
     "mapboxMissingToken": "رمز Mapbox مفقود. عيّن EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN لعرض الخريطة على أندرويد.",
-    "tapPlaceHint": "اضغط على مكان في الخريطة للتنقل أو التواصل"
+    "tapPlaceHint": "اضغط على مكان في الخريطة للتنقل أو التواصل",
+    "approxLocation": "موقع تقريبي (تل أبيب) — GPS غير متاح",
+    "cachedLocation": "آخر موقع معروف",
+    "noPlacesNearby": "لا توجد أماكن قريبة — حاول الاقتراب أو التحديث"
   },
   "place": {
     "navigate": "التنقل",

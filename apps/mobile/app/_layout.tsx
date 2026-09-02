@@ -11,7 +11,7 @@ import {
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Alert, View } from "react-native";
 import { I18nextProvider } from "react-i18next";
 
 import { AuthSessionProvider, useAuthSession } from "../src/auth/AuthSession";
@@ -29,15 +29,44 @@ const queryClient = new QueryClient({
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const segments = useSegments();
-  const { isSessionActive, clearSession } = useAuthSession();
+  const { isSessionActive, activateSession, clearSession } = useAuthSession();
   const [ready, setReady] = useState(false);
+  const [sessionBootstrapped, setSessionBootstrapped] = useState(false);
 
   useEffect(() => {
-    setUnauthorizedHandler(() => {
-      clearSession();
-      router.replace("/onboarding");
+    setUnauthorizedHandler((context) => {
+      const expired = context?.expired ?? false;
+      const goLogin = () => {
+        clearSession();
+        router.replace("/onboarding");
+      };
+      if (expired) {
+        Alert.alert(
+          i18n.t("auth.sessionExpiredTitle"),
+          i18n.t("auth.sessionExpiredBody"),
+          [{ text: i18n.t("common.ok"), onPress: goLogin }]
+        );
+        return;
+      }
+      goLogin();
     });
   }, [router, clearSession]);
+
+  useEffect(() => {
+    if (!ready || sessionBootstrapped) return;
+    let mounted = true;
+    (async () => {
+      const token = await getStoredToken();
+      if (!mounted) return;
+      if (token) {
+        activateSession();
+      }
+      setSessionBootstrapped(true);
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [ready, sessionBootstrapped, activateSession]);
 
   useEffect(() => {
     let mounted = true;
@@ -56,7 +85,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !sessionBootstrapped) return;
 
     let mounted = true;
     (async () => {
@@ -89,7 +118,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     return () => {
       mounted = false;
     };
-  }, [ready, segments, router, isSessionActive]);
+  }, [ready, sessionBootstrapped, segments, router, isSessionActive]);
 
   if (!ready) {
     return (

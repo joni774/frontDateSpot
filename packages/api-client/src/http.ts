@@ -28,7 +28,7 @@ export const apiClient = axios.create({
   },
 });
 
-type UnauthorizedHandler = () => void;
+type UnauthorizedHandler = (context?: { expired?: boolean }) => void;
 let onUnauthorized: UnauthorizedHandler | null = null;
 
 export function setUnauthorizedHandler(handler: UnauthorizedHandler): void {
@@ -105,7 +105,7 @@ apiClient.interceptors.response.use(
 
     if (error.response?.status === 401) {
       await AsyncStorage.multiRemove([TOKEN_KEY, REFRESH_TOKEN_KEY, USER_KEY]);
-      onUnauthorized?.();
+      onUnauthorized?.({ expired: true });
     }
     return Promise.reject(error);
   }

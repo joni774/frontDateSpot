@@ -206,13 +206,17 @@ export default function PlaceDetailScreen() {
   const callPlace = async () => {
     if (!place?.phone) return;
     await trackLead("CALL");
-    openPlaceCall(place.phone);
+    openPlaceCall(place.phone, t("place.linkOpenError"));
   };
 
   const bookViaWhatsApp = async () => {
     if (!place?.phone) return;
     await trackLead("WHATSAPP");
-    openPlaceWhatsApp(place.phone, t("place.bookWhatsAppText", { name: place.name }));
+    openPlaceWhatsApp(
+      place.phone,
+      t("place.bookWhatsAppText", { name: place.name }),
+      t("place.linkOpenError")
+    );
   };
 
   const openWebsite = async () => {

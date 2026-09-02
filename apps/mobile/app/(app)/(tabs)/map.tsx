@@ -45,6 +45,9 @@ export default function MapScreen() {
     Platform.OS === "web" ? DEFAULT_COORDS : null
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [locationHint, setLocationHint] = useState<"device" | "cached" | "fallback" | null>(
+    null
+  );
   const locatingLock = useRef(false);
 
   const loadLocation = useCallback(async () => {
@@ -54,11 +57,17 @@ export default function MapScreen() {
       const result = await resolveDeviceCoords();
       if (result.fromDevice) {
         setCoords(result.coords);
+        setLocationHint("device");
         return;
       }
       const cached = await peekCachedDeviceCoords();
-      if (cached) setCoords(cached);
-      else setCoords(DEFAULT_COORDS);
+      if (cached) {
+        setCoords(cached);
+        setLocationHint("cached");
+      } else {
+        setCoords(DEFAULT_COORDS);
+        setLocationHint("fallback");
+      }
     } finally {
       locatingLock.current = false;
     }
@@ -126,6 +135,12 @@ export default function MapScreen() {
       <View className="px-4 py-3 bg-surface border-b border-border">
         <Text className="text-xl font-semibold text-text">{t("tabs.map")}</Text>
         <Text className="text-sm text-text-muted mt-1">{t("map.tapPlaceHint")}</Text>
+        {locationHint === "fallback" ? (
+          <Text className="text-xs text-amber-700 mt-2">{t("map.approxLocation")}</Text>
+        ) : null}
+        {locationHint === "cached" ? (
+          <Text className="text-xs text-text-muted mt-2">{t("map.cachedLocation")}</Text>
+        ) : null}
       </View>
 
       <View style={styles.mapWrap}>
@@ -152,8 +167,25 @@ export default function MapScreen() {
           </View>
         ) : null}
 
+        {!isFetching && !isError && coords && places.length === 0 ? (
+          <View style={styles.emptyBanner}>
+            <Text style={styles.emptyText}>{t("map.noPlacesNearby")}</Text>
+          </View>
+        ) : null}
+
         {selected ? (
           <View style={styles.sheet}>
+            <View style={styles.sheetTopRow}>
+              <View style={styles.sheetTopSpacer} />
+              <Pressable
+                onPress={() => setSelectedId(null)}
+                style={styles.sheetClose}
+                accessibilityLabel={t("common.close")}
+                testID="map-close-sheet"
+              >
+                <Text style={styles.sheetCloseText}>×</Text>
+              </Pressable>
+            </View>
             <Pressable
               onPress={() => router.push(`/(app)/place/${selected.id}`)}
               style={styles.sheetHeader}
@@ -181,7 +213,7 @@ export default function MapScreen() {
                 selected.phone
                   ? () => {
                       void trackLead(selected.id, "CALL");
-                      openPlaceCall(selected.phone!);
+                      openPlaceCall(selected.phone!, t("place.linkOpenError"));
                     }
                   : undefined
               }
@@ -191,7 +223,8 @@ export default function MapScreen() {
                       void trackLead(selected.id, "WHATSAPP");
                       openPlaceWhatsApp(
                         selected.phone!,
-                        t("place.bookWhatsAppText", { name: selected.name })
+                        t("place.bookWhatsAppText", { name: selected.name }),
+                        t("place.linkOpenError")
                       );
                     }
                   : undefined
@@ -273,6 +306,22 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 13,
   },
+  emptyBanner: {
+    position: "absolute",
+    top: "40%",
+    left: 24,
+    right: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.92)",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  emptyText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    textAlign: "center",
+  },
   sheet: {
     position: "absolute",
     left: 12,
@@ -286,6 +335,28 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: 6,
+  },
+  sheetTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  sheetTopSpacer: {
+    flex: 1,
+  },
+  sheetClose: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surfaceContainerHigh,
+  },
+  sheetCloseText: {
+    fontSize: 22,
+    lineHeight: 24,
+    color: colors.textMuted,
+    fontWeight: "600",
   },
   sheetHeader: {
     flexDirection: "row",

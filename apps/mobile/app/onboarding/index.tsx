@@ -69,6 +69,15 @@ export default function OnboardingScreen() {
             {isAuthStep ? (
               showLogin ? (
                 <View>
+                  <Pressable
+                    onPress={() => setShowLogin(false)}
+                    className="mb-4 self-start"
+                    testID="onboarding-back-from-login"
+                  >
+                    <Text className="text-primary font-semibold text-base">
+                      ← {t("common.back")}
+                    </Text>
+                  </Pressable>
                   <Text className="text-2xl font-semibold text-text text-center mb-2">
                     {t("auth.login")}
                   </Text>

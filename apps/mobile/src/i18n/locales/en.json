@@ -7,6 +7,7 @@
     "cancel": "Cancel",
     "logout": "Logout",
     "back": "Back",
+    "close": "Close",
     "ok": "OK",
     "success": "Success"
   },
@@ -67,6 +68,18 @@
     "invalidResetToken": "Reset link is invalid or expired",
     "passwordMinLength": "Password must be at least 8 characters",
     "passwordMismatch": "Passwords do not match",
+    "sessionExpiredTitle": "Session expired",
+    "sessionExpiredBody": "Please sign in again to continue",
+    "tooManyRequests": "Too many attempts. Try again in a few minutes",
+    "serverError": "Server error. Please try again later",
+    "emailAlreadyRegistered": "This email is already registered",
+    "phoneAlreadyRegistered": "This phone number is already registered",
+    "sessionExpiredTitle": "Session expired",
+    "sessionExpiredBody": "Please sign in again to continue",
+    "tooManyRequests": "Too many attempts. Try again in a few minutes",
+    "serverError": "Server error. Please try again later",
+    "emailAlreadyRegistered": "This email is already registered",
+    "phoneAlreadyRegistered": "This phone number is already registered",
     "verifyPhone": "Verify phone",
     "sendOtp": "Send OTP",
     "verifyOtp": "Verify code",
@@ -157,7 +170,10 @@
   "map": {
     "webUnavailable": "The map is available in the mobile app. On web, browse places from the home screen.",
     "mapboxMissingToken": "Missing Mapbox token. Set EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN to show the Android map.",
-    "tapPlaceHint": "Tap a place on the map to navigate or contact it"
+    "tapPlaceHint": "Tap a place on the map to navigate or contact it",
+    "approxLocation": "Approximate location (Tel Aviv) — GPS unavailable",
+    "cachedLocation": "Using last known location",
+    "noPlacesNearby": "No places nearby — try moving closer or refresh"
   },
   "place": {
     "navigate": "Navigate",

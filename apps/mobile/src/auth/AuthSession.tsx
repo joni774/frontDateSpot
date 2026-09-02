@@ -1,4 +1,4 @@
-/** In-memory session flag — requires login each cold app start even if JWT is stored. */
+/** In-memory session flag — restored on cold start when a stored JWT exists. */
 import {
   createContext,
   useCallback,
