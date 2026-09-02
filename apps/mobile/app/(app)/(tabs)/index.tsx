@@ -13,7 +13,6 @@ import {
   Animated,
   AppState,
   FlatList,
-  Image,
   Platform,
   Pressable,
   RefreshControl,
@@ -24,6 +23,7 @@ import {
   View,
 } from "react-native";
 import { CategoryChipIcon } from "../../../src/components/icons/CategoryChipIcon";
+import { PlaceThumbnail } from "../../../src/components/PlaceThumbnail";
 import { ScreenHeader } from "../../../src/components/ScreenHeader";
 import {
   DEFAULT_COORDS,
@@ -166,7 +166,7 @@ function FeaturedPlaceCard({
       style={featuredStyles.card}
     >
       {imageUri ? (
-        <Image source={{ uri: imageUri }} style={featuredStyles.image} resizeMode="cover" />
+        <PlaceThumbnail uri={imageUri} style={featuredStyles.image} resizeMode="cover" />
       ) : (
         <View style={[featuredStyles.image, featuredStyles.placeholder]} />
       )}
@@ -288,7 +288,7 @@ function NearbyPlaceRow({
       style={[rowStyles.row, locked && rowStyles.rowLocked]}
     >
       {imageUri ? (
-        <Image source={{ uri: imageUri }} style={rowStyles.thumb} resizeMode="cover" />
+        <PlaceThumbnail uri={imageUri} style={rowStyles.thumb} resizeMode="cover" />
       ) : (
         <View style={[rowStyles.thumb, rowStyles.thumbPlaceholder]} />
       )}
@@ -503,7 +503,8 @@ export default function HomeScreen() {
         q: debouncedQuery.trim() || undefined,
       }),
     enabled: !!coords,
-    // Keep showing the previous results (and the search input) while a new
+    refetchOnMount: "always",
+    // Keep showing the previous results
     // query is in flight instead of unmounting the list for a full skeleton.
     placeholderData: keepPreviousData,
   });

@@ -11,6 +11,7 @@ See [datespot-server/README.md](../datespot-server/README.md) for the API backen
 | Doc | Purpose |
 |-----|---------|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Monorepo map, dependencies, where to change what |
+| [../USER_ACTIONS_HE.md](../USER_ACTIONS_HE.md) | פעולות שאפשר לבצע באפליקציה (עברית) |
 | [AGENTS.md](AGENTS.md) | Instructions for AI coding agents |
 | [apps/mobile/README.md](apps/mobile/README.md) | Mobile app routes, stack, env, scripts |
 | [apps/landing/README.md](apps/landing/README.md) | Marketing landing page (Vite) |

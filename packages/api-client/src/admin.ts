@@ -1,5 +1,7 @@
 import type {
   AdminLead,
+  AdminCreateLeadInvoicesResponse,
+  AdminLeadInvoicesResponse,
   AdminLeadsResponse,
   AdminPlace,
   AdminPlaceInput,
@@ -99,6 +101,29 @@ export async function fetchAdminLeads(params?: {
   const { data } = await apiClient.get<AdminLeadsResponse>("/api/admin/leads", {
     params,
   });
+  return data;
+}
+
+export async function fetchAdminLeadInvoices(params?: {
+  page?: number;
+  limit?: number;
+  placeId?: string;
+}): Promise<AdminLeadInvoicesResponse> {
+  const { data } = await apiClient.get<AdminLeadInvoicesResponse>(
+    "/api/admin/leads/invoices",
+    { params }
+  );
+  return data;
+}
+
+export async function createAdminLeadInvoices(body?: {
+  placeId?: string;
+  sendEmail?: boolean;
+}): Promise<AdminCreateLeadInvoicesResponse> {
+  const { data } = await apiClient.post<AdminCreateLeadInvoicesResponse>(
+    "/api/admin/leads/invoice",
+    body ?? {}
+  );
   return data;
 }
 

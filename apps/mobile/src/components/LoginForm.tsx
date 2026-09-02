@@ -12,6 +12,7 @@ import { z } from "zod";
 
 import { useAuthSession } from "../auth/AuthSession";
 import { textAlignStart } from "../lib/rtl";
+import { SocialLoginButtons } from "./SocialLoginButtons";
 
 type FormData = {
   email: string;
@@ -142,6 +143,8 @@ export function LoginForm({ onSuccess, showHeader = true }: LoginFormProps) {
           <Text className="text-primary font-semibold">{t("auth.register")}</Text>
         </Text>
       </Pressable>
+
+      <SocialLoginButtons onSuccess={onSuccess} />
     </View>
   );
 }

@@ -90,6 +90,19 @@ export default function AdminDashboardScreen() {
             </View>
           ) : null}
 
+          {(data.unbilledLeads ?? 0) > 0 ? (
+            <View className="bg-white rounded-xl border border-amber-200 p-4 mb-6">
+              <Text className="text-sm text-gray-500">{t("admin.unbilledLeads")}</Text>
+              <Text className="text-2xl font-bold text-text mt-1">
+                {(data.unbilledLeads ?? 0).toLocaleString()} · ₪
+                {((data.unbilledRevenueAgorot ?? 0) / 100).toFixed(2)}
+              </Text>
+              {!data.stripeBillingConfigured ? (
+                <Text className="text-xs text-amber-700 mt-2">{t("admin.stripeBillingDevMode")}</Text>
+              ) : null}
+            </View>
+          ) : null}
+
           <View className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
             <Text className="text-lg font-semibold text-text mb-4">
               {t("admin.placesByCategory")}

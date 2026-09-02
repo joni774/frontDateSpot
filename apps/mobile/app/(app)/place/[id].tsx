@@ -31,8 +31,9 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import { PlaceThumbnail } from "../../../src/components/PlaceThumbnail";
 
 import { PlaceActionsBar } from "../../../src/components/PlaceActionsBar";
 import { PlaceMap } from "../../../src/components/PlaceMap";
@@ -182,6 +183,11 @@ export default function PlaceDetailScreen() {
         googleMaps: t("place.googleMaps"),
         appleMaps: t("place.appleMaps"),
         cancel: t("common.cancel"),
+      },
+      {
+        onNavigate: () => {
+          void trackLead("NAVIGATE");
+        },
       }
     );
   };
@@ -269,8 +275,8 @@ export default function PlaceDetailScreen() {
             }}
             keyExtractor={(_, i) => String(i)}
             renderItem={({ item }) => (
-              <Image
-                source={{ uri: item }}
+              <PlaceThumbnail
+                uri={item}
                 style={{ width, height: 280 }}
                 resizeMode="cover"
               />

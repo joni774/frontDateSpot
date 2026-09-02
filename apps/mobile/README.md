@@ -62,16 +62,22 @@ eas login
 eas init   # writes projectId into app.config.ts via EAS_PROJECT_ID
 ```
 
-Set the Mapbox public token as an EAS secret (not in git):
+Set the Mapbox public token as an EAS environment variable for **preview**, **development**, and **production** (not in git):
 
 ```bash
-eas secret:create --scope project --name EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN --value YOUR_PK_TOKEN
+eas env:set preview --name EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN --value YOUR_PK_TOKEN --visibility sensitive --force --non-interactive
+eas env:set development --name EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN --value YOUR_PK_TOKEN --visibility sensitive --force --non-interactive
+eas env:set production --name EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN --value YOUR_PK_TOKEN --visibility sensitive --force --non-interactive
 ```
 
-| Profile | Bundle ID | API URL | Distribution |
-|---------|-----------|---------|--------------|
-| `preview` / `staging` | `co.il.datespot.app.staging` | Staging Railway | Internal (APK / internal iOS) |
-| `production` | `co.il.datespot.app` | Production Railway | Store / TestFlight |
+Without this, Android staging/production builds install but the in-app Mapbox map shows a missing-token message (iPhone uses Apple Maps).
+
+| Profile | Bundle ID | Channel | API URL | Distribution |
+|---------|-----------|---------|---------|--------------|
+| `preview` / `staging` | `co.il.datespot.app.staging` | `staging` | `https://datespot-staging.up.railway.app` | Internal (APK / internal iOS) |
+| `production` | `co.il.datespot.app` | `production` | `https://datespot-server-production-ecb2.up.railway.app` | Store / TestFlight |
+
+`build:staging:*` uses `--profile staging` (extends `preview` + channel `staging`). Build scripts wrap EAS with `EAS_SKIP_AUTO_FINGERPRINT=1` (local fingerprint currently fails on Windows).
 
 Build commands:
 

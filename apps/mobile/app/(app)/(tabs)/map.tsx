@@ -1,13 +1,12 @@
 /** Interactive map with place markers from the API. */
 import { fetchPlaces, recordPlaceLead } from "@datespot/api-client";
-import type { Place } from "@datespot/shared-types";
+import type { LeadType, Place } from "@datespot/shared-types";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
-  Image,
   Platform,
   Pressable,
   StyleSheet,
@@ -17,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PlaceActionsBar } from "../../../src/components/PlaceActionsBar";
+import { PlaceThumbnail } from "../../../src/components/PlaceThumbnail";
 import { PlaceMap } from "../../../src/components/PlaceMap";
 import {
   DELIVERY_LEAD_TYPE,
@@ -85,6 +85,14 @@ export default function MapScreen() {
     [places, selectedId]
   );
 
+  const trackLead = async (placeId: string, type: LeadType) => {
+    try {
+      await recordPlaceLead(placeId, type);
+    } catch {
+      // Lead tracking must not block the contact action.
+    }
+  };
+
   const openNav = (place: Place) => {
     if (place.latitude == null || place.longitude == null) return;
     openPlaceNavigation(
@@ -95,6 +103,11 @@ export default function MapScreen() {
         googleMaps: t("place.googleMaps"),
         appleMaps: t("place.appleMaps"),
         cancel: t("common.cancel"),
+      },
+      {
+        onNavigate: () => {
+          void trackLead(place.id, "NAVIGATE");
+        },
       }
     );
   };
@@ -146,7 +159,7 @@ export default function MapScreen() {
               style={styles.sheetHeader}
             >
               {selected.images[0] ? (
-                <Image source={{ uri: selected.images[0] }} style={styles.sheetThumb} />
+                <PlaceThumbnail uri={selected.images[0]} style={styles.sheetThumb} />
               ) : (
                 <View style={[styles.sheetThumb, styles.sheetThumbEmpty]} />
               )}
@@ -164,14 +177,23 @@ export default function MapScreen() {
             </Pressable>
             <PlaceActionsBar
               onNavigate={() => openNav(selected)}
-              onCall={selected.phone ? () => openPlaceCall(selected.phone!) : undefined}
+              onCall={
+                selected.phone
+                  ? () => {
+                      void trackLead(selected.id, "CALL");
+                      openPlaceCall(selected.phone!);
+                    }
+                  : undefined
+              }
               onWhatsApp={
                 selected.phone
-                  ? () =>
+                  ? () => {
+                      void trackLead(selected.id, "WHATSAPP");
                       openPlaceWhatsApp(
                         selected.phone!,
                         t("place.bookWhatsAppText", { name: selected.name })
-                      )
+                      );
+                    }
                   : undefined
               }
               navigateLabel={t("place.navigate")}

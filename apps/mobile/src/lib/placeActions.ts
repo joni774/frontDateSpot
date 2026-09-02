@@ -41,7 +41,8 @@ export function openPlaceWhatsApp(phone: string, text: string): void {
 
 export function openPlaceNavigation(
   place: NavPlace,
-  labels: { title: string; waze: string; googleMaps: string; appleMaps: string; cancel: string }
+  labels: { title: string; waze: string; googleMaps: string; appleMaps: string; cancel: string },
+  options?: { onNavigate?: () => void }
 ): void {
   const { latitude, longitude, name } = place;
   const encodedName = encodeURIComponent(name);
@@ -49,20 +50,25 @@ export function openPlaceNavigation(
   const apple = `maps://?daddr=${latitude},${longitude}&q=${encodedName}&dirflg=d`;
   const waze = `https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes`;
 
+  const chooseNav = (url: string) => {
+    options?.onNavigate?.();
+    void Linking.openURL(url);
+  };
+
   const buttons = [
     {
       text: labels.waze,
-      onPress: () => void Linking.openURL(waze),
+      onPress: () => chooseNav(waze),
     },
     {
       text: labels.googleMaps,
-      onPress: () => void Linking.openURL(googleWeb),
+      onPress: () => chooseNav(googleWeb),
     },
     ...(Platform.OS === "ios"
       ? [
           {
             text: labels.appleMaps,
-            onPress: () => void Linking.openURL(apple),
+            onPress: () => chooseNav(apple),
           },
         ]
       : []),

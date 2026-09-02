@@ -289,6 +289,8 @@ export {
   fetchAdminUsers,
   updateUserSubscription,
   fetchAdminLeads,
+  fetchAdminLeadInvoices,
+  createAdminLeadInvoices,
 } from "./admin";
 
 export {

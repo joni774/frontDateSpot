@@ -17,10 +17,13 @@ export type LeadType =
   | "CALL"
   | "WHATSAPP"
   | "WEBSITE"
+  | "NAVIGATE"
   | "DELIVERY_WOLT"
   | "DELIVERY_TENBIS"
   | "DELIVERY_MISHLOHA"
   | "DELIVERY_CIBUS";
+
+export type LeadInvoiceStatus = "DRAFT" | "OPEN" | "PAID" | "VOID" | "FAILED";
 
 export type Language = "he" | "en" | "ar";
 
@@ -103,6 +106,9 @@ export interface AdminStats {
   totalLeads?: number;
   weeklyLeads?: number;
   leadRevenueAgorot?: number;
+  unbilledLeads?: number;
+  unbilledRevenueAgorot?: number;
+  stripeBillingConfigured?: boolean;
 }
 
 export interface AdminPlace {
@@ -130,6 +136,8 @@ export interface AdminPlace {
   displayOrder: number;
   viewCount?: number;
   leadFeeAgorot?: number;
+  billingEmail?: string | null;
+  leadBillingEnabled?: boolean;
   sponsoredUntil?: string | null;
   sponsoredPriority?: number;
 }
@@ -148,6 +156,40 @@ export interface AdminLeadsResponse {
   total: number;
   page: number;
   totalPages: number;
+}
+
+export interface AdminLeadInvoice {
+  id: string;
+  placeId: string;
+  placeNameHe: string;
+  placeNameEn: string;
+  stripeInvoiceId: string | null;
+  status: LeadInvoiceStatus;
+  totalAgorot: number;
+  leadCount: number;
+  periodStart: string;
+  periodEnd: string;
+  createdAt: string;
+}
+
+export interface AdminLeadInvoicesResponse {
+  invoices: AdminLeadInvoice[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface AdminCreateLeadInvoicesResponse {
+  created: Array<
+    AdminLeadInvoice & {
+      provider: "stripe" | "dev";
+    }
+  >;
+  skipped: Array<{
+    placeId: string;
+    placeNameHe: string;
+    reason: string;
+  }>;
 }
 
 export interface AdminUserListItem {

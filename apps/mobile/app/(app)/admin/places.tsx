@@ -103,6 +103,8 @@ function emptyPlace(): AdminPlaceInput {
     isActive: true,
     displayOrder: 0,
     leadFeeAgorot: 0,
+    billingEmail: "",
+    leadBillingEnabled: false,
     sponsoredUntil: null,
     sponsoredPriority: 0,
   };
@@ -137,6 +139,8 @@ function placeToForm(place: AdminPlace): AdminPlaceInput {
     isActive: place.isActive,
     displayOrder: place.displayOrder,
     leadFeeAgorot: place.leadFeeAgorot ?? 0,
+    billingEmail: place.billingEmail ?? "",
+    leadBillingEnabled: place.leadBillingEnabled ?? false,
     sponsoredUntil: toSponsoredDateInput(place.sponsoredUntil),
     sponsoredPriority: place.sponsoredPriority ?? 0,
   };
@@ -164,6 +168,8 @@ export default function AdminPlacesScreen() {
         longitude: Number(form.longitude),
         displayOrder: Number(form.displayOrder) || 0,
         leadFeeAgorot: Math.max(0, Math.round(Number(form.leadFeeAgorot) || 0)),
+        billingEmail: form.billingEmail?.trim() ? form.billingEmail.trim() : null,
+        leadBillingEnabled: Boolean(form.leadBillingEnabled),
         sponsoredPriority: Math.max(0, Math.round(Number(form.sponsoredPriority) || 0)),
         sponsoredUntil: form.sponsoredUntil?.trim()
           ? form.sponsoredUntil.trim().slice(0, 10)
@@ -532,6 +538,25 @@ export default function AdminPlacesScreen() {
               onChangeText={(v) => updateField("leadFeeAgorot", Number(v) || 0)}
               keyboardType="number-pad"
             />
+            <Input
+              label={t("admin.billingEmail")}
+              value={form.billingEmail ?? ""}
+              onChangeText={(v) => updateField("billingEmail", v)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholder="billing@restaurant.co.il"
+            />
+            <Pressable
+              onPress={() => updateField("leadBillingEnabled", !form.leadBillingEnabled)}
+              className={`mb-3 px-4 py-3 rounded-lg border ${
+                form.leadBillingEnabled ? "bg-primary/10 border-primary" : "bg-white border-gray-200"
+              }`}
+            >
+              <Text className="text-sm font-medium text-text">
+                {t("admin.leadBillingEnabled")}:{" "}
+                {form.leadBillingEnabled ? t("admin.active") : t("admin.inactive")}
+              </Text>
+            </Pressable>
             <Input
               label={t("admin.sponsoredUntil")}
               value={
