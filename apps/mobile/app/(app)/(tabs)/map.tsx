@@ -21,7 +21,9 @@ import { PlaceMap } from "../../../src/components/PlaceMap";
 import { PlaceThumbnail } from "../../../src/components/PlaceThumbnail";
 import {
   DELIVERY_LEAD_TYPE,
+  PLATFORM_LABEL_KEY,
   type DeliveryPlatform,
+  getAvailableDeliveryPlatforms,
   resolveDeliveryUrl,
   shouldShowDeliveryOrder,
 } from "../../../src/lib/deliveryOrder";
@@ -245,30 +247,17 @@ export default function MapScreen() {
 
             {shouldShowDeliveryOrder(selected) ? (
               <View style={styles.deliveryRow} testID="map-delivery-order">
-                <Pressable
-                  style={styles.deliveryPill}
-                  onPress={() => void openDelivery(selected, "wolt")}
-                >
-                  <Text style={styles.deliveryPillText}>{t("place.orderWolt")}</Text>
-                </Pressable>
-                <Pressable
-                  style={styles.deliveryPill}
-                  onPress={() => void openDelivery(selected, "tenbis")}
-                >
-                  <Text style={styles.deliveryPillText}>{t("place.orderTenBis")}</Text>
-                </Pressable>
-                <Pressable
-                  style={styles.deliveryPill}
-                  onPress={() => void openDelivery(selected, "mishloha")}
-                >
-                  <Text style={styles.deliveryPillText}>{t("place.orderMishloha")}</Text>
-                </Pressable>
-                <Pressable
-                  style={styles.deliveryPill}
-                  onPress={() => void openDelivery(selected, "cibus")}
-                >
-                  <Text style={styles.deliveryPillText}>{t("place.orderCibus")}</Text>
-                </Pressable>
+                {getAvailableDeliveryPlatforms(selected).map(({ platform }) => (
+                  <Pressable
+                    key={platform}
+                    style={styles.deliveryPill}
+                    onPress={() => void openDelivery(selected, platform)}
+                  >
+                    <Text style={styles.deliveryPillText}>
+                      {t(PLATFORM_LABEL_KEY[platform])}
+                    </Text>
+                  </Pressable>
+                ))}
               </View>
             ) : null}
           </View>

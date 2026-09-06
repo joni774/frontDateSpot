@@ -291,6 +291,8 @@ export {
   fetchAdminLeads,
   fetchAdminLeadInvoices,
   createAdminLeadInvoices,
+  checkAdminPlaceDelivery,
+  batchCheckAdminDelivery,
 } from "./admin";
 
 export {
