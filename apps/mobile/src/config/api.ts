@@ -3,6 +3,9 @@ import { Platform } from "react-native";
 
 const DEFAULT_API_URL = "http://localhost:3000";
 const STAGING_API_URL = "https://datespot-staging.up.railway.app";
+/** Must match eas.json production EXPO_PUBLIC_API_URL — never fall back to localhost in store builds. */
+const PRODUCTION_API_URL =
+  "https://datespot-server-production-ecb2.up.railway.app";
 
 function readEnvApiUrl(): string | undefined {
   const fromExtra = Constants.expoConfig?.extra?.apiUrl;
@@ -35,5 +38,5 @@ export function resolveApiBaseUrl(): string {
   // Dev fallback: when .env was not picked up by Metro, still hit Railway staging.
   if (__DEV__) return STAGING_API_URL;
 
-  return DEFAULT_API_URL;
+  return PRODUCTION_API_URL;
 }

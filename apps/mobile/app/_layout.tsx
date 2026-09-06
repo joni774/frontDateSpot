@@ -8,17 +8,26 @@ import {
   getStoredToken,
   setUnauthorizedHandler,
 } from "@datespot/api-client";
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack, useRouter, useRootNavigationState, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import { I18nextProvider } from "react-i18next";
 
 import { AuthSessionProvider, useAuthSession } from "../src/auth/AuthSession";
+import { BootScreen } from "../src/components/BootScreen";
 import { resolveApiBaseUrl } from "../src/config/api";
 import { i18n, initI18n } from "../src/i18n/i18n";
-import { setupPushNotifications } from "../src/notifications/push";
 import { colors } from "../src/theme/colors";
+
+/** Lazy — avoid loading expo-notifications (and its top-level handler) during cold start. */
+function queuePushSetup(): void {
+  void import("../src/notifications/push")
+    .then(({ setupPushNotifications }) => setupPushNotifications())
+    .catch(() => {
+      // Push is optional
+    });
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,6 +38,8 @@ const queryClient = new QueryClient({
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const segments = useSegments();
+  const rootNavigation = useRootNavigationState();
+  const navReady = Boolean(rootNavigation?.key);
   const { isSessionActive, activateSession, clearSession } = useAuthSession();
   const [ready, setReady] = useState(false);
   const [sessionBootstrapped, setSessionBootstrapped] = useState(false);
@@ -56,12 +67,17 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!ready || sessionBootstrapped) return;
     let mounted = true;
     (async () => {
-      const token = await getStoredToken();
-      if (!mounted) return;
-      if (token) {
-        activateSession();
+      try {
+        const token = await getStoredToken();
+        if (!mounted) return;
+        if (token) {
+          activateSession();
+        }
+      } catch {
+        // Still mark bootstrapped so we never stick on a blank frame.
+      } finally {
+        if (mounted) setSessionBootstrapped(true);
       }
-      setSessionBootstrapped(true);
     })();
     return () => {
       mounted = false;
@@ -71,13 +87,20 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const apiUrl = resolveApiBaseUrl();
-      configureApiBaseUrl(apiUrl);
-      if (__DEV__) {
-        console.log("[DateSpot] API base URL:", apiUrl);
+      try {
+        const apiUrl = resolveApiBaseUrl();
+        configureApiBaseUrl(apiUrl);
+        if (__DEV__) {
+          console.log("[DateSpot] API base URL:", apiUrl);
+        }
+        await initI18n();
+      } catch (err) {
+        if (__DEV__) {
+          console.warn("[DateSpot] boot init failed:", err);
+        }
+      } finally {
+        if (mounted) setReady(true);
       }
-      await initI18n();
-      if (mounted) setReady(true);
     })();
     return () => {
       mounted = false;
@@ -85,7 +108,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!ready || !sessionBootstrapped) return;
+    if (!ready || !sessionBootstrapped || !navReady) return;
 
     let mounted = true;
     (async () => {
@@ -106,29 +129,32 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       // Signed in this session → go to app
       if (!needsLogin && (inOnboarding || inAuthGroup)) {
         router.replace("/(app)/(tabs)");
-        void setupPushNotifications();
+        queuePushSetup();
         return;
       }
 
       if (!needsLogin && inApp) {
-        void setupPushNotifications();
+        queuePushSetup();
       }
     })();
 
     return () => {
       mounted = false;
     };
-  }, [ready, sessionBootstrapped, segments, router, isSessionActive]);
+  }, [ready, sessionBootstrapped, navReady, segments, router, isSessionActive]);
 
-  if (!ready) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
+  const showBootOverlay = !ready || !sessionBootstrapped || !navReady;
 
-  return <>{children}</>;
+  return (
+    <View style={styles.root}>
+      {children}
+      {showBootOverlay ? (
+        <View style={styles.overlay} pointerEvents="auto">
+          <BootScreen />
+        </View>
+      ) : null}
+    </View>
+  );
 }
 
 export default function RootLayout() {
@@ -145,3 +171,14 @@ export default function RootLayout() {
     </QueryClientProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 100,
+  },
+});

@@ -82,8 +82,19 @@ export async function initI18n(): Promise<void> {
     interpolation: { escapeValue: false },
   });
 
-  applyRTL(lng);
+  const directionChanged = applyRTL(lng);
   applyWebDocumentDir(lng);
+
+  // forceRTL only takes effect after a restart. On first install (LTR device + he),
+  // reload once so TestFlight / store builds are not stuck with a blank layout.
+  if (directionChanged && Platform.OS !== "web") {
+    const reloadKey = `${LANGUAGE_KEY}:rtl-reload`;
+    const alreadyReloaded = await AsyncStorage.getItem(reloadKey);
+    if (!alreadyReloaded) {
+      await AsyncStorage.setItem(reloadKey, "1");
+      reloadForRtlIfNeeded(true);
+    }
+  }
 }
 
 function applyRTL(lng: string): boolean {
@@ -109,6 +120,21 @@ function reloadForRtlIfNeeded(directionChanged: boolean): void {
 
   if (__DEV__ && DevSettings?.reload) {
     DevSettings.reload();
+    return;
+  }
+
+  // Production (TestFlight / store): prefer expo-updates when present.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const Updates = require("expo-updates") as {
+      isEnabled?: boolean;
+      reloadAsync?: () => Promise<void>;
+    };
+    if (Updates?.isEnabled && typeof Updates.reloadAsync === "function") {
+      void Updates.reloadAsync();
+    }
+  } catch {
+    // expo-updates not installed — direction applies on next cold start.
   }
 }
 
