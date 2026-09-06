@@ -15,6 +15,7 @@ import {
 } from "@datespot/api-client";
 import type { LeadType, PlaceCategory, PriceRange } from "@datespot/shared-types";
 import { Button } from "@datespot/ui";
+import { KosherBadge } from "../../../src/components/KosherBadge";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
@@ -351,6 +352,7 @@ export default function PlaceDetailScreen() {
               {t(`place.categories.${place.category}`)}
             </Text>
           </View>
+          <KosherBadge status={place.kosherStatus} certification={place.kosherCertification} />
           <View
             className={`px-2.5 py-1 rounded-md ${
               !knownHours

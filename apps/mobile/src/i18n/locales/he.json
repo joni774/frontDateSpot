@@ -225,6 +225,10 @@
       "MODERATE": "₪₪ · בינוני",
       "EXPENSIVE": "₪₪₪ · יקר"
     },
+    "kosher": {
+      "strict": "כשר",
+      "partial": "כשר חלקית"
+    },
     "days": {
       "sunday": "ראשון",
       "monday": "שני",
@@ -364,6 +368,15 @@
     "displayOrder": "סדר תצוגה",
     "leadFeeAgorot": "עמלת ליד (אגורות)",
     "billingEmail": "אימייל לחיוב (Stripe)",
+    "kosherStatus": "כשרות",
+    "kosherCertification": "תעודת כשרות (אופציונלי)",
+    "kosherCertificationPlaceholder": "לדוגמה: בד\"ץ, רבנות, מהדרין",
+    "kosherStatusOptions": {
+      "UNKNOWN": "לא ידוע",
+      "NONE": "לא כשר",
+      "PARTIAL": "כשר חלקית",
+      "STRICT": "כשר"
+    },
     "leadBillingEnabled": "חיוב לידים אוטומטי",
     "sponsoredUntil": "קידום ממומן עד (YYYY-MM-DD)",
     "sponsoredPriority": "עדיפות קידום",

@@ -24,6 +24,7 @@ import {
 } from "react-native";
 import { CategoryChipIcon } from "../../../src/components/icons/CategoryChipIcon";
 import { PlaceThumbnail } from "../../../src/components/PlaceThumbnail";
+import { kosherBadgeLabel } from "../../../src/components/KosherBadge";
 import { ScreenHeader } from "../../../src/components/ScreenHeader";
 import {
   DEFAULT_COORDS,
@@ -148,6 +149,7 @@ function FeaturedPlaceCard({
   sponsoredLabel,
   categoryLabel,
   priceLabel,
+  kosherLabel,
   onPress,
 }: {
   place: Place;
@@ -155,6 +157,7 @@ function FeaturedPlaceCard({
   sponsoredLabel: string;
   categoryLabel: string;
   priceLabel: string;
+  kosherLabel: string | null;
   onPress: () => void;
 }) {
   const imageUri = place.images[0];
@@ -187,6 +190,11 @@ function FeaturedPlaceCard({
           <View style={featuredStyles.badge}>
             <Text style={featuredStyles.badgeText}>{priceLabel}</Text>
           </View>
+          {kosherLabel ? (
+            <View style={[featuredStyles.badge, featuredStyles.kosherBadge]}>
+              <Text style={featuredStyles.kosherBadgeText}>{kosherLabel}</Text>
+            </View>
+          ) : null}
         </View>
         <Text style={featuredStyles.name} numberOfLines={2}>
           {place.name}
@@ -252,6 +260,15 @@ const featuredStyles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "600",
   },
+  kosherBadge: {
+    backgroundColor: "rgba(16, 185, 129, 0.92)",
+    borderColor: "rgba(16, 185, 129, 0.92)",
+  },
+  kosherBadgeText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "700",
+  },
   name: {
     color: "#fff",
     fontSize: 24,
@@ -269,6 +286,7 @@ function NearbyPlaceRow({
   locked,
   categoryLabel,
   priceLabel,
+  kosherLabel,
   distanceLabel,
   onPress,
 }: {
@@ -276,6 +294,7 @@ function NearbyPlaceRow({
   locked: boolean;
   categoryLabel: string;
   priceLabel: string;
+  kosherLabel: string | null;
   distanceLabel: string | null;
   onPress: () => void;
 }) {
@@ -308,6 +327,7 @@ function NearbyPlaceRow({
         ) : null}
         <Text style={rowStyles.meta}>
           {categoryLabel} · {priceLabel}
+          {kosherLabel ? ` · ${kosherLabel}` : ""}
         </Text>
       </View>
     </Pressable>
@@ -620,6 +640,7 @@ export default function HomeScreen() {
             }
             categoryLabel={t(`place.categories.${featured.category}`)}
             priceLabel={t(`place.priceRange.${featured.priceRange}`)}
+            kosherLabel={kosherBadgeLabel(featured.kosherStatus, featured.kosherCertification, t)}
             onPress={() => openPlace(featured)}
           />
         </View>
@@ -692,6 +713,7 @@ export default function HomeScreen() {
               locked={!!item.isLocked}
               categoryLabel={t(`place.categories.${item.category}`)}
               priceLabel={t(`place.priceRange.${item.priceRange}`)}
+              kosherLabel={kosherBadgeLabel(item.kosherStatus, item.kosherCertification, t)}
               distanceLabel={
                 item.distance != null
                   ? `${item.distance.toFixed(1)} ${t("home.km")}`

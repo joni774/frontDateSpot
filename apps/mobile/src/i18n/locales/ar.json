@@ -214,6 +214,10 @@
       "MODERATE": "₪₪ · متوسط",
       "EXPENSIVE": "₪₪₪ · غالي"
     },
+    "kosher": {
+      "strict": "حلال / كوشير",
+      "partial": "كوشير جزئي"
+    },
     "days": {
       "sunday": "الأحد",
       "monday": "الإثنين",
@@ -351,6 +355,15 @@
     "displayOrder": "ترتيب العرض",
     "leadFeeAgorot": "رسوم العميل المحتمل (أغورات)",
     "billingEmail": "البريد للفوترة (Stripe)",
+    "kosherStatus": "حالة الكوشير",
+    "kosherCertification": "شهادة كوشير (اختياري)",
+    "kosherCertificationPlaceholder": "مثال: بادatz، رابinate",
+    "kosherStatusOptions": {
+      "UNKNOWN": "غير معروف",
+      "NONE": "غير كوشير",
+      "PARTIAL": "كوشير جزئي",
+      "STRICT": "كوشير"
+    },
     "leadBillingEnabled": "فوترة تلقائية للعملاء المحتملين",
     "sponsoredUntil": "إعلان مدفوع حتى (YYYY-MM-DD)",
     "sponsoredPriority": "أولوية الإعلان",

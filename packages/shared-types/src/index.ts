@@ -13,6 +13,8 @@ export type PlaceCategory =
 
 export type PriceRange = "FREE" | "BUDGET" | "MODERATE" | "EXPENSIVE";
 
+export type KosherStatus = "UNKNOWN" | "NONE" | "PARTIAL" | "STRICT";
+
 export type LeadType =
   | "CALL"
   | "WHATSAPP"
@@ -56,6 +58,8 @@ export interface Place {
   longitude?: number;
   address?: string;
   phone?: string | null;
+  kosherStatus?: KosherStatus;
+  kosherCertification?: string | null;
 }
 
 export interface PlaceDetail extends Place {
@@ -140,6 +144,8 @@ export interface AdminPlace {
   leadBillingEnabled?: boolean;
   sponsoredUntil?: string | null;
   sponsoredPriority?: number;
+  kosherStatus?: KosherStatus;
+  kosherCertification?: string | null;
 }
 
 export interface AdminLead {

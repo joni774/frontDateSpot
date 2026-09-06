@@ -231,6 +231,10 @@
       "MODERATE": "₪₪ · Moderate",
       "EXPENSIVE": "₪₪₪ · Expensive"
     },
+    "kosher": {
+      "strict": "Kosher",
+      "partial": "Partially kosher"
+    },
     "days": {
       "sunday": "Sunday",
       "monday": "Monday",
@@ -368,6 +372,15 @@
     "displayOrder": "Display order",
     "leadFeeAgorot": "Lead fee (agorot)",
     "billingEmail": "Billing email (Stripe)",
+    "kosherStatus": "Kosher status",
+    "kosherCertification": "Kosher certification (optional)",
+    "kosherCertificationPlaceholder": "e.g. Badatz, Rabbinate, Mehadrin",
+    "kosherStatusOptions": {
+      "UNKNOWN": "Unknown",
+      "NONE": "Not kosher",
+      "PARTIAL": "Partially kosher",
+      "STRICT": "Kosher"
+    },
     "leadBillingEnabled": "Automatic lead billing",
     "sponsoredUntil": "Sponsored until (YYYY-MM-DD)",
     "sponsoredPriority": "Sponsorship priority",

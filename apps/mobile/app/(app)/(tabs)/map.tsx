@@ -16,8 +16,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PlaceActionsBar } from "../../../src/components/PlaceActionsBar";
-import { PlaceThumbnail } from "../../../src/components/PlaceThumbnail";
+import { kosherBadgeLabel } from "../../../src/components/KosherBadge";
 import { PlaceMap } from "../../../src/components/PlaceMap";
+import { PlaceThumbnail } from "../../../src/components/PlaceThumbnail";
 import {
   DELIVERY_LEAD_TYPE,
   type DeliveryPlatform,
@@ -199,11 +200,19 @@ export default function MapScreen() {
                 <Text style={styles.sheetName} numberOfLines={1}>
                   {selected.name}
                 </Text>
-                <Text style={styles.sheetMeta} numberOfLines={1}>
+                <Text style={styles.sheetMeta} numberOfLines={2}>
                   {selected.address ?? t(`place.categories.${selected.category}`)}
                   {selected.distance != null
                     ? ` · ${selected.distance.toFixed(1)} ${t("home.km")}`
                     : ""}
+                  {(() => {
+                    const kosher = kosherBadgeLabel(
+                      selected.kosherStatus,
+                      selected.kosherCertification,
+                      t
+                    );
+                    return kosher ? ` · ${kosher}` : "";
+                  })()}
                 </Text>
               </View>
             </Pressable>

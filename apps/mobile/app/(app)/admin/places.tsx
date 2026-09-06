@@ -107,6 +107,8 @@ function emptyPlace(): AdminPlaceInput {
     leadBillingEnabled: false,
     sponsoredUntil: null,
     sponsoredPriority: 0,
+    kosherStatus: "UNKNOWN",
+    kosherCertification: "",
   };
 }
 
@@ -143,6 +145,8 @@ function placeToForm(place: AdminPlace): AdminPlaceInput {
     leadBillingEnabled: place.leadBillingEnabled ?? false,
     sponsoredUntil: toSponsoredDateInput(place.sponsoredUntil),
     sponsoredPriority: place.sponsoredPriority ?? 0,
+    kosherStatus: place.kosherStatus ?? "UNKNOWN",
+    kosherCertification: place.kosherCertification ?? "",
   };
 }
 
@@ -623,6 +627,35 @@ export default function AdminPlacesScreen() {
                 </Pressable>
               ))}
             </ScrollView>
+
+            <Text className="text-sm font-medium text-text mb-2">
+              {t("admin.kosherStatus")}
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-3">
+              {(["UNKNOWN", "NONE", "PARTIAL", "STRICT"] as const).map((status) => (
+                <Pressable
+                  key={status}
+                  onPress={() => updateField("kosherStatus", status)}
+                  className={`mr-2 px-3 py-2 rounded-full ${
+                    form.kosherStatus === status ? "bg-primary" : "bg-gray-100"
+                  }`}
+                >
+                  <Text
+                    className={`text-sm ${
+                      form.kosherStatus === status ? "text-white" : "text-gray-700"
+                    }`}
+                  >
+                    {t(`admin.kosherStatusOptions.${status}`)}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+            <Input
+              label={t("admin.kosherCertification")}
+              value={form.kosherCertification ?? ""}
+              onChangeText={(v) => updateField("kosherCertification", v)}
+              placeholder={t("admin.kosherCertificationPlaceholder")}
+            />
 
             <Text className="text-sm font-medium text-text mb-2">
               {t("admin.priceRange")}
