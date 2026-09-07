@@ -1,3 +1,5 @@
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -38,6 +40,46 @@ const TRANSITION_MS = 360;
 type AnimatedQuestionBannerProps = {
   visible?: boolean;
 };
+
+function FrostedBubble({ children }: { children: React.ReactNode }) {
+  if (Platform.OS === "web") {
+    return (
+      <View
+        style={[
+          styles.cardShell,
+          {
+            backgroundColor: "rgba(255, 255, 255, 0.78)",
+            backdropFilter: "blur(18px)",
+          } as View["props"]["style"],
+        ]}
+      >
+        <LinearGradient
+          colors={["rgba(255, 255, 255, 0.88)", "rgba(250, 249, 247, 0.78)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.glassSheen} pointerEvents="none" />
+        {children}
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.cardShell}>
+      <BlurView intensity={78} tint="light" style={styles.blurFill}>
+        <LinearGradient
+          colors={["rgba(255, 255, 255, 0.52)", "rgba(255, 255, 255, 0.18)"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.glassSheen} pointerEvents="none" />
+        {children}
+      </BlurView>
+    </View>
+  );
+}
 
 export function AnimatedQuestionBanner({ visible = true }: AnimatedQuestionBannerProps) {
   const { t } = useTranslation();
@@ -205,7 +247,7 @@ export function AnimatedQuestionBanner({ visible = true }: AnimatedQuestionBanne
   });
 
   const combinedY = Animated.add(mountY, floatY);
-  const bottomOffset = TAB_BAR_HEIGHT + Math.max(bottomInset, Platform.OS === "web" ? 0 : 4);
+  const bottomOffset = TAB_BAR_HEIGHT + Math.max(bottomInset, Platform.OS === "web" ? 0 : 6);
 
   if (!visible) return null;
 
@@ -234,49 +276,37 @@ export function AnimatedQuestionBanner({ visible = true }: AnimatedQuestionBanne
             style={{ transform: [{ scale: pressScale }] }}
             accessibilityLiveRegion="polite"
           >
-            <View style={styles.card}>
-              <View style={styles.contentRow}>
-                <View style={styles.iconWrap}>
-                  <AiTabIcon size={18} color={colors.primary} />
-                </View>
-
-                <View style={styles.textCol}>
+            <FrostedBubble>
+              <View style={styles.cardInner}>
+                <View style={styles.headerRow}>
+                  <View style={styles.iconWrap}>
+                    <AiTabIcon size={20} color={colors.primary} />
+                  </View>
                   <Text style={[styles.label, { textAlign: textAlignStart() }]}>
                     {t("home.questionBanner.badge")}
                   </Text>
-                  <Animated.View
-                    style={{
-                      opacity: textFade,
-                      transform: [{ translateY: textSlide }],
-                    }}
-                  >
-                    <Text
-                      style={[styles.question, { textAlign: textAlignStart() }]}
-                      numberOfLines={1}
-                    >
-                      {questions[index]}
-                    </Text>
-                  </Animated.View>
-                </View>
-
-                <View style={styles.chevron}>
                   <Text style={styles.chevronText}>›</Text>
                 </View>
-              </View>
 
-              <View style={styles.progressTrack}>
-                <Animated.View style={[styles.progressFill, { width: progressWidth }]} />
-              </View>
+                <Animated.View
+                  style={{
+                    opacity: textFade,
+                    transform: [{ translateY: textSlide }],
+                  }}
+                >
+                  <Text
+                    style={[styles.question, { textAlign: textAlignStart() }]}
+                    numberOfLines={2}
+                  >
+                    {questions[index]}
+                  </Text>
+                </Animated.View>
 
-              <View style={styles.dots}>
-                {questions.map((_, dotIndex) => (
-                  <View
-                    key={QUESTION_KEYS[dotIndex]}
-                    style={[styles.dot, dotIndex === index && styles.dotActive]}
-                  />
-                ))}
+                <View style={styles.progressTrack}>
+                  <Animated.View style={[styles.progressFill, { width: progressWidth }]} />
+                </View>
               </View>
-            </View>
+            </FrostedBubble>
 
             <View style={styles.tail} pointerEvents="none" />
           </Animated.View>
@@ -296,80 +326,84 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
-  card: {
+  cardShell: {
     width: "100%",
-    maxWidth: 340,
-    backgroundColor: colors.surface,
-    borderRadius: 20,
+    maxWidth: 390,
+    borderRadius: 24,
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: colors.border,
-    paddingTop: 14,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    borderColor: "rgba(255, 255, 255, 0.72)",
     ...Platform.select({
       ios: {
         shadowColor: "#1A1918",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.1,
-        shadowRadius: 20,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.14,
+        shadowRadius: 24,
       },
-      android: { elevation: 8 },
+      android: { elevation: 10 },
       default: {
         shadowColor: "#1A1918",
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.08,
-        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.12,
+        shadowRadius: 20,
       },
     }),
   },
-  contentRow: {
+  blurFill: {
+    overflow: "hidden",
+  },
+  glassSheen: {
+    ...StyleSheet.absoluteFillObject,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.65)",
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  cardInner: {
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 14,
+  },
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 10,
+    marginBottom: 10,
   },
   iconWrap: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: 12,
-    backgroundColor: `${colors.primary}12`,
+    backgroundColor: "rgba(164, 60, 18, 0.1)",
     alignItems: "center",
     justifyContent: "center",
-  },
-  textCol: {
-    flex: 1,
-    minWidth: 0,
   },
   label: {
-    fontSize: 11,
+    flex: 1,
+    fontSize: 12,
     fontWeight: "600",
     color: colors.textMuted,
-    letterSpacing: 0.3,
-    marginBottom: 2,
+    letterSpacing: 0.2,
   },
   question: {
-    fontSize: 17,
-    lineHeight: 22,
+    fontSize: 20,
+    lineHeight: 27,
     fontWeight: "700",
     color: colors.text,
-  },
-  chevron: {
-    width: 24,
-    alignItems: "center",
-    justifyContent: "center",
+    minHeight: 54,
   },
   chevronText: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "300",
     color: colors.outline,
     marginTop: -2,
   },
   progressTrack: {
-    marginTop: 12,
-    height: 2,
+    marginTop: 14,
+    height: 3,
     borderRadius: 999,
-    backgroundColor: colors.surfaceContainer,
+    backgroundColor: "rgba(164, 60, 18, 0.12)",
     overflow: "hidden",
   },
   progressFill: {
@@ -377,31 +411,15 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: colors.primary,
   },
-  dots: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 4,
-    marginTop: 10,
-  },
-  dot: {
-    width: 4,
-    height: 4,
-    borderRadius: 999,
-    backgroundColor: colors.surfaceContainerHigh,
-  },
-  dotActive: {
-    width: 14,
-    backgroundColor: colors.primary,
-  },
   tail: {
     alignSelf: "center",
-    width: 14,
-    height: 14,
-    backgroundColor: colors.surface,
+    width: 16,
+    height: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.82)",
     borderRightWidth: 1,
     borderBottomWidth: 1,
-    borderColor: colors.border,
+    borderColor: "rgba(255, 255, 255, 0.72)",
     transform: [{ rotate: "45deg" }],
-    marginTop: -8,
+    marginTop: -9,
   },
 });
