@@ -1,7 +1,9 @@
 /** Bottom tab navigation: Home, Map, AI Chat, Profile. */
-import { Tabs } from "expo-router";
+import { Tabs, usePathname } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { View } from "react-native";
 
+import { AnimatedQuestionBanner } from "../../../src/components/AnimatedQuestionBanner";
 import { AiTabIcon } from "../../../src/components/icons/AiTabIcon";
 import { HomeTabIcon } from "../../../src/components/icons/HomeTabIcon";
 import { MapTabIcon } from "../../../src/components/icons/MapTabIcon";
@@ -10,9 +12,12 @@ import { colors } from "../../../src/theme/colors";
 
 export default function TabsLayout() {
   const { t } = useTranslation();
+  const pathname = usePathname();
+  const showQuestionBubble = !pathname.includes("/ai");
 
   return (
-    <Tabs
+    <View style={{ flex: 1 }}>
+      <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
@@ -64,6 +69,8 @@ export default function TabsLayout() {
       />
       <Tabs.Screen name="saved" options={{ href: null }} />
       <Tabs.Screen name="favorites" options={{ href: null }} />
-    </Tabs>
+      </Tabs>
+      <AnimatedQuestionBanner visible={showQuestionBubble} />
+    </View>
   );
 }
