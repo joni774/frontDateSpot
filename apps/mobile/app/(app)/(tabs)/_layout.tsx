@@ -1,7 +1,7 @@
 /** Bottom tab navigation: Home, Map, AI Chat, Profile. */
+import { Fragment } from "react";
 import { Tabs, usePathname } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { View } from "react-native";
 
 import { AnimatedQuestionBanner } from "../../../src/components/AnimatedQuestionBanner";
 import { AiTabIcon } from "../../../src/components/icons/AiTabIcon";
@@ -16,7 +16,7 @@ export default function TabsLayout() {
   const showQuestionBubble = !pathname.includes("/ai");
 
   return (
-    <View style={{ flex: 1 }}>
+    <Fragment>
       <Tabs
       screenOptions={{
         headerShown: false,
@@ -71,6 +71,6 @@ export default function TabsLayout() {
       <Tabs.Screen name="favorites" options={{ href: null }} />
       </Tabs>
       <AnimatedQuestionBanner visible={showQuestionBubble} />
-    </View>
+    </Fragment>
   );
 }

@@ -43,6 +43,7 @@ export function AnimatedQuestionBanner({ visible = true }: AnimatedQuestionBanne
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const bottomInset = Number.isFinite(insets.bottom) ? insets.bottom : 0;
 
   const questions = useMemo(
     () => QUESTION_KEYS.map((key) => t(`home.questionBanner.${key}`)),
@@ -204,7 +205,7 @@ export function AnimatedQuestionBanner({ visible = true }: AnimatedQuestionBanne
   });
 
   const combinedY = Animated.add(mountY, floatY);
-  const bottomOffset = TAB_BAR_HEIGHT + Math.max(insets.bottom, Platform.OS === "web" ? 0 : 4);
+  const bottomOffset = TAB_BAR_HEIGHT + Math.max(bottomInset, Platform.OS === "web" ? 0 : 4);
 
   if (!visible) return null;
 

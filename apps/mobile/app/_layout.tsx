@@ -12,6 +12,7 @@ import { Stack, useRouter, useRootNavigationState, useSegments } from "expo-rout
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { I18nextProvider } from "react-i18next";
 
 import { AuthSessionProvider, useAuthSession } from "../src/auth/AuthSession";
@@ -159,16 +160,18 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <I18nextProvider i18n={i18n}>
-        <AuthSessionProvider>
-          <AuthGuard>
-            <StatusBar style="dark" />
-            <Stack screenOptions={{ headerShown: false }} />
-          </AuthGuard>
-        </AuthSessionProvider>
-      </I18nextProvider>
-    </QueryClientProvider>
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <I18nextProvider i18n={i18n}>
+          <AuthSessionProvider>
+            <AuthGuard>
+              <StatusBar style="dark" />
+              <Stack screenOptions={{ headerShown: false }} />
+            </AuthGuard>
+          </AuthSessionProvider>
+        </I18nextProvider>
+      </QueryClientProvider>
+    </SafeAreaProvider>
   );
 }
 
