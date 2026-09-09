@@ -4,7 +4,7 @@ export function Hero() {
   return (
     <section className="hero">
       <div className="hero__media" aria-hidden>
-        <img className="hero__image" src="/hero.jpg" alt="" width={2400} height={1600} />
+        <img className="hero__image" src="/hero.png" alt="" width={2400} height={1600} />
         <div className="hero__scrim" />
       </div>
 
