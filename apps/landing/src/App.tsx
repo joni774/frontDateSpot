@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
 import { Features } from "./components/Features";
+import { HowItWorks } from "./components/HowItWorks";
+import { Faq } from "./components/Faq";
 import { Cta } from "./components/Cta";
 import { Footer } from "./components/Footer";
 import "./styles.css";
@@ -37,6 +39,8 @@ export default function App() {
       <main>
         <Hero />
         <Features />
+        <HowItWorks />
+        <Faq />
         <Cta />
       </main>
       <Footer />

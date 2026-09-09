@@ -21,6 +21,14 @@ pnpm build
 pnpm preview
 ```
 
+## Pages
+
+- `/` — Hero, Features, How it works, FAQ, CTA.
+- `/privacy.html` — Privacy policy.
+- `/terms.html` — Terms of use.
+
+Contact email (`support@datespot.co.il`) is set in [`src/config.ts`](src/config.ts) and used for the footer "יצירת קשר" link and legal pages.
+
 ## Store links
 
 When App Store / Google Play URLs are ready, set them in [`src/config.ts`](src/config.ts):

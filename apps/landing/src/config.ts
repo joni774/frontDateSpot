@@ -4,6 +4,8 @@
  */
 export const siteUrl = "https://datespot.co.il";
 
+export const contactEmail = "support@datespot.co.il";
+
 export const storeLinks = {
   appStoreUrl: null as string | null,
   playStoreUrl: null as string | null,
