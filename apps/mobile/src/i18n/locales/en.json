@@ -177,7 +177,7 @@
       "sunset": "Catch a sunset?",
       "spontaneous": "No plan — surprise us?",
       "badge": "Ask the bot",
-      "ctaAction": "Ask now",
+      "dismiss": "Close bubble",
       "tapHint": "Tap to ask the AI bot"
     },
     "datingCta": "Dating 18+",

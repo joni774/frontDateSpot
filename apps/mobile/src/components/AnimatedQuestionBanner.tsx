@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -8,6 +9,7 @@ import {
   Easing,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -33,6 +35,7 @@ const QUESTION_KEYS = [
   "spontaneous",
 ] as const;
 
+const DISMISS_STORAGE_KEY = "@datespot/question-banner-dismissed";
 const TAB_BAR_HEIGHT = 64;
 const HOLD_MS = 3000;
 const TRANSITION_MS = 360;
@@ -48,13 +51,13 @@ function FrostedBubble({ children }: { children: React.ReactNode }) {
         style={[
           styles.cardShell,
           {
-            backgroundColor: "rgba(255, 255, 255, 0.78)",
+            backgroundColor: "rgba(255, 255, 255, 0.82)",
             backdropFilter: "blur(18px)",
           } as View["props"]["style"],
         ]}
       >
         <LinearGradient
-          colors={["rgba(255, 255, 255, 0.88)", "rgba(250, 249, 247, 0.78)"]}
+          colors={["rgba(255, 236, 228, 0.55)", "rgba(255, 255, 255, 0.78)"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
@@ -67,9 +70,9 @@ function FrostedBubble({ children }: { children: React.ReactNode }) {
 
   return (
     <View style={styles.cardShell}>
-      <BlurView intensity={78} tint="light" style={styles.blurFill}>
+      <BlurView intensity={82} tint="light" style={styles.blurFill}>
         <LinearGradient
-          colors={["rgba(255, 255, 255, 0.52)", "rgba(255, 255, 255, 0.18)"]}
+          colors={["rgba(255, 236, 228, 0.45)", "rgba(255, 255, 255, 0.22)"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
@@ -93,6 +96,7 @@ export function AnimatedQuestionBanner({ visible = true }: AnimatedQuestionBanne
   );
 
   const [index, setIndex] = useState(0);
+  const [dismissed, setDismissed] = useState<boolean | null>(null);
 
   const mountY = useRef(new Animated.Value(48)).current;
   const mountOpacity = useRef(new Animated.Value(0)).current;
@@ -101,6 +105,22 @@ export function AnimatedQuestionBanner({ visible = true }: AnimatedQuestionBanne
   const textSlide = useRef(new Animated.Value(0)).current;
   const pressScale = useRef(new Animated.Value(1)).current;
   const progress = useRef(new Animated.Value(0)).current;
+  const dismissAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const stored = await AsyncStorage.getItem(DISMISS_STORAGE_KEY);
+        if (mounted) setDismissed(stored === "1");
+      } catch {
+        if (mounted) setDismissed(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const openAiWithQuestion = useCallback(() => {
     const question = questions[index]?.trim();
@@ -110,6 +130,31 @@ export function AnimatedQuestionBanner({ visible = true }: AnimatedQuestionBanne
       params: { prompt: question, promptTs: String(Date.now()) },
     });
   }, [index, questions, router]);
+
+  const dismissBanner = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(dismissAnim, {
+        toValue: 0,
+        duration: 220,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(mountY, {
+        toValue: 32,
+        duration: 220,
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: true,
+      }),
+    ]).start(async ({ finished }) => {
+      if (!finished) return;
+      setDismissed(true);
+      try {
+        await AsyncStorage.setItem(DISMISS_STORAGE_KEY, "1");
+      } catch {
+        // Still hide locally even if persistence fails.
+      }
+    });
+  }, [dismissAnim, mountY]);
 
   const runProgress = useCallback(() => {
     progress.stopAnimation();
@@ -123,10 +168,11 @@ export function AnimatedQuestionBanner({ visible = true }: AnimatedQuestionBanne
   }, [progress]);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || dismissed !== false) return;
 
     mountY.setValue(48);
     mountOpacity.setValue(0);
+    dismissAnim.setValue(1);
 
     Animated.parallel([
       Animated.spring(mountY, {
@@ -144,10 +190,10 @@ export function AnimatedQuestionBanner({ visible = true }: AnimatedQuestionBanne
     ]).start();
 
     runProgress();
-  }, [mountOpacity, mountY, runProgress, visible]);
+  }, [dismissAnim, dismissed, mountOpacity, mountY, runProgress, visible]);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || dismissed !== false) return;
 
     const floatAnim = Animated.loop(
       Animated.sequence([
@@ -168,10 +214,10 @@ export function AnimatedQuestionBanner({ visible = true }: AnimatedQuestionBanne
 
     floatAnim.start();
     return () => floatAnim.stop();
-  }, [floatY, visible]);
+  }, [dismissed, floatY, visible]);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || dismissed !== false) return;
 
     let cancelled = false;
     let timeout: ReturnType<typeof setTimeout>;
@@ -185,7 +231,7 @@ export function AnimatedQuestionBanner({ visible = true }: AnimatedQuestionBanne
           useNativeDriver: true,
         }),
         Animated.timing(textSlide, {
-          toValue: -8,
+          toValue: -6,
           duration: TRANSITION_MS * 0.45,
           easing: Easing.out(Easing.quad),
           useNativeDriver: true,
@@ -194,7 +240,7 @@ export function AnimatedQuestionBanner({ visible = true }: AnimatedQuestionBanne
         if (!finished || cancelled) return;
 
         setIndex((current) => (current + 1) % questions.length);
-        textSlide.setValue(10);
+        textSlide.setValue(6);
         runProgress();
 
         Animated.parallel([
@@ -221,7 +267,7 @@ export function AnimatedQuestionBanner({ visible = true }: AnimatedQuestionBanne
       cancelled = true;
       clearTimeout(timeout);
     };
-  }, [questions.length, runProgress, textFade, textSlide, visible]);
+  }, [dismissed, questions.length, runProgress, textFade, textSlide, visible]);
 
   const onPressIn = () => {
     Animated.spring(pressScale, {
@@ -249,7 +295,9 @@ export function AnimatedQuestionBanner({ visible = true }: AnimatedQuestionBanne
   const combinedY = Animated.add(mountY, floatY);
   const bottomOffset = TAB_BAR_HEIGHT + Math.max(bottomInset, Platform.OS === "web" ? 0 : 6);
 
-  if (!visible) return null;
+  if (!visible || dismissed !== false) return null;
+
+  const questionText = questions[index];
 
   return (
     <View style={styles.overlay} pointerEvents="box-none">
@@ -258,59 +306,87 @@ export function AnimatedQuestionBanner({ visible = true }: AnimatedQuestionBanne
           styles.anchor,
           {
             bottom: bottomOffset,
-            opacity: mountOpacity,
-            transform: [{ translateY: combinedY }],
+            opacity: Animated.multiply(mountOpacity, dismissAnim),
+            transform: [{ translateY: combinedY }, { scale: dismissAnim }],
           },
         ]}
         pointerEvents="box-none"
       >
-        <Pressable
-          onPress={openAiWithQuestion}
-          onPressIn={onPressIn}
-          onPressOut={onPressOut}
-          accessibilityRole="button"
-          accessibilityLabel={questions[index]}
-          accessibilityHint={t("home.questionBanner.tapHint")}
-        >
-          <Animated.View
-            style={{ transform: [{ scale: pressScale }] }}
-            accessibilityLiveRegion="polite"
-          >
-            <FrostedBubble>
-              <View style={styles.cardInner}>
-                <View style={styles.headerRow}>
-                  <View style={styles.iconWrap}>
-                    <AiTabIcon size={20} color={colors.primary} />
-                  </View>
-                  <Text style={[styles.label, { textAlign: textAlignStart() }]}>
-                    {t("home.questionBanner.badge")}
-                  </Text>
-                  <Text style={styles.chevronText}>›</Text>
-                </View>
-
+        <FrostedBubble>
+          <View style={styles.cardInner}>
+            <View style={styles.mainRow}>
+              <Pressable
+                onPress={openAiWithQuestion}
+                onPressIn={onPressIn}
+                onPressOut={onPressOut}
+                accessibilityRole="button"
+                accessibilityLabel={questionText}
+                accessibilityHint={t("home.questionBanner.tapHint")}
+                style={styles.tapArea}
+              >
                 <Animated.View
-                  style={{
-                    opacity: textFade,
-                    transform: [{ translateY: textSlide }],
-                  }}
+                  style={[styles.tapInner, { transform: [{ scale: pressScale }] }]}
+                  accessibilityLiveRegion="polite"
                 >
-                  <Text
-                    style={[styles.question, { textAlign: textAlignStart() }]}
-                    numberOfLines={2}
+                  <View style={styles.iconWrap}>
+                    <AiTabIcon size={22} color={colors.primary} />
+                  </View>
+
+                  <Animated.View
+                    style={[
+                      styles.questionWrap,
+                      {
+                        opacity: textFade,
+                        transform: [{ translateY: textSlide }],
+                      },
+                    ]}
                   >
-                    {questions[index]}
-                  </Text>
+                    {Platform.OS === "android" ? (
+                      <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        bounces={false}
+                        style={styles.questionScroll}
+                        contentContainerStyle={styles.questionScrollContent}
+                      >
+                        <Text style={[styles.question, { textAlign: textAlignStart() }]}>
+                          {questionText}
+                        </Text>
+                      </ScrollView>
+                    ) : (
+                      <Text
+                        style={[styles.question, { textAlign: textAlignStart() }]}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.82}
+                      >
+                        {questionText}
+                      </Text>
+                    )}
+                  </Animated.View>
+
+                  <Text style={styles.chevronText}>›</Text>
                 </Animated.View>
+              </Pressable>
 
-                <View style={styles.progressTrack}>
-                  <Animated.View style={[styles.progressFill, { width: progressWidth }]} />
-                </View>
-              </View>
-            </FrostedBubble>
+              <Pressable
+                onPress={dismissBanner}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel={t("home.questionBanner.dismiss")}
+                style={styles.closeBtn}
+              >
+                <Text style={styles.closeText}>×</Text>
+              </Pressable>
+            </View>
 
-            <View style={styles.tail} pointerEvents="none" />
-          </Animated.View>
-        </Pressable>
+            <View style={styles.progressTrack}>
+              <Animated.View style={[styles.progressFill, { width: progressWidth }]} />
+            </View>
+          </View>
+        </FrostedBubble>
+
+        <View style={styles.tail} pointerEvents="none" />
       </Animated.View>
     </View>
   );
@@ -326,28 +402,28 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: "center",
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
   },
   cardShell: {
     width: "100%",
-    maxWidth: 390,
-    borderRadius: 24,
+    maxWidth: 400,
+    borderRadius: 22,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.72)",
+    borderWidth: 1.5,
+    borderColor: "rgba(164, 60, 18, 0.28)",
     ...Platform.select({
       ios: {
-        shadowColor: "#1A1918",
+        shadowColor: colors.primaryDark,
         shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.14,
-        shadowRadius: 24,
+        shadowOpacity: 0.2,
+        shadowRadius: 22,
       },
-      android: { elevation: 10 },
+      android: { elevation: 12 },
       default: {
-        shadowColor: "#1A1918",
+        shadowColor: colors.primaryDark,
         shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.12,
-        shadowRadius: 20,
+        shadowOpacity: 0.16,
+        shadowRadius: 18,
       },
     }),
   },
@@ -357,53 +433,86 @@ const styles = StyleSheet.create({
   glassSheen: {
     ...StyleSheet.absoluteFillObject,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.65)",
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderTopColor: "rgba(255, 255, 255, 0.72)",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   cardInner: {
-    paddingHorizontal: 18,
-    paddingTop: 16,
-    paddingBottom: 14,
+    paddingLeft: 14,
+    paddingRight: 10,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
-  headerRow: {
+  mainRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  tapArea: {
+    flex: 1,
+    minWidth: 0,
+  },
+  tapInner: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    marginBottom: 10,
+    minHeight: 44,
   },
   iconWrap: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: 12,
-    backgroundColor: "rgba(164, 60, 18, 0.1)",
+    backgroundColor: "rgba(164, 60, 18, 0.14)",
+    borderWidth: 1,
+    borderColor: "rgba(164, 60, 18, 0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
-  label: {
+  questionWrap: {
     flex: 1,
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.textMuted,
-    letterSpacing: 0.2,
+    minWidth: 0,
+    justifyContent: "center",
+  },
+  questionScroll: {
+    flexGrow: 0,
+  },
+  questionScrollContent: {
+    alignItems: "center",
   },
   question: {
-    fontSize: 20,
-    lineHeight: 27,
-    fontWeight: "700",
-    color: colors.text,
-    minHeight: 54,
+    fontSize: 21,
+    lineHeight: 26,
+    fontWeight: "800",
+    color: colors.primaryDark,
+    letterSpacing: 0.15,
   },
   chevronText: {
-    fontSize: 24,
-    fontWeight: "300",
-    color: colors.outline,
-    marginTop: -2,
+    fontSize: 26,
+    fontWeight: "400",
+    color: colors.primary,
+    marginTop: -1,
+    paddingLeft: 2,
+  },
+  closeBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "rgba(26, 28, 27, 0.07)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  closeText: {
+    fontSize: 22,
+    lineHeight: 24,
+    fontWeight: "500",
+    color: colors.textMuted,
+    marginTop: -1,
   },
   progressTrack: {
-    marginTop: 14,
+    marginTop: 10,
+    marginRight: 4,
     height: 3,
     borderRadius: 999,
-    backgroundColor: "rgba(164, 60, 18, 0.12)",
+    backgroundColor: "rgba(164, 60, 18, 0.14)",
     overflow: "hidden",
   },
   progressFill: {
@@ -415,10 +524,10 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     width: 16,
     height: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.82)",
-    borderRightWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.72)",
+    backgroundColor: "rgba(255, 248, 245, 0.9)",
+    borderRightWidth: 1.5,
+    borderBottomWidth: 1.5,
+    borderColor: "rgba(164, 60, 18, 0.28)",
     transform: [{ rotate: "45deg" }],
     marginTop: -9,
   },
