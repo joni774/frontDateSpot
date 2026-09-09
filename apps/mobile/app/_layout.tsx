@@ -17,9 +17,12 @@ import { I18nextProvider } from "react-i18next";
 
 import { AuthSessionProvider, useAuthSession } from "../src/auth/AuthSession";
 import { BootScreen } from "../src/components/BootScreen";
+import { RtlShell } from "../src/components/RtlShell";
 import { resolveApiBaseUrl } from "../src/config/api";
 import { i18n, initI18n } from "../src/i18n/i18n";
-import { colors } from "../src/theme/colors";
+import { bootstrapRtlSync } from "../src/lib/rtl";
+
+bootstrapRtlSync();
 
 /** Lazy — avoid loading expo-notifications (and its top-level handler) during cold start. */
 function queuePushSetup(): void {
@@ -147,14 +150,14 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const showBootOverlay = !ready || !sessionBootstrapped || !navReady;
 
   return (
-    <View style={styles.root}>
+    <>
       {children}
       {showBootOverlay ? (
         <View style={styles.overlay} pointerEvents="auto">
           <BootScreen />
         </View>
       ) : null}
-    </View>
+    </>
   );
 }
 
@@ -163,12 +166,14 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <I18nextProvider i18n={i18n}>
-          <AuthSessionProvider>
-            <AuthGuard>
-              <StatusBar style="dark" />
-              <Stack screenOptions={{ headerShown: false }} />
-            </AuthGuard>
-          </AuthSessionProvider>
+          <RtlShell>
+            <AuthSessionProvider>
+              <AuthGuard>
+                <StatusBar style="dark" />
+                <Stack screenOptions={{ headerShown: false }} />
+              </AuthGuard>
+            </AuthSessionProvider>
+          </RtlShell>
         </I18nextProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
@@ -176,10 +181,6 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   overlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 100,
