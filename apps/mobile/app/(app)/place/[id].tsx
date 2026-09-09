@@ -41,7 +41,9 @@ import { PlaceMap } from "../../../src/components/PlaceMap";
 import { colors } from "../../../src/theme/colors";
 import {
   DELIVERY_LEAD_TYPE,
+  PLATFORM_LABEL_KEY,
   type DeliveryPlatform,
+  getAvailableDeliveryPlatforms,
   resolveDeliveryUrl,
   shouldShowDeliveryOrder,
 } from "../../../src/lib/deliveryOrder";
@@ -417,18 +419,15 @@ export default function PlaceDetailScreen() {
               </Text>
             </View>
             <View style={{ gap: 10 }}>
-              <Button onPress={() => void openDelivery("wolt")}>
-                {t("place.orderWolt")}
-              </Button>
-              <Button variant="secondary" onPress={() => void openDelivery("tenbis")}>
-                {t("place.orderTenBis")}
-              </Button>
-              <Button variant="secondary" onPress={() => void openDelivery("mishloha")}>
-                {t("place.orderMishloha")}
-              </Button>
-              <Button variant="secondary" onPress={() => void openDelivery("cibus")}>
-                {t("place.orderCibus")}
-              </Button>
+              {getAvailableDeliveryPlatforms(place).map(({ platform }, index) => (
+                <Button
+                  key={platform}
+                  variant={index === 0 ? "primary" : "secondary"}
+                  onPress={() => void openDelivery(platform)}
+                >
+                  {t(PLATFORM_LABEL_KEY[platform])}
+                </Button>
+              ))}
             </View>
           </View>
         ) : null}

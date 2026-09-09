@@ -4,15 +4,21 @@ import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+let handlerConfigured = false;
+
+function ensureNotificationHandler(): void {
+  if (handlerConfigured) return;
+  handlerConfigured = true;
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 function getEasProjectId(): string | undefined {
   return (
@@ -31,6 +37,7 @@ export async function setupPushNotifications(): Promise<void> {
   }
 
   try {
+    ensureNotificationHandler();
     const { status: existing } = await Notifications.getPermissionsAsync();
     let finalStatus = existing;
     if (existing !== "granted") {

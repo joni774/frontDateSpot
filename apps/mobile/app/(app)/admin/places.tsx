@@ -1,5 +1,6 @@
 /** Admin places management — list, create, edit, activate/deactivate. */
 import {
+  checkAdminPlaceDelivery,
   createAdminPlace,
   deleteAdminPlace,
   fetchAdminPlaces,
@@ -9,13 +10,14 @@ import {
 import type {
   AdminPlace,
   AdminPlaceInput,
+  DeliveryAvailability,
   PlaceCategory,
   PriceRange,
 } from "@datespot/shared-types";
 import { Button, Input } from "@datespot/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -31,12 +33,32 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { safeOpenUrl } from "../../../src/lib/placeActions";
 
-const DELIVERY_URL_FIELDS = [
-  { key: "deliveryWoltUrl", labelKey: "admin.deliveryWolt", placeholder: "https://wolt.com/he/isr/..." },
-  { key: "deliveryTenBisUrl", labelKey: "admin.deliveryTenBis", placeholder: "https://www.10bis.co.il/next/he/menu/..." },
-  { key: "deliveryMishlohaUrl", labelKey: "admin.deliveryMishloha", placeholder: "https://www.mishloha.co.il/..." },
-  { key: "deliveryCibusUrl", labelKey: "admin.deliveryCibus", placeholder: "https://www.cibus.co.il/..." },
+const DELIVERY_PROVIDERS = [
+  {
+    urlKey: "deliveryWoltUrl",
+    statusKey: "deliveryWoltStatus",
+    labelKey: "admin.deliveryWolt",
+    placeholder: "https://wolt.com/he/isr/...",
+  },
+  {
+    urlKey: "deliveryTenBisUrl",
+    statusKey: "deliveryTenBisStatus",
+    labelKey: "admin.deliveryTenBis",
+    placeholder: "https://www.10bis.co.il/next/he/menu/...",
+  },
+  {
+    urlKey: "deliveryMishlohaUrl",
+    statusKey: "deliveryMishlohaStatus",
+    labelKey: "admin.deliveryMishloha",
+    placeholder: "https://www.mishloha.co.il/...",
+  },
 ] as const;
+
+const DELIVERY_STATUSES: DeliveryAvailability[] = [
+  "UNKNOWN",
+  "AVAILABLE",
+  "NOT_AVAILABLE",
+];
 
 function isValidHttpUrl(value: string): boolean {
   try {
@@ -99,7 +121,10 @@ function emptyPlace(): AdminPlaceInput {
     deliveryWoltUrl: "",
     deliveryTenBisUrl: "",
     deliveryMishlohaUrl: "",
-    deliveryCibusUrl: "",
+    deliveryWoltStatus: "UNKNOWN",
+    deliveryTenBisStatus: "UNKNOWN",
+    deliveryMishlohaStatus: "UNKNOWN",
+    deliveryStatusConfirmedByAdmin: false,
     isActive: true,
     displayOrder: 0,
     leadFeeAgorot: 0,
@@ -137,7 +162,10 @@ function placeToForm(place: AdminPlace): AdminPlaceInput {
     deliveryWoltUrl: place.deliveryWoltUrl ?? "",
     deliveryTenBisUrl: place.deliveryTenBisUrl ?? "",
     deliveryMishlohaUrl: place.deliveryMishlohaUrl ?? "",
-    deliveryCibusUrl: place.deliveryCibusUrl ?? "",
+    deliveryWoltStatus: place.deliveryWoltStatus ?? "UNKNOWN",
+    deliveryTenBisStatus: place.deliveryTenBisStatus ?? "UNKNOWN",
+    deliveryMishlohaStatus: place.deliveryMishlohaStatus ?? "UNKNOWN",
+    deliveryStatusConfirmedByAdmin: place.deliveryStatusConfirmedByAdmin ?? false,
     isActive: place.isActive,
     displayOrder: place.displayOrder,
     leadFeeAgorot: place.leadFeeAgorot ?? 0,
@@ -158,6 +186,7 @@ export default function AdminPlacesScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<AdminPlaceInput>(emptyPlace());
   const [imagesText, setImagesText] = useState("");
+  const [pendingReviewOnly, setPendingReviewOnly] = useState(false);
 
   const { data: places, isLoading, error } = useQuery({
     queryKey: ["admin-places"],
@@ -187,7 +216,10 @@ export default function AdminPlacesScreen() {
         deliveryWoltUrl: form.deliveryWoltUrl || undefined,
         deliveryTenBisUrl: form.deliveryTenBisUrl || undefined,
         deliveryMishlohaUrl: form.deliveryMishlohaUrl || undefined,
-        deliveryCibusUrl: form.deliveryCibusUrl || undefined,
+        deliveryWoltStatus: form.deliveryWoltStatus ?? "UNKNOWN",
+        deliveryTenBisStatus: form.deliveryTenBisStatus ?? "UNKNOWN",
+        deliveryMishlohaStatus: form.deliveryMishlohaStatus ?? "UNKNOWN",
+        deliveryStatusConfirmedByAdmin: true,
       };
       if (editingId) {
         return updateAdminPlace(editingId, payload);
@@ -295,8 +327,8 @@ export default function AdminPlacesScreen() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const invalidDeliveryUrlLabel = DELIVERY_URL_FIELDS.find(({ key }) => {
-    const value = (form[key] ?? "").trim();
+  const invalidDeliveryUrlLabel = DELIVERY_PROVIDERS.find(({ urlKey }) => {
+    const value = String(form[urlKey] ?? "").trim();
     return value.length > 0 && !isValidHttpUrl(value);
   })?.labelKey;
 
@@ -314,6 +346,24 @@ export default function AdminPlacesScreen() {
     void safeOpenUrl(value, t("place.linkOpenError"));
   };
 
+  const deliveryCheckMutation = useMutation({
+    mutationFn: (id: string) => checkAdminPlaceDelivery(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-places"] });
+      if (editingId && data.place) {
+        setForm(placeToForm(data.place));
+      }
+      Alert.alert(t("common.success"), t("admin.deliveryCheckDone"));
+    },
+    onError: () => Alert.alert(t("common.error"), t("admin.deliveryCheckFailed")),
+  });
+
+  const filteredPlaces = useMemo(() => {
+    const list = places ?? [];
+    if (!pendingReviewOnly) return list;
+    return list.filter((p) => p.deliveryStatusConfirmedByAdmin !== true);
+  }, [places, pendingReviewOnly]);
+
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-row items-center justify-between px-4 py-3 bg-surface border-b border-border">
@@ -325,6 +375,19 @@ export default function AdminPlacesScreen() {
         </View>
         <Pressable testID="admin-places-add" onPress={openCreate} className="bg-primary px-3 py-2 rounded-lg">
           <Text className="text-white font-semibold text-sm">+ {t("admin.addPlace")}</Text>
+        </Pressable>
+      </View>
+
+      <View className="px-4 py-2 flex-row">
+        <Pressable
+          onPress={() => setPendingReviewOnly((v) => !v)}
+          className={`px-3 py-2 rounded-full border ${
+            pendingReviewOnly ? "bg-primary border-primary" : "bg-surface border-border"
+          }`}
+        >
+          <Text className={pendingReviewOnly ? "text-white text-sm" : "text-text text-sm"}>
+            {t("admin.deliveryPendingReview")}
+          </Text>
         </Pressable>
       </View>
 
@@ -340,7 +403,7 @@ export default function AdminPlacesScreen() {
         </View>
       ) : (
         <FlatList
-          data={places ?? []}
+          data={filteredPlaces}
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ padding: 16 }}
           renderItem={({ item }) => (
@@ -508,22 +571,61 @@ export default function AdminPlacesScreen() {
               onChangeText={(v) => updateField("website", v)}
               autoCapitalize="none"
             />
-            {DELIVERY_URL_FIELDS.map(({ key, labelKey, placeholder }) => {
-              const value = form[key] ?? "";
+            {editingId ? (
+              <Pressable
+                onPress={() => deliveryCheckMutation.mutate(editingId)}
+                disabled={deliveryCheckMutation.isPending}
+                className="mb-3 self-start px-3 py-2 rounded-lg bg-primary/10 border border-primary"
+              >
+                <Text className="text-primary font-semibold text-sm">
+                  {deliveryCheckMutation.isPending
+                    ? t("common.loading")
+                    : t("admin.deliveryAutoCheck")}
+                </Text>
+              </Pressable>
+            ) : null}
+            {DELIVERY_PROVIDERS.map(({ urlKey, statusKey, labelKey, placeholder }) => {
+              const value = String(form[urlKey] ?? "");
               const trimmed = value.trim();
               const hasError = trimmed.length > 0 && !isValidHttpUrl(trimmed);
+              const status = (form[statusKey] ?? "UNKNOWN") as DeliveryAvailability;
               return (
-                <View key={key}>
+                <View key={urlKey} className="mb-3">
+                  <Text className="text-text font-medium mb-2">{t(labelKey)}</Text>
+                  <View className="flex-row flex-wrap gap-2 mb-2">
+                    {DELIVERY_STATUSES.map((s) => (
+                      <Pressable
+                        key={s}
+                        onPress={() => updateField(statusKey, s)}
+                        className={`px-3 py-1.5 rounded-full border ${
+                          status === s
+                            ? "bg-primary border-primary"
+                            : "bg-surface border-border"
+                        }`}
+                      >
+                        <Text
+                          className={
+                            status === s ? "text-white text-xs" : "text-text text-xs"
+                          }
+                        >
+                          {t(`admin.deliveryStatus.${s}`)}
+                        </Text>
+                      </Pressable>
+                    ))}
+                  </View>
                   <Input
-                    label={t(labelKey)}
+                    label={t("admin.deliveryUrl")}
                     value={value}
-                    onChangeText={(v) => updateField(key, v)}
+                    onChangeText={(v) => updateField(urlKey, v)}
                     autoCapitalize="none"
                     placeholder={placeholder}
                     error={hasError ? t("admin.invalidUrlFormat") : undefined}
                   />
                   {trimmed.length > 0 && !hasError ? (
-                    <Pressable onPress={() => testDeliveryUrl(trimmed)} style={{ marginTop: -8, marginBottom: 12 }}>
+                    <Pressable
+                      onPress={() => testDeliveryUrl(trimmed)}
+                      style={{ marginTop: -8, marginBottom: 8 }}
+                    >
                       <Text className="text-primary text-sm">{t("admin.testLink")}</Text>
                     </Pressable>
                   ) : null}
