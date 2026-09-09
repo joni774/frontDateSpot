@@ -4,6 +4,9 @@ Marketing landing page for DateSpot (Hebrew RTL). Vite + React + TypeScript.
 
 Standalone app — no dependency on `@datespot/ui`, `api-client`, or the mobile Expo app.
 
+Production API (Railway `datespot-production`): `https://datespot-server-production-ecb2.up.railway.app`.
+Override with `VITE_API_URL` at build time if you need staging.
+
 ## Commands
 
 From the monorepo root (`datespot-client/`):
