@@ -22,12 +22,25 @@ export type LeadType =
   | "NAVIGATE"
   | "DELIVERY_WOLT"
   | "DELIVERY_TENBIS"
-  | "DELIVERY_MISHLOHA"
-  | "DELIVERY_CIBUS";
+  | "DELIVERY_MISHLOHA";
+
+export type DeliveryAvailability = "UNKNOWN" | "AVAILABLE" | "NOT_AVAILABLE";
 
 export type LeadInvoiceStatus = "DRAFT" | "OPEN" | "PAID" | "VOID" | "FAILED";
 
 export type Language = "he" | "en" | "ar";
+
+export interface ResolvedDeliveryProvider {
+  available: boolean;
+  url: string | null;
+  status: DeliveryAvailability;
+}
+
+export interface ResolvedDeliveryProviders {
+  wolt: ResolvedDeliveryProvider;
+  tenbis: ResolvedDeliveryProvider;
+  mishloha: ResolvedDeliveryProvider;
+}
 
 export interface User {
   id: string;
@@ -60,6 +73,13 @@ export interface Place {
   phone?: string | null;
   kosherStatus?: KosherStatus;
   kosherCertification?: string | null;
+  delivery?: ResolvedDeliveryProviders;
+  deliveryWoltUrl?: string | null;
+  deliveryTenBisUrl?: string | null;
+  deliveryMishlohaUrl?: string | null;
+  deliveryWoltStatus?: DeliveryAvailability;
+  deliveryTenBisStatus?: DeliveryAvailability;
+  deliveryMishlohaStatus?: DeliveryAvailability;
 }
 
 export interface PlaceDetail extends Place {
@@ -71,7 +91,10 @@ export interface PlaceDetail extends Place {
   deliveryWoltUrl?: string | null;
   deliveryTenBisUrl?: string | null;
   deliveryMishlohaUrl?: string | null;
-  deliveryCibusUrl?: string | null;
+  delivery?: ResolvedDeliveryProviders;
+  deliveryWoltStatus?: DeliveryAvailability;
+  deliveryTenBisStatus?: DeliveryAvailability;
+  deliveryMishlohaStatus?: DeliveryAvailability;
   isOpen: boolean;
   isSaved?: boolean;
   isFavorite?: boolean;
@@ -135,7 +158,11 @@ export interface AdminPlace {
   deliveryWoltUrl?: string | null;
   deliveryTenBisUrl?: string | null;
   deliveryMishlohaUrl?: string | null;
-  deliveryCibusUrl?: string | null;
+  deliveryWoltStatus?: DeliveryAvailability;
+  deliveryTenBisStatus?: DeliveryAvailability;
+  deliveryMishlohaStatus?: DeliveryAvailability;
+  deliveryStatusCheckedAt?: string | null;
+  deliveryStatusConfirmedByAdmin?: boolean;
   isActive: boolean;
   displayOrder: number;
   viewCount?: number;

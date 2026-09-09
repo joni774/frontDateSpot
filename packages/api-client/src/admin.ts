@@ -65,6 +65,42 @@ export async function updateAdminPlaceOrder(
   return data;
 }
 
+export async function checkAdminPlaceDelivery(id: string): Promise<{
+  place: AdminPlace;
+  result: {
+    wolt: { status: string; url: string | null };
+    tenbis: { status: string; url: string | null };
+    mishloha: { status: string; url: string | null };
+  };
+}> {
+  const { data } = await apiClient.post<{
+    place: AdminPlace;
+    result: {
+      wolt: { status: string; url: string | null };
+      tenbis: { status: string; url: string | null };
+      mishloha: { status: string; url: string | null };
+    };
+  }>(`/api/admin/places/${id}/delivery-check`);
+  return data;
+}
+
+export async function batchCheckAdminDelivery(body?: {
+  limit?: number;
+  offset?: number;
+  foodOnly?: boolean;
+  onlyUnknown?: boolean;
+}): Promise<{
+  candidates: number;
+  updated: number;
+  skipped: number;
+  done: boolean;
+  nextOffset: number;
+  details: Array<{ name: string; wolt: string; tenbis: string; mishloha: string }>;
+}> {
+  const { data } = await apiClient.post("/api/admin/delivery-check", body ?? {});
+  return data;
+}
+
 export async function fetchAdminUsers(
   page = 1,
   limit = 20,

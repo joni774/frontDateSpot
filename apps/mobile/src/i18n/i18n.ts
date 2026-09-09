@@ -4,8 +4,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import { DevSettings, I18nManager, Platform } from "react-native";
+import { DevSettings, Platform } from "react-native";
 
+import { applyNativeRtl, applyWebDocumentDir, isRtlLanguage } from "../lib/rtl";
 import ar from "./locales/ar.json";
 import en from "./locales/en.json";
 import he from "./locales/he.json";
@@ -13,11 +14,6 @@ import he from "./locales/he.json";
 export const LANGUAGE_KEY = "@datespot/language";
 
 export type AppLanguage = "he" | "en" | "ar";
-
-function isRtlLanguage(lng: string): boolean {
-  const base = lng.split("-")[0];
-  return base === "he" || base === "ar";
-}
 
 function normalizeAppLanguage(raw?: string | null): AppLanguage {
   const base = (raw ?? "he").toLowerCase().split(/[-_]/)[0]?.trim();
@@ -54,13 +50,6 @@ export async function getAiLanguage(i18nLanguage?: string | null): Promise<AppLa
   return getStoredAppLanguage();
 }
 
-function applyWebDocumentDir(lng: string): void {
-  if (Platform.OS !== "web" || typeof document === "undefined") return;
-  const rtl = isRtlLanguage(lng);
-  document.documentElement.dir = rtl ? "rtl" : "ltr";
-  document.documentElement.lang = lng.split("-")[0];
-}
-
 export async function initI18n(): Promise<void> {
   let stored = await AsyncStorage.getItem(LANGUAGE_KEY);
   // Persist Hebrew default so AI never inherits browser "en".
@@ -82,21 +71,19 @@ export async function initI18n(): Promise<void> {
     interpolation: { escapeValue: false },
   });
 
-  applyRTL(lng);
+  const directionChanged = applyNativeRtl(lng);
   applyWebDocumentDir(lng);
-}
 
-function applyRTL(lng: string): boolean {
-  const shouldRtl = isRtlLanguage(lng);
-  const directionChanged = I18nManager.isRTL !== shouldRtl;
-  I18nManager.allowRTL(shouldRtl);
-  I18nManager.forceRTL(shouldRtl);
-  // Keep left/right as physical sides so Hebrew is RTL without a mirrored UI.
-  // react-native-web doesn't implement this API — guard so web doesn't crash on boot.
-  if (typeof I18nManager.swapLeftAndRightInRTL === "function") {
-    I18nManager.swapLeftAndRightInRTL(false);
+  // forceRTL only takes effect after a restart. On first install (LTR device + he),
+  // reload once so TestFlight / store builds are not stuck with a blank layout.
+  if (directionChanged && Platform.OS !== "web") {
+    const reloadKey = `${LANGUAGE_KEY}:rtl-reload`;
+    const alreadyReloaded = await AsyncStorage.getItem(reloadKey);
+    if (!alreadyReloaded) {
+      await AsyncStorage.setItem(reloadKey, "1");
+      reloadForRtlIfNeeded(true);
+    }
   }
-  return directionChanged;
 }
 
 function reloadForRtlIfNeeded(directionChanged: boolean): void {
@@ -109,13 +96,28 @@ function reloadForRtlIfNeeded(directionChanged: boolean): void {
 
   if (__DEV__ && DevSettings?.reload) {
     DevSettings.reload();
+    return;
+  }
+
+  // Production (TestFlight / store): prefer expo-updates when present.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const Updates = require("expo-updates") as {
+      isEnabled?: boolean;
+      reloadAsync?: () => Promise<void>;
+    };
+    if (Updates?.isEnabled && typeof Updates.reloadAsync === "function") {
+      void Updates.reloadAsync();
+    }
+  } catch {
+    // expo-updates not installed — direction applies on next cold start.
   }
 }
 
 export async function changeLanguage(lng: string): Promise<void> {
   const normalized = normalizeAppLanguage(lng);
   await AsyncStorage.setItem(LANGUAGE_KEY, normalized);
-  const directionChanged = applyRTL(normalized);
+  const directionChanged = applyNativeRtl(normalized);
   applyWebDocumentDir(normalized);
   await i18n.changeLanguage(normalized);
 

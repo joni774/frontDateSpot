@@ -48,8 +48,6 @@ const CATEGORIES: { key: CategoryFilter; label: string }[] = [
   { key: "DAIRY_RESTAURANT", label: "dairy" },
   { key: "MEAT_RESTAURANT", label: "meat" },
   { key: "SUSHI", label: "sushi" },
-  { key: "SUNSET", label: "sunset" },
-  { key: "ATTRACTION", label: "attraction" },
 ];
 
 function SkeletonCard({ tall }: { tall?: boolean }) {

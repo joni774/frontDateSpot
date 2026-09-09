@@ -29,7 +29,6 @@ const LEAD_TYPES: Array<LeadType | "ALL"> = [
   "DELIVERY_WOLT",
   "DELIVERY_TENBIS",
   "DELIVERY_MISHLOHA",
-  "DELIVERY_CIBUS",
 ];
 
 function formatFee(agorot: number): string {
