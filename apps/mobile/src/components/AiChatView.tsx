@@ -355,9 +355,13 @@ const bubbleStyles = StyleSheet.create({
 
 type AiChatViewProps = {
   showBack?: boolean;
+  /** When set (e.g. from home question banner), auto-send after the session is ready. */
+  initialPrompt?: string;
+  /** Changes whenever the same prompt should fire again on an already-mounted tab. */
+  promptNonce?: string;
 };
 
-export function AiChatView({ showBack = false }: AiChatViewProps) {
+export function AiChatView({ showBack = false, initialPrompt, promptNonce }: AiChatViewProps) {
   const { t, i18n } = useTranslation();
   const router = useRouter();
   const listRef = useRef<FlatList>(null);
@@ -368,6 +372,8 @@ export function AiChatView({ showBack = false }: AiChatViewProps) {
   const [coords, setCoords] = useState(DEFAULT_COORDS);
   const [starting, setStarting] = useState(true);
   const sessionIdRef = useRef<string | null>(null);
+  const pendingPromptRef = useRef<string | null>(null);
+  const handledPromptNonceRef = useRef<string | null>(null);
 
   const { data: quota, refetch: refetchQuota } = useQuery({
     queryKey: ["ai-quota"],
@@ -420,6 +426,8 @@ export function AiChatView({ showBack = false }: AiChatViewProps) {
     };
   }, [resolveCoords, t, i18n.language]);
 
+  const quotaBlocked = !!quota && !quota.unlimited && (quota.remaining ?? 0) <= 0;
+
   const chatMutation = useMutation({
     mutationFn: async (payload: { message: string; displayText: string }) => {
       const appLang = await getAiLanguage(i18n.language);
@@ -450,7 +458,27 @@ export function AiChatView({ showBack = false }: AiChatViewProps) {
     },
   });
 
-  const quotaBlocked = !!quota && !quota.unlimited && (quota.remaining ?? 0) <= 0;
+  useEffect(() => {
+    const trimmed = initialPrompt?.trim();
+    if (!trimmed || !promptNonce || promptNonce === handledPromptNonceRef.current) return;
+    pendingPromptRef.current = trimmed;
+  }, [initialPrompt, promptNonce]);
+
+  useEffect(() => {
+    const pending = pendingPromptRef.current?.trim();
+    if (!pending || starting || chatMutation.isPending) return;
+    if (!sessionIdRef.current) return;
+
+    pendingPromptRef.current = null;
+    if (promptNonce) handledPromptNonceRef.current = promptNonce;
+
+    if (quotaBlocked) {
+      setInput(pending);
+      return;
+    }
+
+    chatMutation.mutate({ message: pending, displayText: pending });
+  }, [starting, chatMutation, chatMutation.isPending, quotaBlocked, promptNonce]);
 
   const sendMessage = (text: string, displayText?: string) => {
     const trimmed = text.trim();
